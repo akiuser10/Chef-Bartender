@@ -754,11 +754,17 @@ def edit_secondary_ingredient(id):
             for item in secondary.ingredients:
                 _ = item.product
             flash(f'Secondary ingredient updated successfully! {items_added} ingredient(s) added.')
+            scroll_to = request.args.get('scroll_to') or request.form.get('scroll_to')
+            if scroll_to:
+                return redirect(url_for('secondary.secondary_ingredients') + f'#row_{scroll_to}')
             return redirect(url_for('secondary.secondary_ingredients'))
         except Exception as e:
             db.session.rollback()
             current_app.logger.error(f"Error updating secondary ingredient: {str(e)}", exc_info=True)
             flash(f'An error occurred while updating the secondary ingredient: {str(e)}', 'error')
+            scroll_to = request.args.get('scroll_to') or request.form.get('scroll_to')
+            if scroll_to:
+                return redirect(url_for('secondary.edit_secondary_ingredient', id=id, scroll_to=scroll_to))
             return redirect(url_for('secondary.edit_secondary_ingredient', id=id))
 
     preset_rows = []
@@ -777,7 +783,8 @@ def edit_secondary_ingredient(id):
                 'code': code
             })
 
-    return render_template('secondary_ingredients/edit.html', ingredient_options=ingredient_options, secondary=secondary, preset_rows=preset_rows)
+    scroll_to = request.args.get('scroll_to')
+    return render_template('secondary_ingredients/edit.html', ingredient_options=ingredient_options, secondary=secondary, preset_rows=preset_rows, scroll_to=scroll_to)
 
 
 @secondary_bp.route('/secondary-ingredients/<int:id>/delete', methods=['POST'])

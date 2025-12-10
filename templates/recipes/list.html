@@ -120,7 +120,7 @@
         {% set selling_price = recipe.selling_price_value() %}
         {% set cost_percent = recipe.cost_percentage() %}
         {% set has_missing = recipe.has_missing_cost() %}
-        <tr {% if has_missing %}class="missing-cost-row"{% endif %}>
+        <tr id="row_{{ recipe.id }}" {% if has_missing %}class="missing-cost-row"{% endif %}>
             <td>{{ recipe.recipe_code if recipe.recipe_code else 'N/A' }}</td>
             <td {% if has_missing %}style="color: red; font-weight: bold;"{% endif %}>{{ recipe.title }}</td>
             <td>{{ recipe.recipe_type if recipe.recipe_type else (recipe.type if recipe.type else 'N/A') }}</td>
@@ -150,7 +150,7 @@
             <td>{{ get_user_display_name(recipe.creator) if recipe.creator else 'Unknown' }}</td>
             <td>{{ get_user_display_name(recipe.last_editor) if recipe.last_editor else (get_user_display_name(recipe.creator) if recipe.creator else 'Unknown') }}</td>
             <td class="actions-cell">
-                <a class="link-action" href="{{ url_for('recipes.edit_recipe', id=recipe.id) }}">Edit</a>
+                <a class="link-action" href="{{ url_for('recipes.edit_recipe', id=recipe.id, scroll_to=recipe.id) }}">Edit</a>
                 <form method="POST" action="{{ url_for('recipes.delete_recipe', id=recipe.id) }}" onsubmit="return confirm('Delete this recipe?');" class="inline-form">
                     <button type="submit" class="link-action">Delete</button>
                 </form>
@@ -301,6 +301,26 @@ document.addEventListener('DOMContentLoaded', function() {
             updateCategoryOptions();
         });
     }
+    
+    // Scroll to row if hash is present in URL
+    window.addEventListener('load', function() {
+        const hash = window.location.hash;
+        if (hash && hash.startsWith('#row_')) {
+            const rowId = hash.substring(1); // Remove the #
+            const row = document.getElementById(rowId);
+            if (row) {
+                // Small delay to ensure page is fully rendered
+                setTimeout(function() {
+                    row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    // Highlight the row briefly
+                    row.style.backgroundColor = 'rgba(255, 255, 0, 0.3)';
+                    setTimeout(function() {
+                        row.style.backgroundColor = '';
+                    }, 2000);
+                }, 100);
+            }
+        }
+    });
 });
 </script>
 {% endblock %}

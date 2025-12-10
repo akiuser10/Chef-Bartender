@@ -3,6 +3,9 @@
 <h2>Edit Ingredient</h2>
 
 <form method="POST" enctype="multipart/form-data">
+    {% if scroll_to %}
+    <input type="hidden" name="scroll_to" value="{{ scroll_to }}">
+    {% endif %}
     <div class="form-table-wrapper">
     <div class="form-two-column form-two-column-wide">
         <table class="form-table">

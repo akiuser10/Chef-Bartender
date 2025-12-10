@@ -61,7 +61,7 @@
         <tbody>
         {% for row in secondary_rows %}
             {% set has_missing = row.get('has_missing_cost', False) %}
-            <tr {% if has_missing %}class="missing-cost-row"{% endif %}>
+            <tr id="row_{{ row.id }}" {% if has_missing %}class="missing-cost-row"{% endif %}>
                 <td>{{ row.code }}</td>
                 <td {% if has_missing %}style="color: red; font-weight: bold;"{% endif %}>{{ row.name }}</td>
                 <td>{{ row.category or '-' }}</td>
@@ -72,7 +72,7 @@
                 <td>{{ row.get('created_by', 'Unknown') }}</td>
                 <td>{{ row.get('last_edited_by', 'Unknown') }}</td>
                 <td class="actions-cell">
-                    <a class="link-action" href="{{ url_for('secondary.edit_secondary_ingredient', id=row.id) }}">Edit</a>
+                    <a class="link-action" href="{{ url_for('secondary.edit_secondary_ingredient', id=row.id, scroll_to=row.id) }}">Edit</a>
                     <form method="POST" action="{{ url_for('secondary.delete_secondary_ingredient', id=row.id) }}" onsubmit="return confirm('Delete this secondary ingredient?');" class="inline-form">
                         <button type="submit" class="link-action">Delete</button>
                     </form>
@@ -231,6 +231,26 @@ document.addEventListener('DOMContentLoaded', function() {
             updateSubCategoryOptions();
         });
     }
+    
+    // Scroll to row if hash is present in URL
+    window.addEventListener('load', function() {
+        const hash = window.location.hash;
+        if (hash && hash.startsWith('#row_')) {
+            const rowId = hash.substring(1); // Remove the #
+            const row = document.getElementById(rowId);
+            if (row) {
+                // Small delay to ensure page is fully rendered
+                setTimeout(function() {
+                    row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    // Highlight the row briefly
+                    row.style.backgroundColor = 'rgba(255, 255, 0, 0.3)';
+                    setTimeout(function() {
+                        row.style.backgroundColor = '';
+                    }, 2000);
+                }, 100);
+            }
+        }
+    });
 });
 </script>
 {% endblock %}

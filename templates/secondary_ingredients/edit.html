@@ -106,6 +106,9 @@
             {% endfor %}
         </datalist>
 
+        {% if scroll_to %}
+        <input type="hidden" name="scroll_to" value="{{ scroll_to }}">
+        {% endif %}
         <div class="actions recipe-actions">
             <button type="submit" class="btn">Update Secondary Ingredient</button>
             <a href="{{ url_for('secondary.view_secondary_ingredient', id=secondary.id) }}" class="btn secondary">Cancel</a>

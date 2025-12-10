@@ -9,9 +9,5 @@ cmds = ["python -m venv --copies /opt/venv && . /opt/venv/bin/activate && pip in
 [phases.build]
 cmds = []
 
-# Explicitly disable Java build phase
-[phases.java.build]
-cmds = []
-
 [start]
 cmd = "gunicorn app:app"

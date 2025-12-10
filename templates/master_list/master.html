@@ -48,7 +48,7 @@
         </thead>
         <tbody id="productTableBody">
         {% for row in rows %}
-            <tr class="product-row {{ 'secondary-row' if row.kind == 'secondary' else '' }}" data-description="{{ row.description|lower }}">
+            <tr id="row_{{ row.id }}" class="product-row {{ 'secondary-row' if row.kind == 'secondary' else '' }}" data-description="{{ row.description|lower }}">
                 <td>
                     {% if row.kind == 'product' %}
                         <input type="checkbox" name="selected_items" value="{{ row.id }}" class="row-checkbox" aria-label="Select {{ row.description or row.code }} for deletion">
@@ -68,7 +68,7 @@
                 <td>{{ row.get('last_edited_by', 'Unknown') }}</td>
                 <td class="actions-cell">
                     {% if row.kind == 'product' %}
-                        <a class="link-action" href="{{ url_for('products.edit_ingredient', id=row.id) }}">Edit</a>
+                        <a class="link-action" href="{{ url_for('products.edit_ingredient', id=row.id, scroll_to=row.id) }}">Edit</a>
                         <form method="POST" action="{{ url_for('products.delete_ingredient', id=row.id) }}" onsubmit="return confirm('Are you sure?');" class="inline-form">
                             <button type="submit" class="link-action">Delete</button>
                         </form>
@@ -199,6 +199,26 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Initial state
     updateDeleteButtonState();
+    
+    // Scroll to row if hash is present in URL
+    window.addEventListener('load', function() {
+        const hash = window.location.hash;
+        if (hash && hash.startsWith('#row_')) {
+            const rowId = hash.substring(1); // Remove the #
+            const row = document.getElementById(rowId);
+            if (row) {
+                // Small delay to ensure page is fully rendered
+                setTimeout(function() {
+                    row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    // Highlight the row briefly
+                    row.style.backgroundColor = 'rgba(255, 255, 0, 0.3)';
+                    setTimeout(function() {
+                        row.style.backgroundColor = '';
+                    }, 2000);
+                }, 100);
+            }
+        }
+    });
 });
 </script>
 {% endblock %}

@@ -284,8 +284,12 @@ def edit_ingredient(id):
         
         db.session.commit()
         flash('Ingredient updated successfully!')
+        scroll_to = request.args.get('scroll_to') or request.form.get('scroll_to')
+        if scroll_to:
+            return redirect(url_for('products.ingredients_master') + f'#row_{scroll_to}')
         return redirect(url_for('products.ingredients_master'))
-    return render_template('master_list/edit.html', product=product)
+    scroll_to = request.args.get('scroll_to')
+    return render_template('master_list/edit.html', product=product, scroll_to=scroll_to)
 
 
 @products_bp.route('/ingredients/<int:id>/delete', methods=['POST'])

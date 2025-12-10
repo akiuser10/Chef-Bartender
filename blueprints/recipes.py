@@ -965,11 +965,17 @@ def edit_recipe(id):
 
                 db.session.commit()
                 flash('Recipe updated successfully!')
+                scroll_to = request.args.get('scroll_to') or request.form.get('scroll_to')
+                if scroll_to:
+                    return redirect(url_for('recipes.recipes_list') + f'#row_{scroll_to}')
                 return redirect(url_for('recipes.recipes_list'))
             except Exception as e:
                 db.session.rollback()
                 current_app.logger.error(f"Error updating recipe: {str(e)}", exc_info=True)
                 flash(f'An error occurred while updating the recipe: {str(e)}', 'error')
+                scroll_to = request.args.get('scroll_to') or request.form.get('scroll_to')
+                if scroll_to:
+                    return redirect(url_for('recipes.edit_recipe', id=id, scroll_to=scroll_to))
                 return redirect(url_for('recipes.edit_recipe', id=id))
 
         preset_rows = []
@@ -1013,6 +1019,7 @@ def edit_recipe(id):
                     'unit': ingredient.unit or 'ml'
                 })
 
+        scroll_to = request.args.get('scroll_to')
         return render_template('recipes/edit.html',
                                products=products,
                                secondary_ingredients=secondary_ingredients,
@@ -1021,7 +1028,8 @@ def edit_recipe(id):
                                category_slug=category_slug,
                                ingredient_options=ingredient_options,
                                recipe=recipe,
-                               preset_rows=preset_rows)
+                               preset_rows=preset_rows,
+                               scroll_to=scroll_to)
     except Exception as e:
         current_app.logger.error(f"Error in edit_recipe: {str(e)}", exc_info=True)
         flash('An error occurred while loading the recipe for editing.', 'error')
