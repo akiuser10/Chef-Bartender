@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chef & Bartender</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Top Header Bar -->
+    <div class="top-header">
+        <div class="header-left">
+            <img src="{{ url_for('static', filename='C&B.png') }}" alt="Chef & Bartender" class="logo-ex">
+        </div>
+        <div class="header-right">
+            <div class="stars">★★★★★</div>
+            <div class="dinex-text">CHEF & BARTENDER</div>
+        </div>
+    </div>
+
+    <!-- Navigation Bar -->
+    <nav class="main-nav">
+        <a href="{{ url_for('main.index') }}" class="nav-link">HOME</a>
+        <a href="{{ url_for('products.ingredients_master') }}" class="nav-link">MASTER LIST</a>
+        <a href="{{ url_for('recipes.recipes_list') }}" class="nav-link">RECIPES</a>
+        <a href="{{ url_for('secondary.secondary_ingredients') }}" class="nav-link">SECONDARY RECIPES</a>
+        <a href="{{ url_for('main.about') }}" class="nav-link">ABOUT</a>
+        <a href="{{ url_for('main.contact') }}" class="nav-link">CONTACT</a>
+        {% if current_user.is_authenticated %}
+            <div class="nav-auth">
+                <div class="user-dropdown-container">
+                    <span class="nav-welcome-small user-dropdown-trigger" id="userDropdownTrigger">Welcome, {{ current_user.first_name if current_user.first_name else current_user.username }}</span>
+                    <div class="user-dropdown-menu" id="userDropdownMenu">
+                        <a href="{{ url_for('auth.profile') }}" class="user-dropdown-item">Edit Profile</a>
+                        <a class="nav-logout-small user-dropdown-item" href="{{ url_for('auth.logout') }}">Logout</a>
+                    </div>
+                </div>
+            </div>
+        {% else %}
+            <div class="nav-auth">
+                <a href="{{ url_for('auth.login') }}" class="nav-link">Login</a>
+                <a href="{{ url_for('auth.register') }}" class="nav-link">Register</a>
+            </div>
+        {% endif %}
+    </nav>
+
+    <main class="content">
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                <div class="flash">
+                    {% for msg in messages %}
+                        <p>{{ msg }}</p>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+
+        <div class="page-body">
+            {% block page_panel %}
+            <div class="page-panel">
+                {% block content %}{% endblock %}
+            </div>
+            {% endblock %}
+        </div>
+    </main>
+
+    <footer>
+        <p>© {{ current_year }} Chef & Bartender | Crafted by Akhil Soman 🍹</p>
+    </footer>
+
+    <script>
+    // User dropdown functionality
+    document.addEventListener('DOMContentLoaded', function() {
+        const trigger = document.getElementById('userDropdownTrigger');
+        const menu = document.getElementById('userDropdownMenu');
+        
+        if (trigger && menu) {
+            // Toggle dropdown on click
+            trigger.addEventListener('click', function(e) {
+                e.stopPropagation();
+                menu.classList.toggle('show');
+            });
+            
+            // Close dropdown when clicking outside
+            document.addEventListener('click', function(e) {
+                if (!trigger.contains(e.target) && !menu.contains(e.target)) {
+                    menu.classList.remove('show');
+                }
+            });
+            
+            // Close dropdown when clicking on a menu item
+            const menuItems = menu.querySelectorAll('.user-dropdown-item');
+            menuItems.forEach(function(item) {
+                item.addEventListener('click', function() {
+                    menu.classList.remove('show');
+                });
+            });
+        }
+
+        // Scroll-triggered animations
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        };
+
+        const observer = new IntersectionObserver(function(entries) {
+            entries.forEach(function(entry) {
+                if (entry.isIntersecting) {
+                    entry.target.style.opacity = '1';
+                    entry.target.style.transform = 'translateY(0)';
+                }
+            });
+        }, observerOptions);
+
+        // Helper function to check if element is in viewport
+        function isInViewport(element) {
+            const rect = element.getBoundingClientRect();
+            return (
+                rect.top >= 0 &&
+                rect.left >= 0 &&
+                rect.bottom <= (window.innerHeight || document.documentElement.clientHeight) &&
+                rect.right <= (window.innerWidth || document.documentElement.clientWidth)
+            );
+        }
+
+        // Observe elements for scroll animations (exclude tables to avoid hiding them)
+        const animatedElements = document.querySelectorAll('.page-panel, .panel-header, .btn-category');
+        animatedElements.forEach(function(el) {
+            // Check if element is already in viewport
+            if (isInViewport(el)) {
+                // Already visible, skip animation
+                return;
+            }
+            el.style.opacity = '0';
+            el.style.transform = 'translateY(20px)';
+            el.style.transition = 'opacity 0.6s ease-out, transform 0.6s ease-out';
+            observer.observe(el);
+        });
+
+        // Parallax effect for hero section
+        const heroSection = document.querySelector('.hero-section');
+        if (heroSection) {
+            window.addEventListener('scroll', function() {
+                const scrolled = window.pageYOffset;
+                const heroImage = heroSection.querySelector('.hero-image');
+                if (heroImage && scrolled < heroSection.offsetHeight) {
+                    heroImage.style.transform = 'translateY(' + (scrolled * 0.5) + 'px)';
+                }
+            });
+        }
+    });
+    </script>
+</body>
+</html>

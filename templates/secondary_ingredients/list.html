@@ -1,0 +1,237 @@
+{% extends "base.html" %}
+{% block page_panel %}
+<div class="panel-header">
+    <h2>Secondary Ingredients</h2>
+    <a class="btn" href="{{ url_for('secondary.add_secondary_ingredient') }}">+ Add Secondary Ingredient</a>
+</div>
+
+<div class="panel-controls">
+    <label for="categoryFilter">Category:</label>
+    <select id="categoryFilter" onchange="filterByCategory()">
+        <option value="">All Categories</option>
+        <option value="Food" {% if selected_category == 'Food' %}selected{% endif %}>Food</option>
+        <option value="Beverage" {% if selected_category == 'Beverage' %}selected{% endif %}>Beverage</option>
+    </select>
+    <label for="subCategoryFilter">Sub-Category:</label>
+    <select id="subCategoryFilter" onchange="filterBySubCategory()">
+        <option value="">All Sub-Categories</option>
+        <!-- Food Sub-Categories -->
+        <optgroup label="Food" id="foodSubCategoryGroup">
+            <option value="food:Batch" {% if selected_sub_category == 'food:Batch' %}selected{% endif %}>Batch</option>
+            <option value="food:Broth" {% if selected_sub_category == 'food:Broth' %}selected{% endif %}>Broth</option>
+            <option value="food:Coulis" {% if selected_sub_category == 'food:Coulis' %}selected{% endif %}>Coulis</option>
+            <option value="food:Jam" {% if selected_sub_category == 'food:Jam' %}selected{% endif %}>Jam</option>
+            <option value="food:Jelley" {% if selected_sub_category == 'food:Jelley' %}selected{% endif %}>Jelley</option>
+            <option value="food:Puree" {% if selected_sub_category == 'food:Puree' %}selected{% endif %}>Puree</option>
+            <option value="food:Sauce" {% if selected_sub_category == 'food:Sauce' %}selected{% endif %}>Sauce</option>
+            <option value="food:Stock" {% if selected_sub_category == 'food:Stock' %}selected{% endif %}>Stock</option>
+            <option value="food:Syrup" {% if selected_sub_category == 'food:Syrup' %}selected{% endif %}>Syrup</option>
+        </optgroup>
+        <!-- Beverage Sub-Categories -->
+        <optgroup label="Beverage" id="beverageSubCategoryGroup">
+            <option value="beverage:Alcohol Batch" {% if selected_sub_category == 'beverage:Alcohol Batch' %}selected{% endif %}>Alcohol Batch</option>
+            <option value="beverage:Alcohol Infusion" {% if selected_sub_category == 'beverage:Alcohol Infusion' %}selected{% endif %}>Alcohol Infusion</option>
+            <option value="beverage:Home Brew" {% if selected_sub_category == 'beverage:Home Brew' %}selected{% endif %}>Home Brew</option>
+            <option value="beverage:Jam" {% if selected_sub_category == 'beverage:Jam' %}selected{% endif %}>Jam</option>
+            <option value="beverage:Jelley" {% if selected_sub_category == 'beverage:Jelley' %}selected{% endif %}>Jelley</option>
+            <option value="beverage:Non Alcohol Batch" {% if selected_sub_category == 'beverage:Non Alcohol Batch' %}selected{% endif %}>Non Alcohol Batch</option>
+            <option value="beverage:Puree" {% if selected_sub_category == 'beverage:Puree' %}selected{% endif %}>Puree</option>
+            <option value="beverage:Sacchrum" {% if selected_sub_category == 'beverage:Sacchrum' %}selected{% endif %}>Sacchrum</option>
+            <option value="beverage:Syrup" {% if selected_sub_category == 'beverage:Syrup' %}selected{% endif %}>Syrup</option>
+        </optgroup>
+    </select>
+</div>
+
+<div class="table-wrapper">
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>Code</th>
+                <th>Name</th>
+                <th>Category</th>
+                <th>Sub-Category</th>
+                <th>Unit</th>
+                <th>Cost/Unit ({{ user_currency_info.symbol }})</th>
+                <th>Total Cost ({{ user_currency_info.symbol }})</th>
+                <th>Created By</th>
+                <th>Last Edited By</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for row in secondary_rows %}
+            {% set has_missing = row.get('has_missing_cost', False) %}
+            <tr {% if has_missing %}class="missing-cost-row"{% endif %}>
+                <td>{{ row.code }}</td>
+                <td {% if has_missing %}style="color: red; font-weight: bold;"{% endif %}>{{ row.name }}</td>
+                <td>{{ row.category or '-' }}</td>
+                <td>{{ row.sub_category or '-' }}</td>
+                <td>{{ row.unit }}</td>
+                <td>{{ "%.4f"|format(row.unit_cost) }}</td>
+                <td>{{ row.total_cost|currency }}</td>
+                <td>{{ row.get('created_by', 'Unknown') }}</td>
+                <td>{{ row.get('last_edited_by', 'Unknown') }}</td>
+                <td class="actions-cell">
+                    <a class="link-action" href="{{ url_for('secondary.edit_secondary_ingredient', id=row.id) }}">Edit</a>
+                    <form method="POST" action="{{ url_for('secondary.delete_secondary_ingredient', id=row.id) }}" onsubmit="return confirm('Delete this secondary ingredient?');" class="inline-form">
+                        <button type="submit" class="link-action">Delete</button>
+                    </form>
+                    <a class="link-action" href="{{ url_for('secondary.view_secondary_ingredient', id=row.id) }}">View</a>
+                </td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<script>
+// Food sub-categories
+const foodSubCategories = [
+    'Batch',
+    'Broth',
+    'Coulis',
+    'Jam',
+    'Jelley',
+    'Puree',
+    'Sauce',
+    'Stock',
+    'Syrup'
+];
+
+// Beverage sub-categories
+const beverageSubCategories = [
+    'Alcohol Batch',
+    'Alcohol Infusion',
+    'Home Brew',
+    'Jam',
+    'Jelley',
+    'Non Alcohol Batch',
+    'Puree',
+    'Sacchrum',
+    'Syrup'
+];
+
+function updateSubCategoryOptions() {
+    const categoryFilter = document.getElementById('categoryFilter');
+    const subCategoryFilter = document.getElementById('subCategoryFilter');
+    const foodOptgroup = document.getElementById('foodSubCategoryGroup');
+    const beverageOptgroup = document.getElementById('beverageSubCategoryGroup');
+    
+    if (!categoryFilter || !subCategoryFilter) return;
+    
+    const selectedCategory = categoryFilter.value;
+    const currentSubCategory = subCategoryFilter.value;
+    
+    // Get all options in both optgroups
+    const foodOptions = foodOptgroup ? Array.from(foodOptgroup.querySelectorAll('option')) : [];
+    const beverageOptions = beverageOptgroup ? Array.from(beverageOptgroup.querySelectorAll('option')) : [];
+    
+    if (selectedCategory === 'Food') {
+        // Show only Food sub-categories
+        foodOptions.forEach(function(option) {
+            option.removeAttribute('hidden');
+            option.disabled = false;
+        });
+        beverageOptions.forEach(function(option) {
+            option.setAttribute('hidden', 'hidden');
+            option.disabled = true;
+        });
+        
+        // Show food optgroup, hide beverage optgroup
+        if (foodOptgroup) {
+            foodOptgroup.removeAttribute('hidden');
+        }
+        if (beverageOptgroup) {
+            beverageOptgroup.setAttribute('hidden', 'hidden');
+        }
+        
+        // Reset sub-category if current selection is a beverage sub-category
+        if (currentSubCategory && currentSubCategory.startsWith('beverage:')) {
+            subCategoryFilter.value = '';
+        }
+    } else if (selectedCategory === 'Beverage') {
+        // Show only Beverage sub-categories
+        foodOptions.forEach(function(option) {
+            option.setAttribute('hidden', 'hidden');
+            option.disabled = true;
+        });
+        beverageOptions.forEach(function(option) {
+            option.removeAttribute('hidden');
+            option.disabled = false;
+        });
+        
+        // Hide food optgroup, show beverage optgroup
+        if (foodOptgroup) {
+            foodOptgroup.setAttribute('hidden', 'hidden');
+        }
+        if (beverageOptgroup) {
+            beverageOptgroup.removeAttribute('hidden');
+        }
+        
+        // Reset sub-category if current selection is a food sub-category
+        if (currentSubCategory && currentSubCategory.startsWith('food:')) {
+            subCategoryFilter.value = '';
+        }
+    } else {
+        // Show all sub-categories (All Categories)
+        foodOptions.forEach(function(option) {
+            option.removeAttribute('hidden');
+            option.disabled = false;
+        });
+        beverageOptions.forEach(function(option) {
+            option.removeAttribute('hidden');
+            option.disabled = false;
+        });
+        
+        // Show both optgroups
+        if (foodOptgroup) {
+            foodOptgroup.removeAttribute('hidden');
+        }
+        if (beverageOptgroup) {
+            beverageOptgroup.removeAttribute('hidden');
+        }
+    }
+}
+
+function filterByCategory() {
+    // Update sub-category options before redirecting
+    updateSubCategoryOptions();
+    
+    const url = new URL(window.location.href);
+    const category = document.getElementById('categoryFilter').value;
+    if (category) {
+        url.searchParams.set('category', category);
+    } else {
+        url.searchParams.delete('category');
+    }
+    // Clear sub-category filter when category changes
+    url.searchParams.delete('sub_category');
+    window.location.href = url.toString();
+}
+
+function filterBySubCategory() {
+    const url = new URL(window.location.href);
+    const subCategory = document.getElementById('subCategoryFilter').value;
+    if (subCategory) {
+        url.searchParams.set('sub_category', subCategory);
+    } else {
+        url.searchParams.delete('sub_category');
+    }
+    window.location.href = url.toString();
+}
+
+// Initialize sub-category options on page load
+document.addEventListener('DOMContentLoaded', function() {
+    updateSubCategoryOptions();
+    
+    // Update sub-category options when category filter changes (for immediate visual feedback)
+    const categoryFilter = document.getElementById('categoryFilter');
+    if (categoryFilter) {
+        categoryFilter.addEventListener('change', function() {
+            updateSubCategoryOptions();
+        });
+    }
+});
+</script>
+{% endblock %}
+

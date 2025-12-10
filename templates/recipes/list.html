@@ -1,0 +1,307 @@
+{% extends "base.html" %}
+{% block page_panel %}
+<div class="panel-header">
+    <h2>Recipes</h2>
+</div>
+
+<div class="recipe-category-buttons">
+    <a class="btn btn-category" href="{{ url_for('recipes.add_recipe', category='beverages') }}">
+        🍷 Add Beverage
+    </a>
+    <a class="btn btn-category" href="{{ url_for('recipes.add_recipe', category='food') }}">
+        🍽️ Add Food
+    </a>
+</div>
+
+<div class="panel-controls">
+    <label for="typeFilter">Filter by Type:</label>
+    <select id="typeFilter" onchange="filterByType()">
+        <option value="">All Types</option>
+        <option value="Food" {% if selected_type == 'Food' %}selected{% endif %}>Food</option>
+        <option value="Beverage" {% if selected_type == 'Beverage' %}selected{% endif %}>Beverage</option>
+    </select>
+    <label for="categoryFilter">Category:</label>
+    <select id="categoryFilter" onchange="filterByCategory()">
+        <option value="">All Categories</option>
+        <!-- Food Categories -->
+        <optgroup label="Food">
+            <option value="food:Coffee" {% if selected_category == 'food:Coffee' %}selected{% endif %}>Coffee</option>
+            <option value="food:Tea" {% if selected_category == 'food:Tea' %}selected{% endif %}>Tea</option>
+            <option value="food:Pizza" {% if selected_category == 'food:Pizza' %}selected{% endif %}>Pizza</option>
+            <option value="food:Pasta" {% if selected_category == 'food:Pasta' %}selected{% endif %}>Pasta</option>
+            <option value="food:Dessert" {% if selected_category == 'food:Dessert' %}selected{% endif %}>Dessert</option>
+            <option value="food:Grill" {% if selected_category == 'food:Grill' %}selected{% endif %}>Grill</option>
+            <option value="food:Soups" {% if selected_category == 'food:Soups' %}selected{% endif %}>Soups</option>
+            <option value="food:Salad" {% if selected_category == 'food:Salad' %}selected{% endif %}>Salad</option>
+            <option value="food:Smoothie" {% if selected_category == 'food:Smoothie' %}selected{% endif %}>Smoothie</option>
+            <option value="food:Cold Cuts" {% if selected_category == 'food:Cold Cuts' %}selected{% endif %}>Cold Cuts</option>
+            <option value="food:Appetizers" {% if selected_category == 'food:Appetizers' %}selected{% endif %}>Appetizers</option>
+            <option value="food:Sides" {% if selected_category == 'food:Sides' %}selected{% endif %}>Sides</option>
+            <option value="food:Mains" {% if selected_category == 'food:Mains' %}selected{% endif %}>Mains</option>
+            <option value="food:Bread" {% if selected_category == 'food:Bread' %}selected{% endif %}>Bread</option>
+            <option value="food:Rice" {% if selected_category == 'food:Rice' %}selected{% endif %}>Rice</option>
+            <option value="food:Snacks or Finger Food" {% if selected_category == 'food:Snacks or Finger Food' %}selected{% endif %}>Snacks or Finger Food</option>
+            <option value="food:Fusion" {% if selected_category == 'food:Fusion' %}selected{% endif %}>Fusion</option>
+        </optgroup>
+        <!-- Beverage Categories -->
+        <optgroup label="Beverages">
+            <option value="beverage:Classic Cocktail" {% if selected_category == 'beverage:Classic Cocktail' %}selected{% endif %}>Classic Cocktail</option>
+            <option value="beverage:Signature Cocktail" {% if selected_category == 'beverage:Signature Cocktail' %}selected{% endif %}>Signature Cocktail</option>
+            <option value="beverage:Mocktail" {% if selected_category == 'beverage:Mocktail' %}selected{% endif %}>Mocktail</option>
+            <option value="beverage:Red Wine GLS" {% if selected_category == 'beverage:Red Wine GLS' %}selected{% endif %}>Red Wine GLS</option>
+            <option value="beverage:Red Wine BTL" {% if selected_category == 'beverage:Red Wine BTL' %}selected{% endif %}>Red Wine BTL</option>
+            <option value="beverage:White Wine GLS" {% if selected_category == 'beverage:White Wine GLS' %}selected{% endif %}>White Wine GLS</option>
+            <option value="beverage:White Wine BTL" {% if selected_category == 'beverage:White Wine BTL' %}selected{% endif %}>White Wine BTL</option>
+            <option value="beverage:Rose Wine GLS" {% if selected_category == 'beverage:Rose Wine GLS' %}selected{% endif %}>Rose Wine GLS</option>
+            <option value="beverage:Rose Wine BTL" {% if selected_category == 'beverage:Rose Wine BTL' %}selected{% endif %}>Rose Wine BTL</option>
+            <option value="beverage:Sparkling Wine GLS" {% if selected_category == 'beverage:Sparkling Wine GLS' %}selected{% endif %}>Sparkling Wine GLS</option>
+            <option value="beverage:Sparkling Wine BTL" {% if selected_category == 'beverage:Sparkling Wine BTL' %}selected{% endif %}>Sparkling Wine BTL</option>
+            <option value="beverage:Sweet Wine GLS" {% if selected_category == 'beverage:Sweet Wine GLS' %}selected{% endif %}>Sweet Wine GLS</option>
+            <option value="beverage:Sweet Wine BTL" {% if selected_category == 'beverage:Sweet Wine BTL' %}selected{% endif %}>Sweet Wine BTL</option>
+            <option value="beverage:Vodka SHT" {% if selected_category == 'beverage:Vodka SHT' %}selected{% endif %}>Vodka SHT</option>
+            <option value="beverage:Vodka BTL" {% if selected_category == 'beverage:Vodka BTL' %}selected{% endif %}>Vodka BTL</option>
+            <option value="beverage:Gin SHT" {% if selected_category == 'beverage:Gin SHT' %}selected{% endif %}>Gin SHT</option>
+            <option value="beverage:Gin BTL" {% if selected_category == 'beverage:Gin BTL' %}selected{% endif %}>Gin BTL</option>
+            <option value="beverage:Rum SHT" {% if selected_category == 'beverage:Rum SHT' %}selected{% endif %}>Rum SHT</option>
+            <option value="beverage:Rum BTL" {% if selected_category == 'beverage:Rum BTL' %}selected{% endif %}>Rum BTL</option>
+            <option value="beverage:Tequila SHT" {% if selected_category == 'beverage:Tequila SHT' %}selected{% endif %}>Tequila SHT</option>
+            <option value="beverage:Tequila BTL" {% if selected_category == 'beverage:Tequila BTL' %}selected{% endif %}>Tequila BTL</option>
+            <option value="beverage:Whiskey SHT" {% if selected_category == 'beverage:Whiskey SHT' %}selected{% endif %}>Whiskey SHT</option>
+            <option value="beverage:Whiskey BTL" {% if selected_category == 'beverage:Whiskey BTL' %}selected{% endif %}>Whiskey BTL</option>
+            <option value="beverage:Whisky SHT" {% if selected_category == 'beverage:Whisky SHT' %}selected{% endif %}>Whisky SHT</option>
+            <option value="beverage:Whisky BTL" {% if selected_category == 'beverage:Whisky BTL' %}selected{% endif %}>Whisky BTL</option>
+            <option value="beverage:Brandy SHT" {% if selected_category == 'beverage:Brandy SHT' %}selected{% endif %}>Brandy SHT</option>
+            <option value="beverage:Brandy BTL" {% if selected_category == 'beverage:Brandy BTL' %}selected{% endif %}>Brandy BTL</option>
+            <option value="beverage:Cognac SHT" {% if selected_category == 'beverage:Cognac SHT' %}selected{% endif %}>Cognac SHT</option>
+            <option value="beverage:Cognac BTL" {% if selected_category == 'beverage:Cognac BTL' %}selected{% endif %}>Cognac BTL</option>
+            <option value="beverage:Beer Draught" {% if selected_category == 'beverage:Beer Draught' %}selected{% endif %}>Beer Draught</option>
+            <option value="beverage:Beer Bottle" {% if selected_category == 'beverage:Beer Bottle' %}selected{% endif %}>Beer Bottle</option>
+            <option value="beverage:Amaro SHT" {% if selected_category == 'beverage:Amaro SHT' %}selected{% endif %}>Amaro SHT</option>
+            <option value="beverage:Amaro BTL" {% if selected_category == 'beverage:Amaro BTL' %}selected{% endif %}>Amaro BTL</option>
+            <option value="beverage:Vermouth SHT" {% if selected_category == 'beverage:Vermouth SHT' %}selected{% endif %}>Vermouth SHT</option>
+            <option value="beverage:Vermouth BTL" {% if selected_category == 'beverage:Vermouth BTL' %}selected{% endif %}>Vermouth BTL</option>
+            <option value="beverage:Generic Liqueur SHT" {% if selected_category == 'beverage:Generic Liqueur SHT' %}selected{% endif %}>Generic Liqueur SHT</option>
+            <option value="beverage:Generic Liqueur BTL" {% if selected_category == 'beverage:Generic Liqueur BTL' %}selected{% endif %}>Generic Liqueur BTL</option>
+            <option value="beverage:Branded Liqueur SHT" {% if selected_category == 'beverage:Branded Liqueur SHT' %}selected{% endif %}>Branded Liqueur SHT</option>
+            <option value="beverage:Branded Liqueur BTL" {% if selected_category == 'beverage:Branded Liqueur BTL' %}selected{% endif %}>Branded Liqueur BTL</option>
+        </optgroup>
+    </select>
+</div>
+
+<div class="table-wrapper">
+<table class="data-table recipes-table">
+    <colgroup>
+        <col class="col-code">
+        <col class="col-name">
+        <col class="col-type">
+        <col class="col-level">
+        <col class="col-cost">
+        <col class="col-selling">
+        <col class="col-percent">
+        <col class="col-actions">
+    </colgroup>
+    <thead>
+        <tr>
+            <th>Recipe Code</th>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Category</th>
+            <th>Cost Price ({{ user_currency_info.symbol }})</th>
+            <th>Selling Price ({{ user_currency_info.symbol }})</th>
+            <th>Cost % of SP</th>
+            <th>Created By</th>
+            <th>Last Edited By</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+    {% for recipe in recipes %}
+        {% set cost_price = recipe.calculate_total_cost() %}
+        {% set selling_price = recipe.selling_price_value() %}
+        {% set cost_percent = recipe.cost_percentage() %}
+        {% set has_missing = recipe.has_missing_cost() %}
+        <tr {% if has_missing %}class="missing-cost-row"{% endif %}>
+            <td>{{ recipe.recipe_code if recipe.recipe_code else 'N/A' }}</td>
+            <td {% if has_missing %}style="color: red; font-weight: bold;"{% endif %}>{{ recipe.title }}</td>
+            <td>{{ recipe.recipe_type if recipe.recipe_type else (recipe.type if recipe.type else 'N/A') }}</td>
+            <td>
+                {% if recipe.food_category %}
+                    {{ recipe.food_category }}
+                {% elif recipe.beverage_category %}
+                    {{ recipe.beverage_category }}
+                {% else %}
+                    {% set cat_key = (recipe.type or recipe.recipe_type or '')|lower %}
+                    {% if cat_key in ['cocktails','classic'] %}
+                        Cocktail
+                    {% elif cat_key in ['mocktails','signature'] %}
+                        Mocktail
+                    {% elif cat_key in ['beverages','beverage'] %}
+                        Beverage
+                    {% elif cat_key in ['food'] %}
+                        Food
+                    {% else %}
+                        N/A
+                    {% endif %}
+                {% endif %}
+            </td>
+            <td>{{ cost_price|currency }}</td>
+            <td>{{ selling_price|currency }}</td>
+            <td>{{ cost_percent is not none and ("%.2f"|format(cost_percent) ~ '%') or '--' }}</td>
+            <td>{{ get_user_display_name(recipe.creator) if recipe.creator else 'Unknown' }}</td>
+            <td>{{ get_user_display_name(recipe.last_editor) if recipe.last_editor else (get_user_display_name(recipe.creator) if recipe.creator else 'Unknown') }}</td>
+            <td class="actions-cell">
+                <a class="link-action" href="{{ url_for('recipes.edit_recipe', id=recipe.id) }}">Edit</a>
+                <form method="POST" action="{{ url_for('recipes.delete_recipe', id=recipe.id) }}" onsubmit="return confirm('Delete this recipe?');" class="inline-form">
+                    <button type="submit" class="link-action">Delete</button>
+                </form>
+                {% if recipe.recipe_code %}
+                <a class="link-action" href="{{ url_for('recipes.view_recipe_by_code', code=recipe.recipe_code) }}">View</a>
+                {% else %}
+                <a class="link-action" href="{{ url_for('recipes.view_recipe', id=recipe.id) }}">View</a>
+                {% endif %}
+            </td>
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>
+</div>
+
+<script>
+function updateCategoryOptions() {
+    const typeFilter = document.getElementById('typeFilter');
+    const categoryFilter = document.getElementById('categoryFilter');
+    
+    if (!typeFilter || !categoryFilter) {
+        return;
+    }
+    
+    const selectedType = typeFilter.value;
+    const currentCategory = categoryFilter.value;
+    
+    // Get all options and optgroups
+    const foodOptions = categoryFilter.querySelectorAll('optgroup[label="Food"] option');
+    const beverageOptions = categoryFilter.querySelectorAll('optgroup[label="Beverages"] option');
+    const foodOptgroup = categoryFilter.querySelector('optgroup[label="Food"]');
+    const beverageOptgroup = categoryFilter.querySelector('optgroup[label="Beverages"]');
+    
+    // Show/hide options based on type selection using hidden attribute
+    if (selectedType === 'Food') {
+        // Show only Food categories
+        foodOptions.forEach(function(option) {
+            option.removeAttribute('hidden');
+            option.disabled = false;
+        });
+        beverageOptions.forEach(function(option) {
+            option.setAttribute('hidden', 'hidden');
+            option.disabled = true;
+        });
+        
+        // Hide beverage optgroup
+        if (beverageOptgroup) {
+            beverageOptgroup.setAttribute('hidden', 'hidden');
+        }
+        if (foodOptgroup) {
+            foodOptgroup.removeAttribute('hidden');
+        }
+        
+        // Reset category if current selection is a beverage category
+        if (currentCategory && currentCategory.startsWith('beverage:')) {
+            categoryFilter.value = '';
+        }
+    } else if (selectedType === 'Beverage') {
+        // Show only Beverage categories
+        foodOptions.forEach(function(option) {
+            option.setAttribute('hidden', 'hidden');
+            option.disabled = true;
+        });
+        beverageOptions.forEach(function(option) {
+            option.removeAttribute('hidden');
+            option.disabled = false;
+        });
+        
+        // Hide food optgroup
+        if (foodOptgroup) {
+            foodOptgroup.setAttribute('hidden', 'hidden');
+        }
+        if (beverageOptgroup) {
+            beverageOptgroup.removeAttribute('hidden');
+        }
+        
+        // Reset category if current selection is a food category
+        if (currentCategory && currentCategory.startsWith('food:')) {
+            categoryFilter.value = '';
+        }
+    } else {
+        // Show all categories (All Types)
+        foodOptions.forEach(function(option) {
+            option.removeAttribute('hidden');
+            option.disabled = false;
+        });
+        beverageOptions.forEach(function(option) {
+            option.removeAttribute('hidden');
+            option.disabled = false;
+        });
+        
+        // Show both optgroups
+        if (foodOptgroup) {
+            foodOptgroup.removeAttribute('hidden');
+        }
+        if (beverageOptgroup) {
+            beverageOptgroup.removeAttribute('hidden');
+        }
+    }
+}
+
+function filterByType() {
+    // Update category options before redirecting
+    updateCategoryOptions();
+    
+    const url = new URL(window.location.href);
+    const type = document.getElementById('typeFilter').value;
+    if (type) {
+        url.searchParams.set('type', type);
+    } else {
+        url.searchParams.delete('type');
+    }
+    // Clear category filter when type changes
+    url.searchParams.delete('category');
+    window.location.href = url.toString();
+}
+
+function filterByLevel() {
+    const url = new URL(window.location.href);
+    const level = document.getElementById('levelFilter').value;
+    if (level) {
+        url.searchParams.set('level', level);
+    } else {
+        url.searchParams.delete('level');
+    }
+    window.location.href = url.toString();
+}
+
+function filterByCategory() {
+    const url = new URL(window.location.href);
+    const cat = document.getElementById('categoryFilter').value;
+    if (cat) {
+        url.searchParams.set('category', cat);
+    } else {
+        url.searchParams.delete('category');
+    }
+    window.location.href = url.toString();
+}
+
+// Initialize category options on page load
+document.addEventListener('DOMContentLoaded', function() {
+    updateCategoryOptions();
+    
+    // Update category options when type filter changes (for immediate visual feedback)
+    const typeFilter = document.getElementById('typeFilter');
+    if (typeFilter) {
+        typeFilter.addEventListener('change', function() {
+            updateCategoryOptions();
+        });
+    }
+});
+</script>
+{% endblock %}
+

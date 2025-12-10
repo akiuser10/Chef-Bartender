@@ -1,0 +1,118 @@
+{% extends "base.html" %}
+{% block page_panel %}
+<div class="page-panel">
+    <div class="panel-header">
+        <h2>Edit Profile</h2>
+    </div>
+
+    <form method="POST" class="profile-form">
+        <div class="profile-form-columns">
+            <div class="profile-form-col">
+                <div class="form-group">
+                    <label for="username">Username:</label>
+                    <input type="text" id="username" name="username" value="{{ user.username }}" required class="form-input">
+                </div>
+
+                <div class="form-group">
+                    <label for="first_name">First Name:</label>
+                    <input type="text" id="first_name" name="first_name" value="{{ user.first_name or '' }}" class="form-input">
+                </div>
+
+                <div class="form-group">
+                    <label for="last_name">Last Name:</label>
+                    <input type="text" id="last_name" name="last_name" value="{{ user.last_name or '' }}" class="form-input">
+                </div>
+            </div>
+
+            <div class="profile-form-col">
+                <div class="form-group">
+                    <label for="organisation">Organisation:</label>
+                    <input type="text" id="organisation" name="organisation" value="{{ user.organisation or '' }}" class="form-input" placeholder="Enter organisation name">
+                    <small class="form-help-text" style="display: block; margin-top: 5px; color: #999; font-size: 0.9em;">
+                        Users with the same organisation name will share Master List, Recipes, and Secondary Ingredients.
+                    </small>
+                </div>
+
+                <div class="form-group">
+                    <label for="restaurant_bar_name">Restaurant or Bar Name:</label>
+                    <input type="text" id="restaurant_bar_name" name="restaurant_bar_name" value="{{ user.restaurant_bar_name or '' }}" class="form-input" placeholder="Enter restaurant or bar name">
+                </div>
+
+                <div class="form-group">
+                    <label for="company_address">Complete Address of the Company:</label>
+                    <textarea id="company_address" name="company_address" class="form-input" rows="3" placeholder="Enter complete company address">{{ user.company_address or '' }}</textarea>
+                </div>
+            </div>
+
+            <div class="profile-form-col">
+                <div class="form-group">
+                    <label for="email">Email Address:</label>
+                    <input type="email" id="email" name="email" value="{{ user.email }}" required class="form-input">
+                </div>
+
+                <div class="form-group">
+                    <label for="contact_number">Contact Number:</label>
+                    <input type="text" id="contact_number" name="contact_number" value="{{ user.contact_number or '' }}" class="form-input" placeholder="e.g., +971 555341989">
+                </div>
+
+                <div class="form-group">
+                    <label for="country">Country:</label>
+                    <select id="country" name="country" class="form-input">
+                        <option value="">Select Country</option>
+                        {% for code, country_info in countries.items() %}
+                        <option value="{{ code }}" {% if user.country == code %}selected{% endif %}>{{ country_info.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="currency">Currency:</label>
+                    <select id="currency" name="currency" class="form-input">
+                        {% for code, currency_info in currencies.items() %}
+                        <option value="{{ code }}" {% if user.currency == code or (not user.currency and code == 'AED') %}selected{% endif %}>
+                            {{ currency_info.name }} ({{ currency_info.symbol }})
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="password">New Password (leave blank to keep current password):</label>
+                    <input type="password" id="password" name="password" class="form-input" placeholder="Enter new password">
+                </div>
+            </div>
+        </div>
+
+        <div class="form-actions">
+            <button type="submit" class="btn">Update Profile</button>
+            <a href="{{ url_for('main.index') }}" class="btn secondary">Cancel</a>
+        </div>
+    </form>
+</div>
+
+<script>
+// Auto-select currency when country is selected
+document.addEventListener('DOMContentLoaded', function() {
+    const countrySelect = document.getElementById('country');
+    const currencySelect = document.getElementById('currency');
+    
+    // Country to currency mapping
+    const countryCurrencyMap = {
+        {% for code, country_info in countries.items() %}
+        '{{ code }}': '{{ country_info.currency }}',
+        {% endfor %}
+    };
+    
+    if (countrySelect && currencySelect) {
+        countrySelect.addEventListener('change', function() {
+            const selectedCountry = this.value;
+            if (selectedCountry && countryCurrencyMap[selectedCountry]) {
+                const defaultCurrency = countryCurrencyMap[selectedCountry];
+                currencySelect.value = defaultCurrency;
+            }
+        });
+    }
+});
+</script>
+{% endblock %}
+
