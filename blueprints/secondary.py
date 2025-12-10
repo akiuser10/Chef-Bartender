@@ -485,7 +485,10 @@ def add_secondary_ingredient():
                             )
                             db.session.add(item)
                     else:
-                        product = Product.query.get(option['id'])
+                        # Apply organization filter to ensure users can only add products from their organization
+                        from utils.helpers import get_organization_filter
+                        prod_filter = get_organization_filter(Product)
+                        product = Product.query.filter(prod_filter).filter_by(id=option['id']).first()
                         if not product:
                             continue
                         quantity_ml_value = qty
@@ -793,7 +796,9 @@ def delete_secondary_ingredient(id):
 @login_required
 def link_ingredient_to_secondary(id):
     """Link a product/ingredient to a secondary ingredient via web interface"""
-    secondary = HomemadeIngredient.query.get_or_404(id)
+    from utils.helpers import get_organization_filter
+    org_filter = get_organization_filter(HomemadeIngredient)
+    secondary = HomemadeIngredient.query.filter(org_filter).filter_by(id=id).first_or_404()
     
     if request.method == 'POST':
         try:
@@ -805,7 +810,9 @@ def link_ingredient_to_secondary(id):
                 flash('Please provide a valid product and quantity.')
                 return redirect(url_for('secondary.link_ingredient_to_secondary', id=id))
             
-            product = Product.query.get(product_id)
+            # Apply organization filter to ensure users can only link products from their organization
+            prod_filter = get_organization_filter(Product)
+            product = Product.query.filter(prod_filter).filter_by(id=product_id).first()
             if not product:
                 flash('Product not found.')
                 return redirect(url_for('secondary.link_ingredient_to_secondary', id=id))
