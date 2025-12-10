@@ -30,7 +30,7 @@ ENV PATH="/opt/venv/bin:$PATH"
 ENV PYTHONUNBUFFERED=1
 
 # Expose port (Railway will set PORT env var)
-EXPOSE 8080
+EXPOSE ${PORT:-8080}
 
-# Start gunicorn
-CMD ["gunicorn", "app:app", "--bind", "0.0.0.0:8080"]
+# Start gunicorn (Railway sets PORT env var)
+CMD gunicorn app:app --bind 0.0.0.0:${PORT:-8080}
