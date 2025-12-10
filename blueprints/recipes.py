@@ -560,6 +560,11 @@ def export_recipe_pdf(id):
         table_data = [['CODE', 'DESCRIPTION', 'UNIT QTY', 'RECIPE ML', 'RECIPE COST']]
         
         total_cost = 0.0
+        # Initialize currency code before the loop to ensure it's always available
+        from utils.currency import format_currency
+        from flask_login import current_user
+        pdf_currency_code = current_user.currency if current_user.is_authenticated else 'AED'
+        
         if recipe.ingredients:
             for i in recipe.ingredients:
                 ingredient = i.get_product()
@@ -593,9 +598,6 @@ def export_recipe_pdf(id):
                     if display_unit:
                         recipe_ml += f" {display_unit}"
                     
-                    # Get user currency for PDF
-                    from utils.currency import format_currency
-                    pdf_currency_code = current_user.currency if current_user.is_authenticated else 'AED'
                     table_data.append([code, desc, unit_qty, recipe_ml, format_currency(cost, pdf_currency_code)])
         
         table_data.append(['', '', '', 'Total', format_currency(total_cost, pdf_currency_code)])
