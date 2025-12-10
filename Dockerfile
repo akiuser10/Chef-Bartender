@@ -29,8 +29,8 @@ RUN mkdir -p static/uploads/products static/uploads/recipes
 ENV PATH="/opt/venv/bin:$PATH"
 ENV PYTHONUNBUFFERED=1
 
-# Expose port (Railway will set PORT env var)
-EXPOSE ${PORT:-8080}
+# Expose port (Railway will set PORT env var, default to 8080)
+EXPOSE 8080
 
 # Start gunicorn (Railway sets PORT env var)
 CMD gunicorn app:app --bind 0.0.0.0:${PORT:-8080}
