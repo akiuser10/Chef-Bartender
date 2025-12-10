@@ -540,8 +540,12 @@ def edit_secondary_ingredient(id):
     _ = secondary.ingredients
     for item in secondary.ingredients:
         _ = item.product
-    products = Product.query.order_by(Product.description).all()
-    existing_secondary = HomemadeIngredient.query.filter(HomemadeIngredient.id != id).order_by(HomemadeIngredient.name).all()
+    # Apply organization filters to ensure users only see ingredients from their organization
+    from utils.helpers import get_organization_filter
+    prod_org_filter = get_organization_filter(Product)
+    sec_org_filter = get_organization_filter(HomemadeIngredient)
+    products = Product.query.filter(prod_org_filter).order_by(Product.description).all()
+    existing_secondary = HomemadeIngredient.query.filter(sec_org_filter).filter(HomemadeIngredient.id != id).order_by(HomemadeIngredient.name).all()
 
     ingredient_options = [
         {

@@ -46,19 +46,13 @@ def add_product():
         else:
             unique_item_number = f"ITEM-{uuid.uuid4().hex[:8].upper()}"
 
-        # Get the latest product code from user's organization or globally if no org
-        from utils.helpers import get_organization_filter
-        org_filter = get_organization_filter(Product)
-        latest_product = Product.query.filter(org_filter).order_by(Product.id.desc()).first()
-        if latest_product and latest_product.barbuddy_code and latest_product.barbuddy_code[2:].isdigit():
-            next_number = int(latest_product.barbuddy_code[2:]) + 1
+        # Get the latest product code globally first to ensure uniqueness across all organizations
+        # Since barbuddy_code has a global unique constraint, we must check globally first
+        global_latest = Product.query.order_by(Product.id.desc()).first()
+        if global_latest and global_latest.barbuddy_code and global_latest.barbuddy_code[2:].isdigit():
+            next_number = int(global_latest.barbuddy_code[2:]) + 1
         else:
-            # Fallback to global count if no products in org
-            global_latest = Product.query.order_by(Product.id.desc()).first()
-            if global_latest and global_latest.barbuddy_code and global_latest.barbuddy_code[2:].isdigit():
-                next_number = int(global_latest.barbuddy_code[2:]) + 1
-            else:
-                next_number = 1
+            next_number = 1
         barbuddy_code = f"BB{next_number:03d}"
 
         image_path = None
@@ -208,19 +202,13 @@ def add_ingredient():
         else:
             unique_item_number = f"ITEM-{uuid.uuid4().hex[:8].upper()}"
 
-        # Get the latest product code from user's organization or globally if no org
-        from utils.helpers import get_organization_filter
-        org_filter = get_organization_filter(Product)
-        latest_product = Product.query.filter(org_filter).order_by(Product.id.desc()).first()
-        if latest_product and latest_product.barbuddy_code and latest_product.barbuddy_code[2:].isdigit():
-            next_number = int(latest_product.barbuddy_code[2:]) + 1
+        # Get the latest product code globally first to ensure uniqueness across all organizations
+        # Since barbuddy_code has a global unique constraint, we must check globally first
+        global_latest = Product.query.order_by(Product.id.desc()).first()
+        if global_latest and global_latest.barbuddy_code and global_latest.barbuddy_code[2:].isdigit():
+            next_number = int(global_latest.barbuddy_code[2:]) + 1
         else:
-            # Fallback to global count if no products in org
-            global_latest = Product.query.order_by(Product.id.desc()).first()
-            if global_latest and global_latest.barbuddy_code and global_latest.barbuddy_code[2:].isdigit():
-                next_number = int(global_latest.barbuddy_code[2:]) + 1
-            else:
-                next_number = 1
+            next_number = 1
         barbuddy_code = f"BB{next_number:03d}"
 
         image_path = None

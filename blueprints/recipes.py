@@ -786,8 +786,12 @@ def edit_recipe(id):
                 category_display = 'Cocktails'
         config = CATEGORY_CONFIG.get(category_slug, CATEGORY_CONFIG['cocktails'])
         
-        products = Product.query.order_by(Product.description).all()
-        secondary_ingredients = HomemadeIngredient.query.order_by(HomemadeIngredient.name).all()
+        # Apply organization filters to ensure users only see ingredients from their organization
+        from utils.helpers import get_organization_filter
+        prod_org_filter = get_organization_filter(Product)
+        sec_org_filter = get_organization_filter(HomemadeIngredient)
+        products = Product.query.filter(prod_org_filter).order_by(Product.description).all()
+        secondary_ingredients = HomemadeIngredient.query.filter(sec_org_filter).order_by(HomemadeIngredient.name).all()
         
         ingredient_options = []
         for p in products:
