@@ -104,7 +104,7 @@ def profile():
             
             db.session.commit()
             flash('Profile updated successfully! Your organization sharing will be updated immediately.', 'success')
-            return redirect(url_for('auth.profile'))
+            return redirect(url_for('main.index'))
         except Exception as e:
             db.session.rollback()
             flash(f'An error occurred while updating your profile: {str(e)}', 'error')
