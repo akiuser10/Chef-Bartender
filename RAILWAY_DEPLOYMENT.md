@@ -28,8 +28,14 @@ git commit -m "Ready for Railway deployment"
 
 2. **Push your code:**
    ```bash
-   git remote add origin https://github.com/YOUR_USERNAME/YOUR_REPO_NAME.git
+   git remote add origin https://github.com/akiuser10/Chef-Bartender.git
    git branch -M main
+   git push -u origin main
+   ```
+   
+   **Note:** If you already have a remote set, update it with:
+   ```bash
+   git remote set-url origin https://github.com/akiuser10/Chef-Bartender.git
    git push -u origin main
    ```
 
