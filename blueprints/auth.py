@@ -76,9 +76,10 @@ def profile():
                     return redirect(url_for('auth.profile'))
                 user.email = new_email
             
-            # Update first name and last name
+            # Update first name, last name, and user role
             user.first_name = request.form.get('first_name', '').strip() or None
             user.last_name = request.form.get('last_name', '').strip() or None
+            user.user_role = request.form.get('user_role', '').strip() or None
             # Normalize organization name (trim whitespace) for consistent matching
             org_value = request.form.get('organisation', '').strip()
             user.organisation = org_value if org_value else None

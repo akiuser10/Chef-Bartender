@@ -15,6 +15,7 @@ class User(db.Model, UserMixin):
     is_admin = db.Column(db.Boolean, default=False)
     first_name = db.Column(db.String(80))
     last_name = db.Column(db.String(80))
+    user_role = db.Column(db.String(50))
     organisation = db.Column(db.String(200))
     restaurant_bar_name = db.Column(db.String(200))
     company_address = db.Column(db.Text)

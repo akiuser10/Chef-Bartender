@@ -217,6 +217,8 @@ def ensure_schema_updates():
                         conn.execute(db.text("ALTER TABLE \"user\" ADD COLUMN first_name VARCHAR(80)"))
                     if 'last_name' not in user_columns:
                         conn.execute(db.text("ALTER TABLE \"user\" ADD COLUMN last_name VARCHAR(80)"))
+                    if 'user_role' not in user_columns:
+                        conn.execute(db.text("ALTER TABLE \"user\" ADD COLUMN user_role VARCHAR(50)"))
                     if 'organisation' not in user_columns:
                         conn.execute(db.text("ALTER TABLE \"user\" ADD COLUMN organisation VARCHAR(200)"))
                     if 'restaurant_bar_name' not in user_columns:
