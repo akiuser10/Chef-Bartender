@@ -9,13 +9,14 @@ from models import Product, HomemadeIngredient, Recipe, RecipeIngredient
 from utils.db_helpers import ensure_schema_updates
 from utils.file_upload import save_uploaded_file
 from utils.constants import resolve_recipe_category, category_context_from_type, CATEGORY_CONFIG
+from utils.permissions import recipe_viewer_required, editor_required, can_access_recipes, can_edit_recipes
 from datetime import datetime
 
 recipes_bp = Blueprint('recipes', __name__)
 
 
 @recipes_bp.route('/recipes', methods=['GET'])
-@login_required
+@recipe_viewer_required
 def recipes_list():
     ensure_schema_updates()
     try:
@@ -72,7 +73,7 @@ def recipes_list():
 
 
 @recipes_bp.route('/recipes/<category>', methods=['GET'])
-@login_required
+@recipe_viewer_required
 def recipe_list(category):
     try:
         # Check if this is actually a recipe code (starts with 'REC-')
@@ -124,7 +125,7 @@ def recipe_list(category):
 
 
 @recipes_bp.route('/recipes/<code>')
-@login_required
+@recipe_viewer_required
 def view_recipe_by_code(code):
     try:
         # First check if it looks like a recipe code (starts with REC-)
@@ -195,7 +196,7 @@ def view_recipe_by_code(code):
 
 
 @recipes_bp.route('/recipe/add/<category>', methods=['GET', 'POST'])
-@login_required
+@editor_required
 def add_recipe(category):
     try:
         canonical, config = resolve_recipe_category(category)
@@ -509,7 +510,7 @@ def add_recipe(category):
 
 
 @recipes_bp.route('/recipe/<int:id>/export-pdf')
-@login_required
+@recipe_viewer_required
 def export_recipe_pdf(id):
     try:
         from reportlab.lib.pagesizes import letter, A4
@@ -726,7 +727,7 @@ def export_recipe_pdf(id):
 
 
 @recipes_bp.route('/recipe/<int:id>')
-@login_required
+@recipe_viewer_required
 def view_recipe(id):
     try:
         from sqlalchemy.orm import joinedload
@@ -773,7 +774,7 @@ def view_recipe(id):
 
 
 @recipes_bp.route('/recipes/<int:id>/edit', methods=['GET', 'POST'])
-@login_required
+@editor_required
 def edit_recipe(id):
     ensure_schema_updates()
     try:
@@ -1058,7 +1059,7 @@ def edit_recipe(id):
 
 
 @recipes_bp.route('/recipes/<int:id>/delete', methods=['POST'])
-@login_required
+@editor_required
 def delete_recipe(id):
     from utils.helpers import get_organization_filter
     org_filter = get_organization_filter(Recipe)

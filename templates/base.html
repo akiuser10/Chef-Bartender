@@ -29,8 +29,12 @@
     <nav class="main-nav">
         <a href="{{ url_for('main.index') }}" class="nav-link">HOME</a>
         <a href="{{ url_for('products.ingredients_master') }}" class="nav-link">MASTER LIST</a>
+        {% if current_user.is_authenticated and current_user.user_role != 'Purchase Manager' %}
         <a href="{{ url_for('recipes.recipes_list') }}" class="nav-link">RECIPES</a>
+        {% endif %}
+        {% if current_user.is_authenticated and current_user.user_role not in ['Purchase Manager', 'Cost Controller'] %}
         <a href="{{ url_for('secondary.secondary_ingredients') }}" class="nav-link">SECONDARY RECIPES</a>
+        {% endif %}
         <a href="{{ url_for('main.about') }}" class="nav-link">ABOUT</a>
         <a href="{{ url_for('main.contact') }}" class="nav-link">CONTACT</a>
         {% if current_user.is_authenticated %}

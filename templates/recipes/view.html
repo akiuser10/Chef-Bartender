@@ -203,7 +203,9 @@
         {% else %}
         <a class="btn secondary" href="{{ url_for('recipes.recipes_list') }}">Back to Recipes</a>
         {% endif %}
+        {% if current_user.user_role and current_user.user_role in ['Chef', 'Chef Manager', 'Bartender', 'Operation Manager'] %}
         <a class="btn" href="{{ url_for('recipes.edit_recipe', id=recipe.id) }}">Edit Recipe</a>
+        {% endif %}
         <a class="btn btn-primary" href="{{ url_for('recipes.export_recipe_pdf', id=recipe.id) }}">Export to PDF</a>
     </div>
 </div>

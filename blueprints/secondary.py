@@ -7,6 +7,7 @@ from flask_login import login_required, current_user
 from extensions import db
 from models import Product, HomemadeIngredient, HomemadeIngredientItem
 from utils.db_helpers import ensure_schema_updates
+from utils.permissions import can_access_secondary_ingredients, editor_required
 from datetime import datetime
 import time
 
@@ -14,7 +15,7 @@ secondary_bp = Blueprint('secondary', __name__)
 
 
 @secondary_bp.route('/secondary-ingredients', methods=['GET'])
-@login_required
+@editor_required
 def secondary_ingredients():
     ensure_schema_updates()
     try:
@@ -138,7 +139,7 @@ def secondary_ingredients():
 
 
 @secondary_bp.route('/secondary-ingredients/<int:id>/export-pdf')
-@login_required
+@editor_required
 def export_secondary_ingredient_pdf(id):
     try:
         from reportlab.lib.pagesizes import A4
@@ -296,7 +297,7 @@ def export_secondary_ingredient_pdf(id):
 
 
 @secondary_bp.route('/secondary-ingredients/<int:id>')
-@login_required
+@editor_required
 def view_secondary_ingredient(id):
     ensure_schema_updates()
     from sqlalchemy.orm import joinedload
@@ -313,7 +314,7 @@ def view_secondary_ingredient(id):
 
 
 @secondary_bp.route('/secondary-ingredients/add', methods=['GET', 'POST'])
-@login_required
+@editor_required
 def add_secondary_ingredient():
     ensure_schema_updates()
     from utils.helpers import get_organization_filter
@@ -530,7 +531,7 @@ def add_secondary_ingredient():
 
 
 @secondary_bp.route('/secondary-ingredients/<int:id>/edit', methods=['GET', 'POST'])
-@login_required
+@editor_required
 def edit_secondary_ingredient(id):
     ensure_schema_updates()
     from sqlalchemy.orm import joinedload
@@ -788,7 +789,7 @@ def edit_secondary_ingredient(id):
 
 
 @secondary_bp.route('/secondary-ingredients/<int:id>/delete', methods=['POST'])
-@login_required
+@editor_required
 def delete_secondary_ingredient(id):
     from utils.helpers import get_organization_filter
     org_filter = get_organization_filter(HomemadeIngredient)
@@ -800,7 +801,7 @@ def delete_secondary_ingredient(id):
 
 
 @secondary_bp.route('/secondary-ingredients/<int:id>/link-ingredient', methods=['GET', 'POST'])
-@login_required
+@editor_required
 def link_ingredient_to_secondary(id):
     """Link a product/ingredient to a secondary ingredient via web interface"""
     from utils.helpers import get_organization_filter
@@ -865,7 +866,7 @@ def link_ingredient_to_secondary(id):
 
 
 @secondary_bp.route('/secondary-ingredients/item/<int:id>/delete', methods=['POST'])
-@login_required
+@editor_required
 def delete_ingredient_item(id):
     """Delete an individual ingredient item from a secondary ingredient"""
     item = HomemadeIngredientItem.query.get_or_404(id)
