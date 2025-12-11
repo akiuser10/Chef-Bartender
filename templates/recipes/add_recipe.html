@@ -295,7 +295,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 const costPerUnit = parseFloat(option.cost_per_unit || 0);
                 const containerVolume = parseFloat(option.container_volume || 0);
                 let unitCost = costPerUnit;
-                if (containerVolume > 0) {
+                // Only divide by container volume for Products; secondary/recipe costs are already per unit
+                if (option.type === 'Product' && containerVolume > 0) {
                     unitCost = costPerUnit / containerVolume;
                 }
                 cost = unitCost * quantity;
