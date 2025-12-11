@@ -190,6 +190,8 @@ class Recipe(db.Model):
     service_charge_percentage = db.Column(db.Float, default=0.0)
     government_fees_percentage = db.Column(db.Float, default=0.0)
     garnish = db.Column(db.Text)
+    glassware = db.Column(db.String(200))
+    plates = db.Column(db.String(200))
     food_category = db.Column(db.String(50))
     beverage_category = db.Column(db.String(50))
 

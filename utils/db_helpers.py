@@ -84,6 +84,10 @@ def ensure_schema_updates():
                         conn.execute(db.text("ALTER TABLE recipe ADD COLUMN government_fees_percentage FLOAT DEFAULT 0"))
                     if 'garnish' not in recipe_columns:
                         conn.execute(db.text("ALTER TABLE recipe ADD COLUMN garnish TEXT"))
+                    if 'glassware' not in recipe_columns:
+                        conn.execute(db.text("ALTER TABLE recipe ADD COLUMN glassware VARCHAR(200)"))
+                    if 'plates' not in recipe_columns:
+                        conn.execute(db.text("ALTER TABLE recipe ADD COLUMN plates VARCHAR(200)"))
                     if 'food_category' not in recipe_columns:
                         conn.execute(db.text("ALTER TABLE recipe ADD COLUMN food_category VARCHAR(50)"))
                     if 'beverage_category' not in recipe_columns:

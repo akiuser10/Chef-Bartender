@@ -48,12 +48,30 @@
                     </div>
                 </div>
 
+                {% if category_slug in ['beverages', 'cocktails', 'mocktails'] %}
+                <div class="glassware-section">
+                    <div class="section-header">GLASSWARE:</div>
+                    <div class="section-content">
+                        <input type="text" id="recipe-glassware" name="glassware" placeholder="Enter Glassware" title="Glassware" value="{{ recipe.glassware or '' }}" class="detail-input">
+                    </div>
+                </div>
+                {% endif %}
+
+                {% if category_slug == 'food' %}
+                <div class="plates-section">
+                    <div class="section-header">PLATES:</div>
+                    <div class="section-content">
+                        <input type="text" id="recipe-plates" name="plates" placeholder="Enter Plates" title="Plates" value="{{ recipe.plates or '' }}" class="detail-input">
+                    </div>
+                </div>
+                {% endif %}
+
                 {% if category_slug == 'food' %}
                 <div class="food-category-section">
                     <div class="section-header">CATEGORY:</div>
                     <div class="section-content">
                         <label for="recipe-food-category" class="sr-only">Food Category</label>
-                        <select id="recipe-food-category" name="food_category" title="Food Category" class="sidebar-select" style="width: 100%; padding: 6px 8px; border: 1px solid #3a3a3a; background: #1a1a1a; color: white; font-size: 0.9rem;">
+                        <select id="recipe-food-category" name="food_category" title="Food Category" class="sidebar-select">
                             <option value="">Select Category</option>
                             <option value="Coffee" {% if recipe and recipe.food_category == 'Coffee' %}selected{% endif %}>Coffee</option>
                             <option value="Tea" {% if recipe and recipe.food_category == 'Tea' %}selected{% endif %}>Tea</option>
@@ -82,7 +100,7 @@
                     <div class="section-header">CATEGORY:</div>
                     <div class="section-content">
                         <label for="recipe-beverage-category" class="sr-only">Beverage Category</label>
-                        <select id="recipe-beverage-category" name="beverage_category" title="Beverage Category" class="sidebar-select" style="width: 100%; padding: 6px 8px; border: 1px solid #3a3a3a; background: #1a1a1a; color: white; font-size: 0.9rem;">
+                        <select id="recipe-beverage-category" name="beverage_category" title="Beverage Category" class="sidebar-select">
                             <option value="">Select Category</option>
                             <!-- Cocktails -->
                             <option value="Classic Cocktail" {% if recipe and recipe.beverage_category == 'Classic Cocktail' %}selected{% endif %}>Classic Cocktail</option>

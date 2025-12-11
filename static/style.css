@@ -2005,6 +2005,8 @@ main .page-panel .recipe-view-container {
 
 .method-section,
 .garnish-section,
+.glassware-section,
+.plates-section,
 .recipe-details-section,
 .food-category-section,
 .beverage-category-section {
@@ -2028,6 +2030,18 @@ main .page-panel .recipe-view-container {
 }
 
 .garnish-section {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+}
+
+.glassware-section {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+}
+
+.plates-section {
     display: flex;
     flex-direction: column;
     min-height: 0;
@@ -2069,12 +2083,16 @@ main .page-panel .recipe-view-container {
 .detail-input,
 .sidebar-input,
 .sidebar-select {
-    width: 100%;
     padding: 6px 8px;
     border: 1px solid #3a3a3a;
     background: #1a1a1a;
     color: white;
     font-size: 0.9rem;
+}
+
+.detail-input,
+.section-content .sidebar-select {
+    width: 100%;
 }
 
 .sidebar-input {

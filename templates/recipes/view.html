@@ -124,6 +124,24 @@
                 </div>
             </div>
 
+            {% if category_slug in ['beverages', 'cocktails', 'mocktails'] or recipe.beverage_category %}
+            <div class="glassware-section">
+                <div class="section-header">GLASSWARE:</div>
+                <div class="section-content">
+                    {{ recipe.glassware if recipe.glassware else "No glassware specified." }}
+                </div>
+            </div>
+            {% endif %}
+
+            {% if category_slug == 'food' or recipe.food_category %}
+            <div class="plates-section">
+                <div class="section-header">PLATES:</div>
+                <div class="section-content">
+                    {{ recipe.plates if recipe.plates else "No plates specified." }}
+                </div>
+            </div>
+            {% endif %}
+
             <div class="recipe-details-section">
                 <div class="section-header">RECIPE DETAILS</div>
                 <div class="summary-box">

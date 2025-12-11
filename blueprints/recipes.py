@@ -247,6 +247,8 @@ def add_recipe(category):
                 
                 method = request.form.get('method', '')
                 garnish = request.form.get('garnish', '')
+                glassware = request.form.get('glassware', '') if canonical in ['beverages', 'cocktails', 'mocktails'] else None
+                plates = request.form.get('plates', '') if canonical == 'food' else None
                 food_category = request.form.get('food_category', '') if canonical == 'food' else None
                 beverage_category = request.form.get('beverage_category', '') if canonical in ['beverages', 'cocktails', 'mocktails'] else None
                 item_level = request.form.get('item_level', 'Primary')
@@ -294,6 +296,8 @@ def add_recipe(category):
                     title=title,
                     method=method,
                     garnish=garnish,
+                    glassware=glassware,
+                    plates=plates,
                     food_category=food_category,
                     beverage_category=beverage_category,
                     recipe_type=recipe_type,
@@ -632,6 +636,20 @@ def export_recipe_pdf(id):
             elements.append(Paragraph(recipe.garnish, styles['Normal']))
             elements.append(Spacer(1, 0.2*inch))
         
+        # Glassware (for beverage recipes)
+        is_beverage = recipe.beverage_category or (recipe.type and recipe.type in ['Cocktails', 'Mocktails', 'Beverages', 'Classic', 'Signature']) or (recipe.recipe_type and recipe.recipe_type == 'Beverage')
+        if is_beverage and recipe.glassware:
+            elements.append(Paragraph("GLASSWARE:", heading_style))
+            elements.append(Paragraph(recipe.glassware, styles['Normal']))
+            elements.append(Spacer(1, 0.2*inch))
+        
+        # Plates (for food recipes)
+        is_food = recipe.food_category or (recipe.type and recipe.type == 'Food') or (recipe.recipe_type and recipe.recipe_type == 'Food')
+        if is_food and recipe.plates:
+            elements.append(Paragraph("PLATES:", heading_style))
+            elements.append(Paragraph(recipe.plates, styles['Normal']))
+            elements.append(Spacer(1, 0.2*inch))
+        
         # Get user currency
         from utils.currency import format_currency
         currency_code = current_user.currency if current_user.is_authenticated else 'AED'
@@ -837,7 +855,10 @@ def edit_recipe(id):
                 recipe.item_level = request.form.get('item_level', recipe.item_level or 'Primary')
                 recipe.method = request.form.get('method', '')
                 recipe.garnish = request.form.get('garnish', '')
+                if category_slug in ['beverages', 'cocktails', 'mocktails']:
+                    recipe.glassware = request.form.get('glassware', '')
                 if category_slug == 'food':
+                    recipe.plates = request.form.get('plates', '')
                     recipe.food_category = request.form.get('food_category', '')
                 elif category_slug in ['beverages', 'cocktails', 'mocktails']:
                     recipe.beverage_category = request.form.get('beverage_category', '')
