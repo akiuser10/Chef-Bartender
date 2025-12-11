@@ -6,7 +6,7 @@ from flask import abort, flash, redirect, url_for
 from flask_login import current_user
 
 # Roles that can create and edit recipes and secondary ingredients
-EDITOR_ROLES = ['Chef', 'Chef Manager', 'Bartender', 'Operation Manager']
+EDITOR_ROLES = ['Chef', 'Bartender', 'Manager']
 
 # Roles that can only view recipes (read-only)
 VIEWER_ROLES = ['Cost Controller']
@@ -19,14 +19,28 @@ def has_role(user, role):
     """Check if user has a specific role"""
     if not user or not user.is_authenticated:
         return False
-    return user.user_role == role
+    user_role = normalize_role(user.user_role)
+    return user_role == role
+
+
+def normalize_role(role):
+    """Normalize role names for backward compatibility"""
+    if not role:
+        return None
+    # Map old role names to new ones
+    role_mapping = {
+        'Operation Manager': 'Manager',
+        'Chef Manager': 'Chef'  # Chef Manager becomes Chef
+    }
+    return role_mapping.get(role, role)
 
 
 def has_any_role(user, roles):
     """Check if user has any of the specified roles"""
     if not user or not user.is_authenticated:
         return False
-    return user.user_role in roles
+    user_role = normalize_role(user.user_role)
+    return user_role in roles
 
 
 def can_edit_recipes(user):
@@ -69,7 +83,8 @@ def role_required(allowed_roles):
                 flash('Please log in to access this page.', 'error')
                 return redirect(url_for('auth.login'))
             
-            if current_user.user_role not in allowed_roles:
+            user_role = normalize_role(current_user.user_role)
+            if user_role not in allowed_roles:
                 flash('You do not have permission to access this page.', 'error')
                 return redirect(url_for('main.index'))
             

@@ -28,9 +28,8 @@
                     <select id="user_role" name="user_role" class="form-input">
                         <option value="">Select Role</option>
                         <option value="Purchase Manager" {% if user.user_role == 'Purchase Manager' %}selected{% endif %}>Purchase Manager</option>
-                        <option value="Operation Manager" {% if user.user_role == 'Operation Manager' %}selected{% endif %}>Operation Manager</option>
+                        <option value="Manager" {% if user.user_role == 'Manager' %}selected{% endif %}>Manager</option>
                         <option value="Chef" {% if user.user_role == 'Chef' %}selected{% endif %}>Chef</option>
-                        <option value="Chef Manager" {% if user.user_role == 'Chef Manager' %}selected{% endif %}>Chef Manager</option>
                         <option value="Bartender" {% if user.user_role == 'Bartender' %}selected{% endif %}>Bartender</option>
                         <option value="Cost Controller" {% if user.user_role == 'Cost Controller' %}selected{% endif %}>Cost Controller</option>
                     </select>

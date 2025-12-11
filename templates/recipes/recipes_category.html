@@ -3,7 +3,7 @@
 <div class="recipe-view-container">
     <div class="panel-header">
         <h2>{{ category }}</h2>
-        {% if current_user.user_role and current_user.user_role in ['Chef', 'Chef Manager', 'Bartender', 'Operation Manager'] %}
+        {% if current_user.user_role and current_user.user_role in ['Chef', 'Bartender', 'Manager'] %}
         <a class="btn" href="{{ url_for('recipes.add_recipe', category=category_slug) }}">+ Add {{ add_label }} Recipe</a>
         {% endif %}
     </div>
@@ -42,7 +42,7 @@
                     <td>{{ get_user_display_name(r.creator) if r.creator else 'Unknown' }}</td>
                     <td>{{ get_user_display_name(r.last_editor) if r.last_editor else (get_user_display_name(r.creator) if r.creator else 'Unknown') }}</td>
                     <td class="actions-cell">
-                        {% if current_user.user_role and current_user.user_role in ['Chef', 'Chef Manager', 'Bartender', 'Operation Manager'] %}
+                        {% if current_user.user_role and current_user.user_role in ['Chef', 'Bartender', 'Manager'] %}
                         <a class="link-action" href="{{ url_for('recipes.edit_recipe', id=r.id) }}">Edit</a>
                         <form method="POST" action="{{ url_for('recipes.delete_recipe', id=r.id) }}" onsubmit="return confirm('Delete this recipe?');" class="inline-form">
                             <button type="submit" class="link-action">Delete</button>
