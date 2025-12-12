@@ -439,6 +439,13 @@ main {
 /* Content should allow wider tables when it contains purchase-details */
 .content:has(.purchase-details) {
     max-width: 100%;
+    width: 100%;
+}
+
+/* Page panel should allow full width for purchase details */
+.page-panel:has(.purchase-details) {
+    width: 100%;
+    max-width: 100%;
 }
 
 .page-body {
@@ -3040,17 +3047,20 @@ main .page-panel .recipe-view-container {
 
 /* Ensure purchase details tables match the width of purchase-header-info */
 .purchase-details .table-wrapper {
-    max-width: 100%;
-    width: 100%;
+    max-width: 100% !important;
+    width: 100% !important;
     box-sizing: border-box;
-    margin-left: 0;
-    margin-right: 0;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    overflow-x: visible;
 }
 
 .purchase-details .data-table {
-    width: 100%;
-    max-width: 100%;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 100%;
     box-sizing: border-box;
+    table-layout: auto;
 }
 
 .purchase-header-info {
