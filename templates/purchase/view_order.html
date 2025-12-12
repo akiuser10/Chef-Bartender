@@ -41,6 +41,14 @@
                 </form>
                 {% endif %}
             {% endif %}
+            {% if current_user.user_role in ['Purchase Manager', 'Chef', 'Bartender', 'Manager'] %}
+                {% if purchase_request.status != 'Order Cancelled' %}
+                <form method="POST" action="{{ url_for('purchase.update_status', purchase_id=purchase_request.id) }}" style="display: inline; margin-left: 10px;">
+                    <input type="hidden" name="status" value="Order Cancelled">
+                    <button type="submit" class="btn btn-action" style="margin-left: 10px; background-color: #dc3545;">Cancel Order</button>
+                </form>
+                {% endif %}
+            {% endif %}
         </div>
     </div>
 

@@ -3077,11 +3077,16 @@ main .page-panel .recipe-view-container {
 
 /* Status badge for Order Placed and Order Received */
 .status-badge.status-order-placed {
-    background-color: #2196f3;
+    background-color: #4caf50; /* Green */
     color: #fff;
 }
 
 .status-badge.status-order-received {
-    background-color: #4caf50;
+    background-color: #2196f3; /* Blue */
+    color: #fff;
+}
+
+.status-badge.status-order-cancelled {
+    background-color: #dc3545; /* Red */
     color: #fff;
 }

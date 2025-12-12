@@ -275,6 +275,14 @@ def update_status(purchase_id):
             if current_user.user_role not in ['Chef', 'Bartender', 'Manager', 'Purchase Manager']:
                 flash('You do not have permission to change status to Order Received.', 'error')
                 return redirect(url_for('purchase.view_purchase_request', purchase_id=purchase_id))
+        elif new_status == 'Order Cancelled':
+            # Purchase Manager, Chef, Bartender, and Manager can cancel orders
+            if current_user.user_role not in ['Purchase Manager', 'Chef', 'Bartender', 'Manager']:
+                flash('You do not have permission to cancel orders.', 'error')
+                if current_user.user_role == 'Purchase Manager':
+                    return redirect(url_for('purchase.view_purchase_request', purchase_id=purchase_id))
+                else:
+                    return redirect(url_for('purchase.view_order', purchase_id=purchase_id))
         
         purchase_request.status = new_status
         db.session.commit()
