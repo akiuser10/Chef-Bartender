@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block page_panel %}
+<div class="panel-header">
+    <h2>Order List</h2>
+</div>
+
+<div class="table-wrapper">
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>Order Number</th>
+                <th>Ordered Date & Time</th>
+                <th>Items Count</th>
+                <th>Total Cost</th>
+                <th>Status</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% if purchase_requests %}
+                {% for purchase_request in purchase_requests %}
+                <tr>
+                    <td><strong>{{ purchase_request.order_number }}</strong></td>
+                    <td>{{ purchase_request.ordered_date.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+                    <td>{{ purchase_request.items|length }} item(s)</td>
+                    <td>{{ user_currency_info.symbol }} {{ "%.2f"|format(purchase_request.calculate_total_cost()) }}</td>
+                    <td>
+                        <span class="status-badge status-{{ purchase_request.status.lower() }}">
+                            {{ purchase_request.status }}
+                        </span>
+                    </td>
+                    <td>
+                        <a href="{{ url_for('purchase.view_order', purchase_id=purchase_request.id) }}" class="btn btn-action">View Details</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            {% else %}
+                <tr>
+                    <td colspan="6" style="text-align: center; padding: 40px;">No purchase orders found. Create a purchase order to see it here.</td>
+                </tr>
+            {% endif %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}
+

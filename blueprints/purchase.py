@@ -127,7 +127,7 @@ def create_purchase_request():
         
         db.session.commit()
         flash(f'Purchase request {order_number} created successfully!', 'success')
-        return redirect(url_for('purchase.purchase'))
+        return redirect(url_for('purchase.order_list'))
     
     except Exception as e:
         db.session.rollback()
@@ -158,6 +158,28 @@ def to_order():
         return redirect(url_for('main.index'))
 
 
+@purchase_bp.route('/purchase/order-list', methods=['GET'])
+@login_required
+@role_required(['Chef', 'Bartender', 'Manager'])
+def order_list():
+    """Display purchase orders created by the current user (Chef, Bartender, Manager)"""
+    try:
+        # Get all purchase requests created by the current user
+        org_filter = get_organization_filter(PurchaseRequest)
+        purchase_requests = PurchaseRequest.query.filter(org_filter).filter_by(created_by=current_user.id).order_by(PurchaseRequest.ordered_date.desc()).all()
+        
+        from utils.currency import get_currency_info
+        currency_info = get_currency_info(current_user.currency or 'AED')
+        
+        return render_template('purchase/order_list.html', 
+                             purchase_requests=purchase_requests,
+                             user_currency_info=currency_info)
+    except Exception as e:
+        flash(f'Error loading order list: {str(e)}', 'error')
+        current_app.logger.error(f'Error in order_list: {str(e)}', exc_info=True)
+        return redirect(url_for('main.index'))
+
+
 @purchase_bp.route('/purchase/<int:purchase_id>/view', methods=['GET'])
 @login_required
 @role_required(['Purchase Manager', 'Manager'])
@@ -177,4 +199,26 @@ def view_purchase_request(purchase_id):
         flash(f'Error loading purchase request: {str(e)}', 'error')
         current_app.logger.error(f'Error in view_purchase_request: {str(e)}', exc_info=True)
         return redirect(url_for('purchase.to_order'))
+
+
+@purchase_bp.route('/purchase/<int:purchase_id>/view-order', methods=['GET'])
+@login_required
+@role_required(['Chef', 'Bartender', 'Manager'])
+def view_order(purchase_id):
+    """View details of a purchase order (for Chef, Bartender, Manager)"""
+    try:
+        # Only allow users to view their own purchase orders
+        org_filter = get_organization_filter(PurchaseRequest)
+        purchase_request = PurchaseRequest.query.filter(org_filter).filter_by(id=purchase_id, created_by=current_user.id).first_or_404()
+        
+        from utils.currency import get_currency_info
+        currency_info = get_currency_info(current_user.currency or 'AED')
+        
+        return render_template('purchase/view_order.html', 
+                             purchase_request=purchase_request,
+                             user_currency_info=currency_info)
+    except Exception as e:
+        flash(f'Error loading purchase order: {str(e)}', 'error')
+        current_app.logger.error(f'Error in view_order: {str(e)}', exc_info=True)
+        return redirect(url_for('purchase.order_list'))
 

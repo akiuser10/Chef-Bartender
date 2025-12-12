@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+{% block page_panel %}
+<div class="panel-header">
+    <h2>Purchase Order Details</h2>
+    <div class="panel-header-actions">
+        <a href="{{ url_for('purchase.order_list') }}" class="btn btn-action">Back to Order List</a>
+    </div>
+</div>
+
+<div class="purchase-details">
+    <div class="purchase-header-info">
+        <div class="info-row">
+            <strong>Order Number:</strong> {{ purchase_request.order_number }}
+        </div>
+        <div class="info-row">
+            <strong>Ordered Date & Time:</strong> {{ purchase_request.ordered_date.strftime('%Y-%m-%d %H:%M:%S') }}
+        </div>
+        <div class="info-row">
+            <strong>Status:</strong> 
+            <span class="status-badge status-{{ purchase_request.status.lower() }}">
+                {{ purchase_request.status }}
+            </span>
+        </div>
+    </div>
+
+    <div class="table-wrapper">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Code</th>
+                    <th>Description</th>
+                    <th>Quantity</th>
+                    <th>Supplier</th>
+                    <th>Sub Category</th>
+                    <th>Cost per Unit</th>
+                    <th>Order Quantity</th>
+                    <th>Total Cost</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in purchase_request.items %}
+                <tr>
+                    <td>{{ item.code or 'N/A' }}</td>
+                    <td>{{ item.description }}</td>
+                    <td>{{ "%.2f"|format(item.quantity) }}</td>
+                    <td>{{ item.supplier or 'N/A' }}</td>
+                    <td>{{ item.sub_category or 'Other' }}</td>
+                    <td>{{ user_currency_info.symbol }} {{ "%.2f"|format(item.cost_per_unit) }}</td>
+                    <td><strong>{{ "%.2f"|format(item.order_quantity) }}</strong></td>
+                    <td><strong>{{ user_currency_info.symbol }} {{ "%.2f"|format(item.cost_per_unit * item.order_quantity) }}</strong></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+            <tfoot>
+                <tr class="total-row">
+                    <td colspan="7"><strong>Total Cost:</strong></td>
+                    <td><strong>{{ user_currency_info.symbol }} {{ "%.2f"|format(purchase_request.calculate_total_cost()) }}</strong></td>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+</div>
+{% endblock %}
+
