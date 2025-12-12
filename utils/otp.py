@@ -26,15 +26,22 @@ def _send_email_via_resend(app, email, otp, from_email, api_key):
         
         resend.api_key = api_key
         
-        # Resend requires verified sender email or can use onboarding@resend.dev for testing
+        # Resend requires domain verification for custom domains (e.g., gmail.com)
+        # Use onboarding@resend.dev for testing (no verification needed)
         # Format: "From Name <email@domain.com>"
-        if '<' not in from_email and '@' in from_email:
+        
+        # If using a custom domain that might not be verified, suggest using test domain
+        if from_email and '@gmail.com' in from_email.lower():
+            # Gmail domain requires verification - use test domain instead
+            from_address = "Chef & Bartender <onboarding@resend.dev>"
+            app.logger.warning(
+                f"Using Resend test domain because {from_email} requires domain verification. "
+                f"For production, verify your domain at https://resend.com/domains or use onboarding@resend.dev"
+            )
+        elif '<' not in from_email and '@' in from_email:
             from_address = f"Chef & Bartender <{from_email}>"
         else:
             from_address = from_email
-        
-        # Note: For production, sender email must be verified in Resend dashboard
-        # For quick testing, you can use "onboarding@resend.dev" (Resend's test domain)
         
         params = {
             "from": from_address,
