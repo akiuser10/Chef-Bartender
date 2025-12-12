@@ -86,11 +86,18 @@ def register():
         store_otp_in_session(email, otp, username, password_hash)
         
         # Send OTP email
-        if send_otp_email(email, otp):
-            flash(f'OTP has been sent to {email}. Please check your email and enter the 6-digit code.', 'info')
-            return render_template('register.html', step='verify_otp', email=email)
-        else:
-            flash('Failed to send OTP email. Please try again later or contact support.', 'error')
+        try:
+            if send_otp_email(email, otp):
+                flash(f'OTP has been sent to {email}. Please check your email and enter the 6-digit code.', 'info')
+                return render_template('register.html', step='verify_otp', email=email)
+            else:
+                flash('Failed to send OTP email. Please check your email configuration and try again later.', 'error')
+                clear_otp_session()
+                return render_template('register.html')
+        except Exception as e:
+            from flask import current_app
+            current_app.logger.error(f'Error in registration OTP sending: {str(e)}', exc_info=True)
+            flash(f'An error occurred while sending OTP. Please try again later. Error: {str(e)}', 'error')
             clear_otp_session()
             return render_template('register.html')
     

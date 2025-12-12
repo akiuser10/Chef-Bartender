@@ -4,7 +4,7 @@ OTP (One-Time Password) utility functions
 import random
 import string
 from datetime import datetime, timedelta
-from flask import session
+from flask import session, current_app
 from flask_mail import Message
 from extensions import mail
 
@@ -23,6 +23,11 @@ def send_otp_email(email, otp):
     Returns True if sent successfully, False otherwise
     """
     try:
+        # Check if email is configured
+        if not current_app.config.get('MAIL_USERNAME') or not current_app.config.get('MAIL_PASSWORD'):
+            current_app.logger.error("Email configuration missing: MAIL_USERNAME or MAIL_PASSWORD not set")
+            return False
+        
         subject = "Your Chef & Bartender Registration OTP"
         body = f"""
 Hello,
@@ -44,13 +49,20 @@ Chef & Bartender Team
         msg = Message(
             subject=subject,
             recipients=[email],
-            body=body
+            body=body,
+            sender=current_app.config.get('MAIL_DEFAULT_SENDER') or current_app.config.get('MAIL_USERNAME')
         )
         
         mail.send(msg)
+        current_app.logger.info(f"OTP email sent successfully to {email}")
         return True
     except Exception as e:
-        print(f"Error sending OTP email: {str(e)}")
+        # Log the error properly
+        error_msg = f"Error sending OTP email to {email}: {str(e)}"
+        try:
+            current_app.logger.error(error_msg, exc_info=True)
+        except:
+            print(error_msg)
         return False
 
 
