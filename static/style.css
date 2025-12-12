@@ -3050,9 +3050,9 @@ main .page-panel .recipe-view-container {
     max-width: 1200px !important;
     width: 1200px !important; /* Fixed width of 1200px */
     box-sizing: border-box;
-    margin: 0 50px !important; /* 50px margins on both sides */
-    margin-left: auto !important; /* Center the table */
-    margin-right: auto !important; /* Center the table */
+    margin: 0 auto !important; /* Center the table with auto margins */
+    padding-left: 50px !important; /* 50px spacing on left */
+    padding-right: 50px !important; /* 50px spacing on right */
     overflow-x: hidden !important; /* Remove horizontal scrolling */
     overflow-y: auto; /* Keep vertical scrolling if needed */
 }
