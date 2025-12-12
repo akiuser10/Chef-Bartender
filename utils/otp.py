@@ -186,19 +186,25 @@ def _send_email_sync(app, email, otp, mail_config, resend_api_key=None, sendgrid
     """
     Send email synchronously (called from background thread)
     Priority: Resend > SendGrid > SMTP
+    Falls back to next method if previous one fails
     """
     with app.app_context():
         from_email = mail_config.get('MAIL_DEFAULT_SENDER') or mail_config.get('MAIL_USERNAME') or 'noreply@chefandbartender.com'
         
-        # Prefer Resend (easiest, no phone verification)
+        # Try Resend first (easiest, no phone verification)
         if resend_api_key:
-            return _send_email_via_resend(app, email, otp, from_email, resend_api_key)
-        # Fallback to SendGrid if Resend not available
-        elif sendgrid_api_key:
-            return _send_email_via_sendgrid(app, email, otp, from_email, sendgrid_api_key)
+            if _send_email_via_resend(app, email, otp, from_email, resend_api_key):
+                return True
+            app.logger.warning(f"Resend failed for {email}, falling back to alternative method")
+        
+        # Fallback to SendGrid if Resend failed or not available
+        if sendgrid_api_key:
+            if _send_email_via_sendgrid(app, email, otp, from_email, sendgrid_api_key):
+                return True
+            app.logger.warning(f"SendGrid failed for {email}, falling back to SMTP")
+        
         # Last resort: SMTP (may not work on Railway)
-        else:
-            return _send_email_via_smtp(app, email, otp, mail_config)
+        return _send_email_via_smtp(app, email, otp, mail_config)
 
 
 def send_otp_email(email, otp):
@@ -216,13 +222,18 @@ def send_otp_email(email, otp):
         resend_api_key = current_app.config.get('RESEND_API_KEY')
         sendgrid_api_key = current_app.config.get('SENDGRID_API_KEY')
         
+        # Prepare mail config with all SMTP settings for fallback
+        mail_config = {
+            'MAIL_DEFAULT_SENDER': from_email,
+            'MAIL_USERNAME': current_app.config.get('MAIL_USERNAME'),
+            'MAIL_SERVER': current_app.config.get('MAIL_SERVER'),
+            'MAIL_PORT': current_app.config.get('MAIL_PORT'),
+            'MAIL_USE_TLS': current_app.config.get('MAIL_USE_TLS'),
+            'MAIL_PASSWORD': current_app.config.get('MAIL_PASSWORD'),
+        }
+        
         if resend_api_key or sendgrid_api_key:
-            # Use API-based email service (works on Railway)
-            mail_config = {
-                'MAIL_DEFAULT_SENDER': from_email,
-                'MAIL_USERNAME': current_app.config.get('MAIL_USERNAME'),
-            }
-            
+            # Use API-based email service (works on Railway) with SMTP fallback
             # Send email in background thread (non-blocking)
             thread = threading.Thread(
                 target=_send_email_sync,
@@ -232,7 +243,7 @@ def send_otp_email(email, otp):
             thread.start()
             
             provider = 'Resend' if resend_api_key else 'SendGrid'
-            current_app.logger.info(f"OTP email sending started for {email} via {provider} (async)")
+            current_app.logger.info(f"OTP email sending started for {email} via {provider} (with fallback) (async)")
             return True
         
         # Fallback to SMTP configuration (may not work on Railway)
