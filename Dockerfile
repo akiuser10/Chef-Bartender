@@ -33,4 +33,5 @@ ENV PYTHONUNBUFFERED=1
 EXPOSE 8080
 
 # Start gunicorn (Railway sets PORT env var)
-CMD gunicorn app:app --bind 0.0.0.0:${PORT:-8080}
+# Use single worker and longer timeout to prevent startup issues
+CMD gunicorn app:app --bind 0.0.0.0:${PORT:-8080} --timeout 120 --workers 1 --worker-class sync --preload

@@ -1,2 +1,2 @@
-web: gunicorn app:app --timeout 120 --workers 2 --bind 0.0.0.0:${PORT:-8080}
+web: gunicorn app:app --timeout 120 --workers 1 --worker-class sync --bind 0.0.0.0:$PORT --preload
 

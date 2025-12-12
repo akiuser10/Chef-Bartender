@@ -145,33 +145,50 @@ def create_app(config_object='config.Config'):
     # Initialize database lazily on first request to prevent blocking worker startup
     # This prevents timeout issues during deployment
     app._db_initialized = False
+    import threading
+    _init_lock = threading.Lock()
+    
+    @app.route('/health')
+    def health_check():
+        """Health check endpoint for Railway"""
+        return {'status': 'ok'}, 200
     
     @app.before_request
     def initialize_database():
         """Initialize database lazily on first request"""
+        # Skip health check endpoint
+        from flask import request
+        if request.path == '/health':
+            return
+        
         if app._db_initialized:
             return
         
-        try:
-            # Create upload directories
-            upload_folder = app.config['UPLOAD_FOLDER']
-            os.makedirs(upload_folder, exist_ok=True)
-            os.makedirs(os.path.join(upload_folder, 'products'), exist_ok=True)
-            os.makedirs(os.path.join(upload_folder, 'recipes'), exist_ok=True)
+        # Use lock to ensure only one thread initializes
+        with _init_lock:
+            if app._db_initialized:
+                return
             
-            # Create all tables first (this will create tables with all model columns)
-            db.create_all()
-            app.logger.info("Database tables created successfully")
-            
-            # Run schema updates (adds any missing columns for migrations)
-            ensure_schema_updates()
-            app.logger.info("Database schema updates completed")
-            
-            app._db_initialized = True
-        except Exception as e:
-            app.logger.error(f"Error initializing database: {str(e)}", exc_info=True)
-            app._db_initialized = True  # Mark as attempted to prevent repeated failures
-            # Continue anyway - the app might still work if tables exist
+            try:
+                # Create upload directories
+                upload_folder = app.config['UPLOAD_FOLDER']
+                os.makedirs(upload_folder, exist_ok=True)
+                os.makedirs(os.path.join(upload_folder, 'products'), exist_ok=True)
+                os.makedirs(os.path.join(upload_folder, 'recipes'), exist_ok=True)
+                
+                # Create all tables first (this will create tables with all model columns)
+                db.create_all()
+                app.logger.info("Database tables created successfully")
+                
+                # Run schema updates (adds any missing columns for migrations)
+                ensure_schema_updates()
+                app.logger.info("Database schema updates completed")
+                
+                app._db_initialized = True
+            except Exception as e:
+                app.logger.error(f"Error initializing database: {str(e)}", exc_info=True)
+                app._db_initialized = True  # Mark as attempted to prevent repeated failures
+                # Continue anyway - the app might still work if tables exist
     
     return app
 
