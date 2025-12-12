@@ -10,6 +10,9 @@
             <tr>
                 <th>Order Number</th>
                 <th>Ordered Date & Time</th>
+                {% if current_user.user_role == 'Purchase Manager' %}
+                <th>Created By</th>
+                {% endif %}
                 <th>Items Count</th>
                 <th>Total Cost</th>
                 <th>Status</th>
@@ -22,6 +25,15 @@
                 <tr>
                     <td><strong>{{ purchase_request.order_number }}</strong></td>
                     <td>{{ purchase_request.ordered_date.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+                    {% if current_user.user_role == 'Purchase Manager' %}
+                    <td>
+                        {% if purchase_request.creator %}
+                            {{ purchase_request.creator.first_name }} {{ purchase_request.creator.last_name if purchase_request.creator.last_name else '' }}
+                        {% else %}
+                            Unknown
+                        {% endif %}
+                    </td>
+                    {% endif %}
                     <td>{{ purchase_request.items|length }} item(s)</td>
                     <td>{{ user_currency_info.symbol }} {{ "%.2f"|format(purchase_request.calculate_total_cost()) }}</td>
                     <td>
@@ -30,13 +42,23 @@
                         </span>
                     </td>
                     <td>
+                        {% if current_user.user_role == 'Purchase Manager' %}
+                        <a href="{{ url_for('purchase.view_purchase_request', purchase_id=purchase_request.id) }}" class="btn btn-action">View Details</a>
+                        {% else %}
                         <a href="{{ url_for('purchase.view_order', purchase_id=purchase_request.id) }}" class="btn btn-action">View Details</a>
+                        {% endif %}
                     </td>
                 </tr>
                 {% endfor %}
             {% else %}
                 <tr>
-                    <td colspan="6" style="text-align: center; padding: 40px;">No purchase orders found. Create a purchase order to see it here.</td>
+                    <td colspan="{% if current_user.user_role == 'Purchase Manager' %}7{% else %}6{% endif %}" style="text-align: center; padding: 40px;">
+                        {% if current_user.user_role == 'Purchase Manager' %}
+                        No purchase orders found.
+                        {% else %}
+                        No purchase orders found. Create a purchase order to see it here.
+                        {% endif %}
+                    </td>
                 </tr>
             {% endif %}
         </tbody>

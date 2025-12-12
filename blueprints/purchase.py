@@ -160,13 +160,18 @@ def to_order():
 
 @purchase_bp.route('/purchase/order-list', methods=['GET'])
 @login_required
-@role_required(['Chef', 'Bartender', 'Manager'])
+@role_required(['Chef', 'Bartender', 'Manager', 'Purchase Manager'])
 def order_list():
-    """Display purchase orders created by the current user (Chef, Bartender, Manager)"""
+    """Display purchase orders - all orders for Purchase Manager, user's own orders for others"""
     try:
-        # Get all purchase requests created by the current user
         org_filter = get_organization_filter(PurchaseRequest)
-        purchase_requests = PurchaseRequest.query.filter(org_filter).filter_by(created_by=current_user.id).order_by(PurchaseRequest.ordered_date.desc()).all()
+        
+        # Purchase Manager sees all orders in the organization
+        # Others see only their own orders
+        if current_user.user_role == 'Purchase Manager':
+            purchase_requests = PurchaseRequest.query.filter(org_filter).order_by(PurchaseRequest.ordered_date.desc()).all()
+        else:
+            purchase_requests = PurchaseRequest.query.filter(org_filter).filter_by(created_by=current_user.id).order_by(PurchaseRequest.ordered_date.desc()).all()
         
         from utils.currency import get_currency_info
         currency_info = get_currency_info(current_user.currency or 'AED')
@@ -203,13 +208,17 @@ def view_purchase_request(purchase_id):
 
 @purchase_bp.route('/purchase/<int:purchase_id>/view-order', methods=['GET'])
 @login_required
-@role_required(['Chef', 'Bartender', 'Manager'])
+@role_required(['Chef', 'Bartender', 'Manager', 'Purchase Manager'])
 def view_order(purchase_id):
-    """View details of a purchase order (for Chef, Bartender, Manager)"""
+    """View details of a purchase order"""
     try:
-        # Only allow users to view their own purchase orders
         org_filter = get_organization_filter(PurchaseRequest)
-        purchase_request = PurchaseRequest.query.filter(org_filter).filter_by(id=purchase_id, created_by=current_user.id).first_or_404()
+        
+        # Purchase Manager can view any order, others can only view their own
+        if current_user.user_role == 'Purchase Manager':
+            purchase_request = PurchaseRequest.query.filter(org_filter).filter_by(id=purchase_id).first_or_404()
+        else:
+            purchase_request = PurchaseRequest.query.filter(org_filter).filter_by(id=purchase_id, created_by=current_user.id).first_or_404()
         
         from utils.currency import get_currency_info
         currency_info = get_currency_info(current_user.currency or 'AED')
