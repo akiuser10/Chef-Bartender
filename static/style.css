@@ -3031,6 +3031,17 @@ main .page-panel .recipe-view-container {
     margin-top: 20px;
 }
 
+/* Ensure purchase details tables can expand to full width */
+.purchase-details .table-wrapper {
+    max-width: 100%;
+    width: 100%;
+}
+
+.purchase-details .data-table {
+    max-width: 3200px;
+    width: 100%;
+}
+
 .purchase-header-info {
     background: rgba(255, 255, 255, 0.1);
     padding: 20px;
