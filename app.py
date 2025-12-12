@@ -31,10 +31,20 @@ def create_app(config_object='config.Config'):
     app = Flask(__name__)
     app.config.from_object(config_object)
     
-    # Initialize extensions
+    # Register health check endpoint FIRST - before any blocking operations
+    @app.route('/health')
+    def health_check():
+        """Health check endpoint for Railway - responds immediately"""
+        return {'status': 'ok'}, 200
+    
+    # Initialize extensions (these should not block)
     db.init_app(app)
     login_manager.init_app(app)
-    mail.init_app(app)
+    # Initialize mail lazily to avoid blocking
+    try:
+        mail.init_app(app)
+    except Exception as e:
+        app.logger.warning(f"Mail initialization warning: {str(e)}")
     
     # Configure login manager
     login_manager.login_view = 'auth.login'
@@ -147,11 +157,6 @@ def create_app(config_object='config.Config'):
     app._db_initialized = False
     import threading
     _init_lock = threading.Lock()
-    
-    @app.route('/health')
-    def health_check():
-        """Health check endpoint for Railway"""
-        return {'status': 'ok'}, 200
     
     @app.before_request
     def initialize_database():
