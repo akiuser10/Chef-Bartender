@@ -5,39 +5,6 @@
         <h2>Register</h2>
     </div>
 
-    {% if step == 'verify_otp' %}
-    <!-- OTP Verification Step -->
-    <form method="POST" class="register-form">
-        <div class="form-group">
-            <p class="otp-info">A 6-digit OTP has been sent to <strong>{{ email }}</strong></p>
-            <p class="otp-instruction">Please check your email and enter the OTP code below:</p>
-        </div>
-
-        <div class="form-group">
-            <label for="otp">Enter OTP:</label>
-            <input 
-                type="text" 
-                id="otp" 
-                name="otp" 
-                required 
-                maxlength="6" 
-                pattern="[0-9]{6}"
-                placeholder="000000" 
-                title="Enter the 6-digit OTP"
-                class="form-input otp-input"
-                autocomplete="off"
-                inputmode="numeric"
-            >
-            <small class="form-help-text">Enter the 6-digit code sent to your email</small>
-        </div>
-
-        <div class="actions">
-            <button type="submit" name="verify_otp" class="btn">Verify OTP</button>
-            <a href="{{ url_for('auth.register') }}" class="btn secondary">Back to Registration</a>
-        </div>
-    </form>
-    {% else %}
-    <!-- Initial Registration Step -->
     <form method="POST" class="register-form">
         <div class="form-group">
             <label for="username">Username:</label>
@@ -63,7 +30,6 @@
                 title="Email"
                 class="form-input"
             >
-            <small class="form-help-text">We'll send a verification code to this email</small>
         </div>
 
         <div class="form-group">
@@ -79,11 +45,50 @@
             >
         </div>
 
+        <div class="form-group">
+            <label for="password-confirm">Confirm Password:</label>
+            <input 
+                type="password" 
+                id="password-confirm" 
+                name="password_confirm" 
+                required 
+                placeholder="Confirm your password" 
+                title="Confirm Password"
+                class="form-input"
+            >
+        </div>
+
+        <div class="form-group">
+            <label for="organisation">Organisation:</label>
+            <input 
+                type="text" 
+                id="organisation" 
+                name="organisation" 
+                placeholder="Enter organisation name" 
+                title="Organisation"
+                class="form-input"
+            >
+            <small class="form-help-text">
+                Users with the same organisation name will share Master List, Recipes, and Secondary Ingredients.
+            </small>
+        </div>
+
+        <div class="form-group">
+            <label for="user_role">User role & Position:</label>
+            <select id="user_role" name="user_role" class="form-input">
+                <option value="">Select Role</option>
+                <option value="Purchase Manager">Purchase Manager</option>
+                <option value="Manager">Manager</option>
+                <option value="Chef">Chef</option>
+                <option value="Bartender">Bartender</option>
+                <option value="Cost Controller">Cost Controller</option>
+            </select>
+        </div>
+
         <div class="actions">
-            <button type="submit" class="btn">Send OTP</button>
+            <button type="submit" class="btn">Register</button>
             <a href="{{ url_for('auth.login') }}" class="btn secondary">Already have an account?</a>
         </div>
     </form>
-    {% endif %}
 </div>
 {% endblock %}

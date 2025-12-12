@@ -1,16 +1,12 @@
 """
 Authentication blueprint - handles login, register, logout
 """
-from flask import Blueprint, render_template, redirect, url_for, request, flash, session
+from flask import Blueprint, render_template, redirect, url_for, request, flash
 from flask_login import login_user, logout_user, login_required, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
 from extensions import db
 from models import User
 from utils.currency import COUNTRIES, CURRENCIES, get_country_currency
-from utils.otp import (
-    generate_otp, send_otp_email, store_otp_in_session,
-    verify_otp_from_session, clear_otp_session, get_pending_registration_data
-)
 
 auth_bp = Blueprint('auth', __name__)
 
@@ -18,54 +14,22 @@ auth_bp = Blueprint('auth', __name__)
 @auth_bp.route('/register', methods=['GET', 'POST'])
 def register():
     if request.method == 'POST':
-        # Check if this is OTP verification step
-        if 'verify_otp' in request.form:
-            email = session.get('otp_email')
-            user_otp = request.form.get('otp', '').strip()
-            
-            if not email or not user_otp:
-                flash('Please enter the OTP sent to your email.', 'error')
-                return render_template('register.html', step='verify_otp', email=email)
-            
-            if verify_otp_from_session(email, user_otp):
-                # OTP verified, create the account
-                pending_data = get_pending_registration_data()
-                username = pending_data.get('username')
-                email = pending_data.get('email')
-                password_hash = pending_data.get('password_hash')
-                
-                if not username or not email or not password_hash:
-                    flash('Session expired. Please register again.', 'error')
-                    clear_otp_session()
-                    return redirect(url_for('auth.register'))
-                
-                # Double-check email is not already registered
-                if User.query.filter_by(email=email).first():
-                    flash('Email already registered. Please log in.', 'error')
-                    clear_otp_session()
-                    return redirect(url_for('auth.login'))
-                
-                # Create the user
-                user = User(username=username, email=email, password=password_hash)
-                db.session.add(user)
-                db.session.commit()
-                
-                # Clear OTP session
-                clear_otp_session()
-                
-                flash('Account created successfully! Please log in.', 'success')
-                return redirect(url_for('auth.login'))
-            else:
-                flash('Invalid or expired OTP. Please check your email and try again.', 'error')
-                return render_template('register.html', step='verify_otp', email=email)
-        
-        # Initial registration step - collect email, username, password and send OTP
+        # Get form data
         username = request.form.get('username', '').strip()
         email = request.form.get('email', '').strip()
         password = request.form.get('password', '').strip()
+        password_confirm = request.form.get('password_confirm', '').strip()
+        organisation = request.form.get('organisation', '').strip()
+        user_role = request.form.get('user_role', '').strip()
         
-        if not username or not email or not password:
-            flash('Please fill in all fields.', 'error')
+        # Validate required fields
+        if not username or not email or not password or not password_confirm:
+            flash('Please fill in all required fields.', 'error')
+            return render_template('register.html')
+        
+        # Validate password confirmation
+        if password != password_confirm:
+            flash('Passwords do not match. Please try again.', 'error')
             return render_template('register.html')
         
         # Check if email is already registered
@@ -78,41 +42,22 @@ def register():
             flash('Username already taken. Please choose another.', 'error')
             return render_template('register.html')
         
-        # Generate and send OTP
-        otp = generate_otp()
+        # Create the user
         password_hash = generate_password_hash(password)
+        user = User(
+            username=username,
+            email=email,
+            password=password_hash,
+            organisation=organisation if organisation else None,
+            user_role=user_role if user_role else None
+        )
+        db.session.add(user)
+        db.session.commit()
         
-        # Store OTP and registration data in session
-        store_otp_in_session(email, otp, username, password_hash)
-        
-        # Send OTP email
-        try:
-            if send_otp_email(email, otp):
-                flash(f'OTP has been sent to {email}. Please check your email and enter the 6-digit code.', 'info')
-                return render_template('register.html', step='verify_otp', email=email)
-            else:
-                # Get more detailed error info for debugging
-                from flask import current_app
-                error_details = (
-                    f"Email config check failed. Check Railway logs for details. "
-                    f"Variables set: MAIL_USERNAME={bool(current_app.config.get('MAIL_USERNAME'))}, "
-                    f"MAIL_PASSWORD={bool(current_app.config.get('MAIL_PASSWORD'))}"
-                )
-                current_app.logger.error(error_details)
-                flash('Failed to send OTP email. Please check your email configuration in Railway and try again later.', 'error')
-                clear_otp_session()
-                return render_template('register.html')
-        except Exception as e:
-            from flask import current_app
-            current_app.logger.error(f'Error in registration OTP sending: {str(e)}', exc_info=True)
-            flash(f'An error occurred while sending OTP. Please try again later. Error: {str(e)}', 'error')
-            clear_otp_session()
-            return render_template('register.html')
+        flash('Account created successfully! Please log in.', 'success')
+        return redirect(url_for('auth.login'))
     
     # GET request - show registration form
-    # Clear any existing OTP session if user navigates back
-    if 'otp_email' not in request.args.get('step', ''):
-        clear_otp_session()
     return render_template('register.html')
 
 
