@@ -42,9 +42,36 @@
     </datalist>
 
     <div class="actions purchase-actions">
-        <button type="submit" class="btn btn-primary">Create Purchase Request</button>
+        <button type="submit" class="btn btn-primary" onclick="return validatePurchaseForm(event)">Create Purchase Request</button>
     </div>
 </form>
+
+<script>
+function validatePurchaseForm(event) {
+    // Remove any HTML5 validation errors by ensuring all number inputs are valid
+    const form = document.getElementById('purchaseForm');
+    const orderQtyInputs = form.querySelectorAll('input[name^="item_order_quantity_"]');
+    
+    let hasErrors = false;
+    orderQtyInputs.forEach(function(input) {
+        const value = parseFloat(input.value);
+        if (isNaN(value) || value < 0) {
+            input.value = '0';
+        }
+        // Remove any validation messages
+        input.setCustomValidity('');
+    });
+    
+    // Check if form is valid
+    if (!form.checkValidity()) {
+        event.preventDefault();
+        form.reportValidity();
+        return false;
+    }
+    
+    return true;
+}
+</script>
 </div>
 
 <script id="product-data" type="application/json">{{ product_options|tojson|safe }}</script>
@@ -104,19 +131,19 @@ document.addEventListener('DOMContentLoaded', function() {
                 <input type="hidden" name="item_code_${currentIndex}" value="${initialData.code || ''}">
             </td>
             <td class="unit-qty-cell">
-                <input type="number" step="0.01" min="0" name="item_quantity_${currentIndex}" placeholder="0.00" value="${initialData.quantity || ''}" class="qty-input table-input table-input-right" readonly>
+                <input type="text" name="item_quantity_${currentIndex}" placeholder="0.00" value="${initialData.quantity || ''}" class="qty-input table-input table-input-right" readonly>
             </td>
             <td class="supplier-cell">
-                <input type="text" name="item_supplier_${currentIndex}" placeholder="Supplier" value="${initialData.supplier || ''}" class="supplier-input table-input">
+                <input type="text" name="item_supplier_${currentIndex}" placeholder="Supplier" value="${initialData.supplier || ''}" class="supplier-input table-input" readonly>
             </td>
             <td class="sub-category-cell">
-                <input type="text" name="item_sub_category_${currentIndex}" placeholder="Sub Category" value="${initialData.sub_category || ''}" class="sub-category-input table-input">
+                <input type="text" name="item_sub_category_${currentIndex}" placeholder="Sub Category" value="${initialData.sub_category || ''}" class="sub-category-input table-input" readonly>
             </td>
             <td class="cost-cell">
-                <input type="number" step="0.01" min="0" name="item_cost_per_unit_${currentIndex}" placeholder="0.00" value="${initialData.cost_per_unit || ''}" class="cost-input table-input table-input-right">
+                <input type="text" name="item_cost_per_unit_${currentIndex}" placeholder="0.00" value="${initialData.cost_per_unit || ''}" class="cost-input table-input table-input-right" readonly>
             </td>
             <td class="order-qty-cell">
-                <input type="number" step="0.01" min="0" name="item_order_quantity_${currentIndex}" placeholder="0.00" value="${initialData.order_quantity || ''}" class="order-qty-input table-input table-input-right">
+                <input type="number" step="0.01" name="item_order_quantity_${currentIndex}" placeholder="0.00" value="${initialData.order_quantity || ''}" class="order-qty-input table-input table-input-right">
             </td>
             <td class="actions-cell-right">
                 <button type="button" class="btn-add-row" title="Add Row">+</button>
@@ -141,10 +168,13 @@ document.addEventListener('DOMContentLoaded', function() {
                 const codeValue = option.code || '-';
                 hiddenCode.value = codeValue !== '-' ? codeValue : '';
                 codeCell.textContent = codeValue;
-                quantityInput.value = option.quantity || '0.00';
+                // Format numbers properly to avoid validation errors
+                const qty = option.quantity || 0;
+                quantityInput.value = (typeof qty === 'number' ? qty.toFixed(2) : qty) || '0.00';
                 supplierInput.value = option.supplier || 'N/A';
                 subCategoryInput.value = option.sub_category || 'Other';
-                costInput.value = option.cost_per_unit || '0.00';
+                const cost = option.cost_per_unit || 0;
+                costInput.value = (typeof cost === 'number' ? cost.toFixed(2) : cost) || '0.00';
             } else {
                 hiddenProductId.value = '';
                 hiddenCode.value = '';

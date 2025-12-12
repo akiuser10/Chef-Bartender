@@ -3056,3 +3056,21 @@ main .page-panel .recipe-view-container {
     margin-top: 20px;
     text-align: center;
 }
+
+/* Purchase form readonly fields */
+.purchase-row input[readonly] {
+    background-color: rgba(255, 255, 255, 0.1);
+    cursor: not-allowed;
+    color: #ccc;
+}
+
+.purchase-row input[readonly]:focus {
+    outline: none;
+    border-color: transparent;
+}
+
+/* Remove validation styling for readonly fields */
+.purchase-row input[readonly]:invalid {
+    border-color: transparent;
+    box-shadow: none;
+}
