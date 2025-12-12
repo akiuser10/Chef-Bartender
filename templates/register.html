@@ -6,88 +6,94 @@
     </div>
 
     <form method="POST" class="register-form">
-        <div class="form-group">
-            <label for="username">Username:</label>
-            <input 
-                type="text" 
-                id="username" 
-                name="username" 
-                required 
-                placeholder="Enter username" 
-                title="Username"
-                class="form-input"
-            >
-        </div>
+        <div class="register-form-columns">
+            <div class="register-form-col">
+                <div class="form-group">
+                    <label for="username">Username:</label>
+                    <input 
+                        type="text" 
+                        id="username" 
+                        name="username" 
+                        required 
+                        placeholder="Enter username" 
+                        title="Username"
+                        class="form-input"
+                    >
+                </div>
 
-        <div class="form-group">
-            <label for="email-register">Email:</label>
-            <input 
-                type="email" 
-                id="email-register" 
-                name="email" 
-                required 
-                placeholder="Enter your email" 
-                title="Email"
-                class="form-input"
-            >
-        </div>
+                <div class="form-group">
+                    <label for="email-register">Email:</label>
+                    <input 
+                        type="email" 
+                        id="email-register" 
+                        name="email" 
+                        required 
+                        placeholder="Enter your email" 
+                        title="Email"
+                        class="form-input"
+                    >
+                </div>
 
-        <div class="form-group">
-            <label for="password-register">Password:</label>
-            <input 
-                type="password" 
-                id="password-register" 
-                name="password" 
-                required 
-                placeholder="Enter your password" 
-                title="Password"
-                class="form-input"
-            >
-        </div>
+                <div class="form-group">
+                    <label for="password-register">Password:</label>
+                    <input 
+                        type="password" 
+                        id="password-register" 
+                        name="password" 
+                        required 
+                        placeholder="Enter your password" 
+                        title="Password"
+                        class="form-input"
+                    >
+                </div>
 
-        <div class="form-group">
-            <label for="password-confirm">Confirm Password:</label>
-            <input 
-                type="password" 
-                id="password-confirm" 
-                name="password_confirm" 
-                required 
-                placeholder="Confirm your password" 
-                title="Confirm Password"
-                class="form-input"
-            >
-        </div>
+                <div class="form-group">
+                    <label for="password-confirm">Confirm Password:</label>
+                    <input 
+                        type="password" 
+                        id="password-confirm" 
+                        name="password_confirm" 
+                        required 
+                        placeholder="Confirm your password" 
+                        title="Confirm Password"
+                        class="form-input"
+                    >
+                </div>
+            </div>
 
-        <div class="form-group">
-            <label for="organisation">Organisation:</label>
-            <input 
-                type="text" 
-                id="organisation" 
-                name="organisation" 
-                placeholder="Enter organisation name" 
-                title="Organisation"
-                class="form-input"
-            >
-            <small class="form-help-text">
-                Users with the same organisation name will share Master List, Recipes, and Secondary Ingredients.
-            </small>
-        </div>
+            <div class="register-form-col">
+                <div class="form-group">
+                    <label for="organisation">Organisation:</label>
+                    <input 
+                        type="text" 
+                        id="organisation" 
+                        name="organisation" 
+                        placeholder="Enter organisation name" 
+                        title="Organisation"
+                        class="form-input"
+                    >
+                    <small class="form-help-text">
+                        Users with the same organisation name will share Master List, Recipes, and Secondary Ingredients.
+                    </small>
+                </div>
 
-        <div class="form-group">
-            <label for="user_role">User role & Position:</label>
-            <select id="user_role" name="user_role" class="form-input">
-                <option value="">Select Role</option>
-                <option value="Purchase Manager">Purchase Manager</option>
-                <option value="Manager">Manager</option>
-                <option value="Chef">Chef</option>
-                <option value="Bartender">Bartender</option>
-                <option value="Cost Controller">Cost Controller</option>
-            </select>
-        </div>
+                <div class="form-group">
+                    <label for="user_role">User role & Position:</label>
+                    <select id="user_role" name="user_role" class="form-input">
+                        <option value="">Select Role</option>
+                        <option value="Purchase Manager">Purchase Manager</option>
+                        <option value="Manager">Manager</option>
+                        <option value="Chef">Chef</option>
+                        <option value="Bartender">Bartender</option>
+                        <option value="Cost Controller">Cost Controller</option>
+                    </select>
+                </div>
 
-        <div class="actions">
-            <button type="submit" class="btn">Register</button>
-            <a href="{{ url_for('auth.login') }}" class="btn secondary">Already have an account?</a>
+                <div class="actions">
+                    <button type="submit" class="btn">Register</button>
+                    <a href="{{ url_for('auth.login') }}" class="btn secondary">Already have an account?</a>
+                </div>
+            </div>
         </div>
     </form>
 </div>
