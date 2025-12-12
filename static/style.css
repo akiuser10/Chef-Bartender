@@ -455,7 +455,10 @@ main {
 
 .page-panel:has(.profile-form) {
     overflow-y: auto;
+    overflow-x: hidden;
     max-height: calc(100vh - 200px);
+    width: 100%;
+    box-sizing: border-box;
 }
 
 .page-panel h2 {
@@ -1333,49 +1336,51 @@ form {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
+    overflow: hidden;
 }
 
 .profile-form-columns {
-    display: flex;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
     gap: 30px;
     margin-bottom: 25px;
     align-items: flex-start;
     width: 100%;
+    max-width: 100%;
     box-sizing: border-box;
 }
 
 .profile-form-col {
-    flex: 1 1 50%;
     min-width: 0;
     display: flex;
     flex-direction: column;
     box-sizing: border-box;
+    width: 100%;
 }
 
 .profile-form-col .form-group {
     width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    overflow: hidden;
+}
+
+.profile-form-col .form-input {
+    max-width: 100%;
+    box-sizing: border-box;
 }
 
 @media (max-width: 1024px) {
     .profile-form-columns {
-        flex-wrap: wrap;
+        grid-template-columns: 1fr 1fr;
         gap: 20px;
-    }
-    
-    .profile-form-col {
-        flex: 1 1 calc(50% - 10px);
-        min-width: 280px;
     }
 }
 
 @media (max-width: 768px) {
     .profile-form-columns {
-        flex-direction: column;
+        grid-template-columns: 1fr;
         gap: 0;
-    }
-    
-    .profile-form-col {
-        flex: 1 1 100%;
     }
 }
 
@@ -1457,6 +1462,7 @@ form {
 
 .form-input {
     width: 100%;
+    max-width: 100%;
     padding: 10px 12px;
     margin-top: 6px;
     border: 1px solid #3a3a3a;
@@ -1467,6 +1473,7 @@ form {
     box-sizing: border-box;
     font-family: inherit;
     transition: border-color 0.2s ease, background-color 0.2s ease;
+    overflow: hidden;
 }
 
 .form-input::placeholder {
@@ -1502,7 +1509,9 @@ textarea.form-input {
     flex-wrap: wrap;
     justify-content: flex-end;
     width: 100%;
+    max-width: 100%;
     box-sizing: border-box;
+    overflow: hidden;
 }
 
 /* Forms inside recipe-view-container should be full width */
