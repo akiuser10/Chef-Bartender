@@ -19,12 +19,15 @@ def generate_otp(length=6):
     return ''.join([str(random.randint(0, 9)) for _ in range(length)])
 
 
-def _send_email_sync(app_context, email, otp, mail_config):
+def _send_email_sync(app, email, otp, mail_config):
     """
     Send email synchronously (called from background thread)
     """
-    with app_context:
+    with app.app_context():
         try:
+            from flask_mail import Message
+            from extensions import mail
+            
             msg = Message(
                 subject="Your Chef & Bartender Registration OTP",
                 recipients=[email],
@@ -52,7 +55,7 @@ Chef & Bartender Team
             socket.setdefaulttimeout(10)  # 10 second timeout
             
             mail.send(msg)
-            current_app.logger.info(f"OTP email sent successfully to {email}")
+            app.logger.info(f"OTP email sent successfully to {email}")
         except Exception as e:
             error_msg = (
                 f"Error sending OTP email to {email}: {str(e)}\n"
@@ -62,7 +65,7 @@ Chef & Bartender Team
                 f"MAIL_USERNAME: {mail_config.get('MAIL_USERNAME', 'NOT SET')}"
             )
             try:
-                current_app.logger.error(error_msg, exc_info=True)
+                app.logger.error(error_msg, exc_info=True)
             except:
                 print(error_msg)
 
@@ -88,15 +91,21 @@ def send_otp_email(email, otp):
             return False
         
         # Prepare mail config to pass to thread
+        from flask import _app_ctx_stack
+        app = current_app._get_current_object()
+        
         mail_config = {
             'MAIL_DEFAULT_SENDER': current_app.config.get('MAIL_DEFAULT_SENDER'),
             'MAIL_USERNAME': mail_username,
+            'MAIL_SERVER': current_app.config.get('MAIL_SERVER'),
+            'MAIL_PORT': current_app.config.get('MAIL_PORT'),
+            'MAIL_USE_TLS': current_app.config.get('MAIL_USE_TLS'),
         }
         
         # Send email in background thread (non-blocking)
         thread = threading.Thread(
             target=_send_email_sync,
-            args=(current_app.app_context(), email, otp, mail_config),
+            args=(app, email, otp, mail_config),
             daemon=True
         )
         thread.start()
