@@ -41,3 +41,7 @@ class Config:
     MAIL_PASSWORD = _strip_quotes(os.environ.get('MAIL_PASSWORD'))
     mail_default_sender = _strip_quotes(os.environ.get('MAIL_DEFAULT_SENDER'))
     MAIL_DEFAULT_SENDER = mail_default_sender if mail_default_sender else MAIL_USERNAME
+    
+    # Additional Flask-Mail settings for better reliability
+    MAIL_DEBUG = False
+    MAIL_SUPPRESS_SEND = False

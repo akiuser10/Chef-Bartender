@@ -91,7 +91,15 @@ def register():
                 flash(f'OTP has been sent to {email}. Please check your email and enter the 6-digit code.', 'info')
                 return render_template('register.html', step='verify_otp', email=email)
             else:
-                flash('Failed to send OTP email. Please check your email configuration and try again later.', 'error')
+                # Get more detailed error info for debugging
+                from flask import current_app
+                error_details = (
+                    f"Email config check failed. Check Railway logs for details. "
+                    f"Variables set: MAIL_USERNAME={bool(current_app.config.get('MAIL_USERNAME'))}, "
+                    f"MAIL_PASSWORD={bool(current_app.config.get('MAIL_PASSWORD'))}"
+                )
+                current_app.logger.error(error_details)
+                flash('Failed to send OTP email. Please check your email configuration in Railway and try again later.', 'error')
                 clear_otp_session()
                 return render_template('register.html')
         except Exception as e:

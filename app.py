@@ -37,6 +37,20 @@ def create_app(config_object='config.Config'):
         """Health check endpoint for Railway - responds immediately"""
         return {'status': 'ok'}, 200
     
+    @app.route('/test-email-config')
+    def test_email_config():
+        """Test endpoint to check email configuration (for debugging)"""
+        config_status = {
+            'MAIL_SERVER': app.config.get('MAIL_SERVER', 'NOT SET'),
+            'MAIL_PORT': app.config.get('MAIL_PORT', 'NOT SET'),
+            'MAIL_USE_TLS': app.config.get('MAIL_USE_TLS', 'NOT SET'),
+            'MAIL_USE_SSL': app.config.get('MAIL_USE_SSL', 'NOT SET'),
+            'MAIL_USERNAME': app.config.get('MAIL_USERNAME', 'NOT SET'),
+            'MAIL_PASSWORD': 'SET' if app.config.get('MAIL_PASSWORD') else 'NOT SET',
+            'MAIL_DEFAULT_SENDER': app.config.get('MAIL_DEFAULT_SENDER', 'NOT SET'),
+        }
+        return config_status, 200
+    
     # Initialize extensions (these should not block)
     db.init_app(app)
     login_manager.init_app(app)
