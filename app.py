@@ -40,11 +40,8 @@ def create_app(config_object='config.Config'):
     # Initialize extensions (these should not block)
     db.init_app(app)
     login_manager.init_app(app)
-    # Initialize mail lazily to avoid blocking
-    try:
-        mail.init_app(app)
-    except Exception as e:
-        app.logger.warning(f"Mail initialization warning: {str(e)}")
+    # Initialize mail - this should not block, just sets up configuration
+    mail.init_app(app)
     
     # Configure login manager
     login_manager.login_view = 'auth.login'

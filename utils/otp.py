@@ -24,8 +24,16 @@ def send_otp_email(email, otp):
     """
     try:
         # Check if email is configured
-        if not current_app.config.get('MAIL_USERNAME') or not current_app.config.get('MAIL_PASSWORD'):
-            current_app.logger.error("Email configuration missing: MAIL_USERNAME or MAIL_PASSWORD not set")
+        mail_username = current_app.config.get('MAIL_USERNAME')
+        mail_password = current_app.config.get('MAIL_PASSWORD')
+        
+        if not mail_username or not mail_password:
+            current_app.logger.error(
+                f"Email configuration missing: MAIL_USERNAME={bool(mail_username)}, "
+                f"MAIL_PASSWORD={bool(mail_password)}, "
+                f"MAIL_SERVER={current_app.config.get('MAIL_SERVER')}, "
+                f"MAIL_PORT={current_app.config.get('MAIL_PORT')}"
+            )
             return False
         
         subject = "Your Chef & Bartender Registration OTP"
@@ -57,8 +65,14 @@ Chef & Bartender Team
         current_app.logger.info(f"OTP email sent successfully to {email}")
         return True
     except Exception as e:
-        # Log the error properly
-        error_msg = f"Error sending OTP email to {email}: {str(e)}"
+        # Log the error properly with full details
+        error_msg = (
+            f"Error sending OTP email to {email}: {str(e)}\n"
+            f"MAIL_SERVER: {current_app.config.get('MAIL_SERVER')}\n"
+            f"MAIL_PORT: {current_app.config.get('MAIL_PORT')}\n"
+            f"MAIL_USE_TLS: {current_app.config.get('MAIL_USE_TLS')}\n"
+            f"MAIL_USERNAME: {current_app.config.get('MAIL_USERNAME', 'NOT SET')}"
+        )
         try:
             current_app.logger.error(error_msg, exc_info=True)
         except:
