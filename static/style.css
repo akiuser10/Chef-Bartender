@@ -3045,13 +3045,13 @@ main .page-panel .recipe-view-container {
     box-sizing: border-box;
 }
 
-/* Ensure purchase details tables match the width of purchase-header-info and expand wider */
+/* Ensure purchase details tables are centered with fixed width */
 .purchase-details .table-wrapper {
-    max-width: none !important;
-    width: calc(100% + 800px) !important; /* Expand 800px wider than container */
+    max-width: 1200px !important;
+    width: 1200px !important; /* Fixed width of 1200px */
     box-sizing: border-box;
-    margin-left: -400px !important; /* Negative margin to center the expansion */
-    margin-right: -400px !important;
+    margin: 0 auto !important; /* Center the table with auto margins */
+    padding: 0 50px !important; /* 50px padding on both sides for spacing */
     overflow-x: hidden !important; /* Remove horizontal scrolling */
     overflow-y: auto; /* Keep vertical scrolling if needed */
 }
