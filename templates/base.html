@@ -41,7 +41,6 @@
         {% endif %}
         {% if current_user.is_authenticated and current_user.user_role in ['Purchase Manager', 'Manager'] %}
         <a href="{{ url_for('purchase.to_order') }}" class="nav-link">TO ORDER</a>
-        <a href="{{ url_for('purchase.order_list') }}" class="nav-link">ORDER LIST</a>
         {% endif %}
         <a href="{{ url_for('main.about') }}" class="nav-link">ABOUT</a>
         <a href="{{ url_for('main.contact') }}" class="nav-link">CONTACT</a>
