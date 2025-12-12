@@ -50,6 +50,22 @@
                 {% endif %}
             {% endif %}
         </div>
+        {% if purchase_request.status == 'Order Received' %}
+        <div class="info-row">
+            <strong>Invoice Number:</strong>
+            <input type="text" name="invoice_number" form="quantitiesForm" 
+                   value="{{ purchase_request.invoice_number or '' }}" 
+                   placeholder="Enter Invoice Number" 
+                   style="padding: 5px 10px; margin-left: 10px; border: 1px solid #3a3a3a; background: #1a1a1a; color: white; border-radius: 4px; min-width: 200px;">
+        </div>
+        <div class="info-row">
+            <strong>Invoice Value:</strong>
+            <input type="text" name="invoice_value" form="quantitiesForm" 
+                   value="{{ "%.2f"|format(purchase_request.invoice_value) if purchase_request.invoice_value else '' }}" 
+                   placeholder="Enter Invoice Value" 
+                   style="padding: 5px 10px; margin-left: 10px; border: 1px solid #3a3a3a; background: #1a1a1a; color: white; border-radius: 4px; min-width: 200px;">
+        </div>
+        {% endif %}
     </div>
 
     <form method="POST" action="{{ url_for('purchase.update_quantities', purchase_id=purchase_request.id) }}" id="quantitiesForm">

@@ -239,6 +239,14 @@ def ensure_schema_updates():
                         # Add quantity_received column (nullable FLOAT)
                         conn.execute(db.text("ALTER TABLE purchase_item ADD COLUMN quantity_received FLOAT"))
                 
+                # Purchase request table updates
+                if table_exists(conn, 'purchase_request'):
+                    purchase_request_columns = get_table_columns(conn, 'purchase_request')
+                    if 'invoice_number' not in purchase_request_columns:
+                        conn.execute(db.text("ALTER TABLE purchase_request ADD COLUMN invoice_number VARCHAR(100)"))
+                    if 'invoice_value' not in purchase_request_columns:
+                        conn.execute(db.text("ALTER TABLE purchase_request ADD COLUMN invoice_value FLOAT"))
+                
                 # Backfill organization for existing items based on creator's organization
                 # This helps migrate existing data to the new organization system
                 try:

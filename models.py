@@ -430,6 +430,8 @@ class PurchaseRequest(db.Model):
     created_by = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     creator = db.relationship('User', foreign_keys=[created_by], backref='created_purchase_requests')
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    invoice_number = db.Column(db.String(100), nullable=True)  # Invoice number when order received
+    invoice_value = db.Column(db.Float, nullable=True)  # Invoice value when order received
     items = db.relationship('PurchaseItem', backref='purchase_request', cascade='all, delete-orphan')
 
     def calculate_total_cost(self):

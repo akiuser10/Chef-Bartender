@@ -335,8 +335,18 @@ def update_quantities(purchase_id):
                 except (ValueError, TypeError):
                     item.quantity_received = None
         
+        # Update invoice number and invoice value if provided
+        if 'invoice_number' in request.form:
+            purchase_request.invoice_number = request.form.get('invoice_number', '').strip() or None
+        if 'invoice_value' in request.form:
+            try:
+                invoice_val = request.form.get('invoice_value', '').strip()
+                purchase_request.invoice_value = float(invoice_val) if invoice_val else None
+            except (ValueError, TypeError):
+                purchase_request.invoice_value = None
+        
         db.session.commit()
-        flash('Quantities updated successfully!', 'success')
+        flash('Quantities and invoice information updated successfully!', 'success')
         
         # Redirect based on user role
         if current_user.user_role == 'Purchase Manager':
