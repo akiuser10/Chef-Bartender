@@ -170,14 +170,20 @@ def to_order():
 def order_list():
     """Display purchase orders - all orders for Purchase Manager, user's own orders for others"""
     try:
+        from sqlalchemy.orm import joinedload
         org_filter = get_organization_filter(PurchaseRequest)
         
         # Purchase Manager sees all orders in the organization
         # Others see only their own orders
+        # Use joinedload to ensure creator relationship is loaded
         if current_user.user_role == 'Purchase Manager':
-            purchase_requests = PurchaseRequest.query.filter(org_filter).order_by(PurchaseRequest.ordered_date.desc()).all()
+            purchase_requests = PurchaseRequest.query.filter(org_filter).options(
+                joinedload(PurchaseRequest.creator)
+            ).order_by(PurchaseRequest.ordered_date.desc()).all()
         else:
-            purchase_requests = PurchaseRequest.query.filter(org_filter).filter_by(created_by=current_user.id).order_by(PurchaseRequest.ordered_date.desc()).all()
+            purchase_requests = PurchaseRequest.query.filter(org_filter).filter_by(created_by=current_user.id).options(
+                joinedload(PurchaseRequest.creator)
+            ).order_by(PurchaseRequest.ordered_date.desc()).all()
         
         from utils.currency import get_currency_info
         currency_info = get_currency_info(current_user.currency or 'AED')
