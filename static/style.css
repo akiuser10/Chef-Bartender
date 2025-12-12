@@ -3052,15 +3052,30 @@ main .page-panel .recipe-view-container {
     box-sizing: border-box;
     margin-left: 0 !important;
     margin-right: 0 !important;
-    overflow-x: visible;
+    overflow-x: hidden !important; /* Remove horizontal scrolling */
+    overflow-y: auto; /* Keep vertical scrolling if needed */
 }
 
 .purchase-details .data-table {
     width: 100% !important;
-    max-width: 100% !important;
+    max-width: none !important;
     min-width: 100%;
     box-sizing: border-box;
     table-layout: auto;
+}
+
+/* Ensure table cells can expand to fill available space */
+.purchase-details .data-table th,
+.purchase-details .data-table td {
+    white-space: nowrap;
+    padding: 10px 15px;
+}
+
+/* Allow description column to wrap if needed */
+.purchase-details .data-table td:nth-child(2),
+.purchase-details .data-table th:nth-child(2) {
+    white-space: normal;
+    word-wrap: break-word;
 }
 
 .purchase-header-info {
