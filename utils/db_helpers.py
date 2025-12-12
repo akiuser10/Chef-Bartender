@@ -232,6 +232,13 @@ def ensure_schema_updates():
                     if 'currency' not in user_columns:
                         conn.execute(db.text("ALTER TABLE \"user\" ADD COLUMN currency VARCHAR(10) DEFAULT 'AED'"))
                 
+                # Purchase item table updates
+                if table_exists(conn, 'purchase_item'):
+                    purchase_item_columns = get_table_columns(conn, 'purchase_item')
+                    if 'quantity_received' not in purchase_item_columns:
+                        # Add quantity_received column (nullable FLOAT)
+                        conn.execute(db.text("ALTER TABLE purchase_item ADD COLUMN quantity_received FLOAT"))
+                
                 # Backfill organization for existing items based on creator's organization
                 # This helps migrate existing data to the new organization system
                 try:
