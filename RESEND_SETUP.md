@@ -28,13 +28,19 @@ Since Railway blocks SMTP and SendGrid requires phone verification, we're using 
 
 ### 3. Verify Sender Email (Important!)
 
+**Option A: Quick Testing (Use Resend's Test Domain)**
+- For immediate testing, Resend allows using `onboarding@resend.dev` as sender
+- This doesn't require verification
+- Update `MAIL_DEFAULT_SENDER=onboarding@resend.dev` in Railway
+
+**Option B: Verify Your Email (Recommended for Production)**
 1. In Resend dashboard, go to **Domains** (in sidebar)
-2. Click **"Add Domain"** OR **"Verify Email"** (if available)
-3. For quick testing, you can use Resend's default domain first
-4. **Better option**: Add and verify your sender email address
-   - Go to **Settings** → **Sender Emails**
-   - Add `akiuser10@gmail.com`
-   - Verify it by clicking the verification link sent to your email
+2. Click **"Add Domain"** and verify your domain
+   - This requires DNS configuration
+3. **OR** use Resend's email verification:
+   - Go to **Settings** → **Sender Emails** (if available)
+   - Add and verify `akiuser10@gmail.com`
+   - Check your email for verification link
 
 ### 4. Add API Key to Railway
 

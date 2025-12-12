@@ -26,12 +26,15 @@ def _send_email_via_resend(app, email, otp, from_email, api_key):
         
         resend.api_key = api_key
         
-        # Resend requires "From Name <email>" format or just email
-        # Use a friendly name
+        # Resend requires verified sender email or can use onboarding@resend.dev for testing
+        # Format: "From Name <email@domain.com>"
         if '<' not in from_email and '@' in from_email:
             from_address = f"Chef & Bartender <{from_email}>"
         else:
             from_address = from_email
+        
+        # Note: For production, sender email must be verified in Resend dashboard
+        # For quick testing, you can use "onboarding@resend.dev" (Resend's test domain)
         
         params = {
             "from": from_address,
