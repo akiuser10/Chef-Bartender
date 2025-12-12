@@ -1337,16 +1337,19 @@ form {
 
 .profile-form-columns {
     display: flex;
-    gap: 25px;
+    gap: 30px;
     margin-bottom: 25px;
     align-items: flex-start;
+    width: 100%;
+    box-sizing: border-box;
 }
 
 .profile-form-col {
-    flex: 1;
+    flex: 1 1 50%;
     min-width: 0;
     display: flex;
     flex-direction: column;
+    box-sizing: border-box;
 }
 
 .profile-form-col .form-group {
@@ -1499,6 +1502,7 @@ textarea.form-input {
     flex-wrap: wrap;
     justify-content: flex-end;
     width: 100%;
+    box-sizing: border-box;
 }
 
 /* Forms inside recipe-view-container should be full width */

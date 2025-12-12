@@ -34,6 +34,16 @@
                         <option value="Cost Controller" {% if user.user_role == 'Cost Controller' %}selected{% endif %}>Cost Controller</option>
                     </select>
                 </div>
+
+                <div class="form-group">
+                    <label for="email">Email Address:</label>
+                    <input type="email" id="email" name="email" value="{{ user.email }}" required class="form-input">
+                </div>
+
+                <div class="form-group">
+                    <label for="contact_number">Contact Number:</label>
+                    <input type="text" id="contact_number" name="contact_number" value="{{ user.contact_number or '' }}" class="form-input" placeholder="e.g., +971 555341989">
+                </div>
             </div>
 
             <div class="profile-form-col">
@@ -53,18 +63,6 @@
                 <div class="form-group">
                     <label for="company_address">Complete Address of the Company:</label>
                     <textarea id="company_address" name="company_address" class="form-input" rows="3" placeholder="Enter complete company address">{{ user.company_address or '' }}</textarea>
-                </div>
-            </div>
-
-            <div class="profile-form-col">
-                <div class="form-group">
-                    <label for="email">Email Address:</label>
-                    <input type="email" id="email" name="email" value="{{ user.email }}" required class="form-input">
-                </div>
-
-                <div class="form-group">
-                    <label for="contact_number">Contact Number:</label>
-                    <input type="text" id="contact_number" name="contact_number" value="{{ user.contact_number or '' }}" class="form-input" placeholder="e.g., +971 555341989">
                 </div>
 
                 <div class="form-group">
