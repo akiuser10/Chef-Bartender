@@ -5,8 +5,8 @@ import random
 import string
 from datetime import datetime, timedelta
 from flask import session, current_app
-from flask_mail import Message
 from extensions import mail
+from flask_mail import Message  # type: ignore
 import threading
 import smtplib
 
@@ -22,7 +22,7 @@ def generate_otp(length=6):
 def _send_email_via_resend(app, email, otp, from_email, api_key):
     """Send email using Resend API (HTTP-based, works on Railway, no phone verification)"""
     try:
-        import resend
+        import resend  # type: ignore
         
         resend.api_key = api_key
         
@@ -94,8 +94,8 @@ Chef & Bartender Team
 def _send_email_via_sendgrid(app, email, otp, from_email, api_key):
     """Send email using SendGrid API (HTTP-based, works on Railway)"""
     try:
-        from sendgrid import SendGridAPIClient
-        from sendgrid.helpers.mail import Mail
+        from sendgrid import SendGridAPIClient  # type: ignore
+        from sendgrid.helpers.mail import Mail  # type: ignore
         
         message = Mail(
             from_email=from_email,
@@ -138,9 +138,6 @@ def _send_email_via_smtp(app, email, otp, mail_config):
     Send email via SMTP (for development or when SendGrid is not available)
     """
     try:
-        from flask_mail import Message
-        from extensions import mail
-        
         msg = Message(
             subject="Your Chef & Bartender Registration OTP",
             recipients=[email],
