@@ -436,6 +436,11 @@ main {
     max-width: 100%;
 }
 
+/* Content should allow wider tables when it contains purchase-details */
+.content:has(.purchase-details) {
+    max-width: 100%;
+}
+
 .page-body {
     width: 100%;
 }
