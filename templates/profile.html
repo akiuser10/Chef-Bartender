@@ -40,7 +40,7 @@
                 <div class="form-group">
                     <label for="organisation">Organisation:</label>
                     <input type="text" id="organisation" name="organisation" value="{{ user.organisation or '' }}" class="form-input" placeholder="Enter organisation name">
-                    <small class="form-help-text" style="display: block; margin-top: 5px; color: #999; font-size: 0.9em;">
+                    <small class="form-help-text">
                         Users with the same organisation name will share Master List, Recipes, and Secondary Ingredients.
                     </small>
                 </div>
@@ -102,18 +102,22 @@
     </form>
 </div>
 
+<script type="application/json" id="country-currency-data">{{ countries | tojson }}</script>
 <script>
 // Auto-select currency when country is selected
 document.addEventListener('DOMContentLoaded', function() {
     const countrySelect = document.getElementById('country');
     const currencySelect = document.getElementById('currency');
+    const dataElement = document.getElementById('country-currency-data');
     
     // Country to currency mapping
-    const countryCurrencyMap = {
-        {% for code, country_info in countries.items() %}
-        '{{ code }}': '{{ country_info.currency }}',
-        {% endfor %}
-    };
+    const countryCurrencyData = JSON.parse(dataElement.textContent);
+    const countryCurrencyMap = {};
+    for (const code in countryCurrencyData) {
+        if (countryCurrencyData[code] && countryCurrencyData[code].currency) {
+            countryCurrencyMap[code] = countryCurrencyData[code].currency;
+        }
+    }
     
     if (countrySelect && currencySelect) {
         countrySelect.addEventListener('change', function() {

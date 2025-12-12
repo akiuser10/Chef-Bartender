@@ -7,7 +7,7 @@ from datetime import datetime
 import os
 
 # Import extensions
-from extensions import db, login_manager
+from extensions import db, login_manager, mail
 
 # Import models (must import after extensions to avoid circular imports)
 # Models import db from extensions
@@ -34,6 +34,7 @@ def create_app(config_object='config.Config'):
     # Initialize extensions
     db.init_app(app)
     login_manager.init_app(app)
+    mail.init_app(app)
     
     # Configure login manager
     login_manager.login_view = 'auth.login'

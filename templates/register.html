@@ -1,19 +1,89 @@
 {% extends "base.html" %}
 {% block page_panel %}
-<h2>Register</h2>
-<form method="POST">
-    <label for="username">Username:</label>
-    <input type="text" id="username" name="username" required placeholder="Enter username" title="Username">
-
-    <label for="email-register">Email:</label>
-    <input type="email" id="email-register" name="email" required placeholder="Enter your email" title="Email">
-
-    <label for="password-register">Password:</label>
-    <input type="password" id="password-register" name="password" required placeholder="Enter your password" title="Password">
-
-    <div class="actions">
-        <button type="submit" class="btn">Register</button>
-        <a href="{{ url_for('auth.login') }}" class="btn secondary">Already have an account?</a>
+<div class="page-panel">
+    <div class="panel-header">
+        <h2>Register</h2>
     </div>
-</form>
+
+    {% if step == 'verify_otp' %}
+    <!-- OTP Verification Step -->
+    <form method="POST" class="register-form">
+        <div class="form-group">
+            <p class="otp-info">A 6-digit OTP has been sent to <strong>{{ email }}</strong></p>
+            <p class="otp-instruction">Please check your email and enter the OTP code below:</p>
+        </div>
+
+        <div class="form-group">
+            <label for="otp">Enter OTP:</label>
+            <input 
+                type="text" 
+                id="otp" 
+                name="otp" 
+                required 
+                maxlength="6" 
+                pattern="[0-9]{6}"
+                placeholder="000000" 
+                title="Enter the 6-digit OTP"
+                class="form-input otp-input"
+                autocomplete="off"
+                inputmode="numeric"
+            >
+            <small class="form-help-text">Enter the 6-digit code sent to your email</small>
+        </div>
+
+        <div class="actions">
+            <button type="submit" name="verify_otp" class="btn">Verify OTP</button>
+            <a href="{{ url_for('auth.register') }}" class="btn secondary">Back to Registration</a>
+        </div>
+    </form>
+    {% else %}
+    <!-- Initial Registration Step -->
+    <form method="POST" class="register-form">
+        <div class="form-group">
+            <label for="username">Username:</label>
+            <input 
+                type="text" 
+                id="username" 
+                name="username" 
+                required 
+                placeholder="Enter username" 
+                title="Username"
+                class="form-input"
+            >
+        </div>
+
+        <div class="form-group">
+            <label for="email-register">Email:</label>
+            <input 
+                type="email" 
+                id="email-register" 
+                name="email" 
+                required 
+                placeholder="Enter your email" 
+                title="Email"
+                class="form-input"
+            >
+            <small class="form-help-text">We'll send a verification code to this email</small>
+        </div>
+
+        <div class="form-group">
+            <label for="password-register">Password:</label>
+            <input 
+                type="password" 
+                id="password-register" 
+                name="password" 
+                required 
+                placeholder="Enter your password" 
+                title="Password"
+                class="form-input"
+            >
+        </div>
+
+        <div class="actions">
+            <button type="submit" class="btn">Send OTP</button>
+            <a href="{{ url_for('auth.login') }}" class="btn secondary">Already have an account?</a>
+        </div>
+    </form>
+    {% endif %}
+</div>
 {% endblock %}

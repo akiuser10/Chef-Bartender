@@ -82,6 +82,24 @@ git commit -m "Ready for Railway deployment"
 
    **Note:** `DATABASE_URL` is automatically set when you add PostgreSQL, so you don't need to add it manually.
 
+3. **Configure Email Settings (for OTP verification):**
+   - Click **"+ New Variable"** and add each of these:
+   
+   ```
+   MAIL_SERVER=smtp.gmail.com
+   MAIL_PORT=587
+   MAIL_USE_TLS=true
+   MAIL_USE_SSL=false
+   MAIL_USERNAME=akiuser10@gmail.com
+   MAIL_PASSWORD=<your-gmail-app-password>
+   MAIL_DEFAULT_SENDER=akiuser10@gmail.com
+   ```
+   
+   **Note:** 
+   - Replace `<your-gmail-app-password>` with your actual Gmail App Password
+   - Remove spaces from the app password when entering (e.g., `vahw jfyq bpix vtjc` becomes `vahwjfyqbpixvtjc`)
+   - See `EMAIL_CONFIGURATION.md` for more details
+
 ### 2.5 Configure Build Settings (Optional)
 
 Railway should auto-detect your Flask app, but you can verify:
