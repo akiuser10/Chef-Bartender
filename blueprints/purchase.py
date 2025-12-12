@@ -266,15 +266,30 @@ def update_status(purchase_id):
         
         # Permission checks
         if new_status == 'Order Placed':
-            # Only Purchase Manager can set to Order Placed
-            if current_user.user_role != 'Purchase Manager':
-                flash('Only Purchase Manager can change status to Order Placed.', 'error')
-                return redirect(url_for('purchase.view_purchase_request', purchase_id=purchase_id))
+            # Purchase Manager can set to Order Placed from any status
+            # Manager can revert from Order Received to Order Placed
+            if current_user.user_role == 'Purchase Manager':
+                # Purchase Manager can change to Order Placed from any status
+                pass
+            elif current_user.user_role == 'Manager':
+                # Manager can only revert from Order Received to Order Placed
+                if purchase_request.status != 'Order Received':
+                    flash('Managers can only revert from Order Received to Order Placed.', 'error')
+                    return redirect(url_for('purchase.view_order', purchase_id=purchase_id))
+            else:
+                flash('You do not have permission to change status to Order Placed.', 'error')
+                if current_user.user_role == 'Purchase Manager':
+                    return redirect(url_for('purchase.view_purchase_request', purchase_id=purchase_id))
+                else:
+                    return redirect(url_for('purchase.view_order', purchase_id=purchase_id))
         elif new_status == 'Order Received':
             # Chef, Bartender, Manager, and Purchase Manager can set to Order Received
             if current_user.user_role not in ['Chef', 'Bartender', 'Manager', 'Purchase Manager']:
                 flash('You do not have permission to change status to Order Received.', 'error')
-                return redirect(url_for('purchase.view_purchase_request', purchase_id=purchase_id))
+                if current_user.user_role == 'Purchase Manager':
+                    return redirect(url_for('purchase.view_purchase_request', purchase_id=purchase_id))
+                else:
+                    return redirect(url_for('purchase.view_order', purchase_id=purchase_id))
         elif new_status == 'Order Cancelled':
             # Purchase Manager, Chef, Bartender, and Manager can cancel orders
             if current_user.user_role not in ['Purchase Manager', 'Chef', 'Bartender', 'Manager']:
