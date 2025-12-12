@@ -470,9 +470,13 @@ main {
 
 .page-panel h2 {
     margin-top: 0;
-    margin-bottom: 20px;
+    margin-bottom: 15px;
     font-size: 1.5rem;
     color: white;
+}
+
+.page-panel:has(.profile-form) h2 {
+    margin-bottom: 12px;
 }
 
 /* About Page */
@@ -1349,8 +1353,8 @@ form {
 .profile-form-columns {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 30px;
-    margin-bottom: 25px;
+    gap: 25px;
+    margin-bottom: 15px;
     align-items: flex-start;
     width: 100%;
     max-width: 100%;
@@ -1370,6 +1374,7 @@ form {
     max-width: 100%;
     box-sizing: border-box;
     overflow: hidden;
+    margin-bottom: 12px;
 }
 
 .profile-form-col .form-input {
@@ -1381,6 +1386,7 @@ form {
     .profile-form-columns {
         grid-template-columns: 1fr 1fr;
         gap: 20px;
+        margin-bottom: 12px;
     }
 }
 
@@ -1406,6 +1412,11 @@ form {
     color: #999;
     font-size: 0.85em;
     line-height: 1.3;
+}
+
+.profile-form .form-help-text {
+    margin-top: 3px;
+    font-size: 0.8em;
 }
 
 .register-form .form-help-text {
@@ -1497,18 +1508,18 @@ form {
 
 .profile-form .form-group label {
     display: block;
-    margin-bottom: 6px;
+    margin-bottom: 4px;
     font-weight: 500;
     color: rgba(255, 255, 255, 0.95);
     font-size: 0.9rem;
-    line-height: 1.4;
+    line-height: 1.3;
 }
 
 .form-input {
     width: 100%;
     max-width: 100%;
-    padding: 8px 12px;
-    margin-top: 4px;
+    padding: 7px 12px;
+    margin-top: 2px;
     border: 1px solid #3a3a3a;
     background: #2a2a2a;
     color: white;
@@ -1518,6 +1529,11 @@ form {
     font-family: inherit;
     transition: border-color 0.2s ease, background-color 0.2s ease;
     overflow: hidden;
+}
+
+.profile-form .form-input {
+    padding: 6px 12px;
+    margin-top: 0;
 }
 
 .form-input::placeholder {
@@ -1546,8 +1562,8 @@ textarea.form-input {
 .form-actions {
     display: flex;
     gap: 12px;
-    margin-top: 25px;
-    padding-top: 20px;
+    margin-top: 15px;
+    padding-top: 15px;
     border-top: 1px solid #3a3a3a;
     align-items: center;
     flex-wrap: wrap;
