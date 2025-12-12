@@ -142,9 +142,15 @@ def create_purchase_request():
 def to_order():
     """Display purchase requests for Purchase Manager and Manager"""
     try:
-        # Get all pending purchase requests
         org_filter = get_organization_filter(PurchaseRequest)
-        purchase_requests = PurchaseRequest.query.filter(org_filter).filter_by(status='Pending').order_by(PurchaseRequest.ordered_date.desc()).all()
+        
+        # Purchase Manager sees all orders, Manager sees only pending orders
+        if current_user.user_role == 'Purchase Manager':
+            # Show all orders for Purchase Manager (this is their Order List)
+            purchase_requests = PurchaseRequest.query.filter(org_filter).order_by(PurchaseRequest.ordered_date.desc()).all()
+        else:
+            # Manager sees only pending orders
+            purchase_requests = PurchaseRequest.query.filter(org_filter).filter_by(status='Pending').order_by(PurchaseRequest.ordered_date.desc()).all()
         
         from utils.currency import get_currency_info
         currency_info = get_currency_info(current_user.currency or 'AED')
