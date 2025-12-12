@@ -1,0 +1,196 @@
+{% extends "base.html" %}
+{% block page_panel %}
+<div class="panel-header">
+    <h2>Purchase Request</h2>
+</div>
+
+<div class="recipe-view-container">
+<form method="POST" action="{{ url_for('purchase.create_purchase_request') }}" id="purchaseForm">
+    <div class="recipe-view-layout">
+        <div class="recipe-table-section">
+            <table class="recipe-cost-table" id="purchaseTable">
+                <thead>
+                    <tr>
+                        <th class="actions-column-left"></th>
+                        <th class="code-cell">CODE</th>
+                        <th class="description-cell">DESCRIPTION</th>
+                        <th class="unit-qty-cell">QUANTITY</th>
+                        <th class="supplier-cell">SUPPLIER</th>
+                        <th class="sub-category-cell">SUB CATEGORY</th>
+                        <th class="cost-cell">COST PER UNIT</th>
+                        <th class="order-qty-cell">ORDER QUANTITY</th>
+                        <th class="actions-column-right"></th>
+                    </tr>
+                </thead>
+                <tbody id="purchaseRows">
+                    <!-- Rows will be added here by JavaScript -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <datalist id="product-options">
+        {% for option in product_options %}
+        <option value="{{ option.description }}" 
+                data-id="{{ option.id }}" 
+                data-code="{{ option.code }}" 
+                data-quantity="{{ option.quantity }}" 
+                data-supplier="{{ option.supplier }}" 
+                data-sub-category="{{ option.sub_category }}" 
+                data-cost="{{ option.cost_per_unit }}"></option>
+        {% endfor %}
+    </datalist>
+
+    <div class="actions purchase-actions">
+        <button type="submit" class="btn btn-primary">Create Purchase Request</button>
+    </div>
+</form>
+</div>
+
+<script id="product-data" type="application/json">{{ product_options|tojson|safe }}</script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const productDataEl = document.getElementById('product-data');
+    if (!productDataEl) {
+        return;
+    }
+    
+    const productOptions = JSON.parse(productDataEl.textContent || '[]');
+    const rowsContainer = document.getElementById('purchaseRows');
+    const currencySymbol = '{{ user_currency_info.symbol }}';
+
+    const optionMap = {};
+    productOptions.forEach(function(opt) {
+        const descriptionKey = (opt.description || '').toLowerCase();
+        if (descriptionKey) {
+            optionMap[descriptionKey] = opt;
+        }
+        const codeKey = (opt.code || '').toLowerCase();
+        if (codeKey) {
+            optionMap[codeKey] = opt;
+        }
+    });
+
+    function findOption(value) {
+        if (!value) return null;
+        const key = value.trim().toLowerCase();
+        if (optionMap[key]) return optionMap[key];
+        // Try partial match
+        for (let desc in optionMap) {
+            if (desc.includes(key) || key.includes(desc)) {
+                return optionMap[desc];
+            }
+        }
+        return null;
+    }
+
+    let rowIndex = 0;
+
+    function createRow(initialData) {
+        initialData = initialData || {};
+        const row = document.createElement('tr');
+        row.className = 'purchase-row';
+        
+        const currentIndex = rowIndex++;
+        
+        row.innerHTML = `
+            <td class="actions-cell-left">
+                <button type="button" class="btn-remove-row" title="Remove Row">-</button>
+            </td>
+            <td class="code-cell">-</td>
+            <td class="description-cell">
+                <input type="text" name="item_description_${currentIndex}" list="product-options" placeholder="Type product name" autocomplete="off" value="${initialData.description || ''}" class="product-input table-input">
+                <input type="hidden" name="item_product_id_${currentIndex}" value="${initialData.product_id || ''}">
+                <input type="hidden" name="item_code_${currentIndex}" value="${initialData.code || ''}">
+            </td>
+            <td class="unit-qty-cell">
+                <input type="number" step="0.01" min="0" name="item_quantity_${currentIndex}" placeholder="0.00" value="${initialData.quantity || ''}" class="qty-input table-input table-input-right" readonly>
+            </td>
+            <td class="supplier-cell">
+                <input type="text" name="item_supplier_${currentIndex}" placeholder="Supplier" value="${initialData.supplier || ''}" class="supplier-input table-input">
+            </td>
+            <td class="sub-category-cell">
+                <input type="text" name="item_sub_category_${currentIndex}" placeholder="Sub Category" value="${initialData.sub_category || ''}" class="sub-category-input table-input">
+            </td>
+            <td class="cost-cell">
+                <input type="number" step="0.01" min="0" name="item_cost_per_unit_${currentIndex}" placeholder="0.00" value="${initialData.cost_per_unit || ''}" class="cost-input table-input table-input-right">
+            </td>
+            <td class="order-qty-cell">
+                <input type="number" step="0.01" min="0" name="item_order_quantity_${currentIndex}" placeholder="0.00" value="${initialData.order_quantity || ''}" class="order-qty-input table-input table-input-right">
+            </td>
+            <td class="actions-cell-right">
+                <button type="button" class="btn-add-row" title="Add Row">+</button>
+            </td>
+        `;
+
+        const descriptionInput = row.querySelector('.product-input');
+        const codeCell = row.querySelector('.code-cell');
+        const quantityInput = row.querySelector('input[name^="item_quantity_"]');
+        const supplierInput = row.querySelector('input[name^="item_supplier_"]');
+        const subCategoryInput = row.querySelector('input[name^="item_sub_category_"]');
+        const costInput = row.querySelector('input[name^="item_cost_per_unit_"]');
+        const orderQtyInput = row.querySelector('input[name^="item_order_quantity_"]');
+        const hiddenProductId = row.querySelector('input[name^="item_product_id_"]');
+        const hiddenCode = row.querySelector('input[name^="item_code_"]');
+
+        function updateRowData() {
+            const option = findOption(descriptionInput.value);
+            
+            if (option) {
+                hiddenProductId.value = option.id || '';
+                const codeValue = option.code || '-';
+                hiddenCode.value = codeValue !== '-' ? codeValue : '';
+                codeCell.textContent = codeValue;
+                quantityInput.value = option.quantity || '0.00';
+                supplierInput.value = option.supplier || 'N/A';
+                subCategoryInput.value = option.sub_category || 'Other';
+                costInput.value = option.cost_per_unit || '0.00';
+            } else {
+                hiddenProductId.value = '';
+                hiddenCode.value = '';
+                if (!descriptionInput.value) {
+                    codeCell.textContent = '-';
+                }
+            }
+        }
+
+        // Handle input events for description
+        descriptionInput.addEventListener('input', function() {
+            updateRowData();
+        });
+        
+        descriptionInput.addEventListener('blur', function() {
+            const option = findOption(descriptionInput.value);
+            if (option) {
+                descriptionInput.value = option.description || descriptionInput.value;
+                updateRowData();
+            }
+        });
+
+        // Handle datalist selection
+        descriptionInput.addEventListener('change', function() {
+            updateRowData();
+        });
+
+        row.querySelector('.btn-remove-row').addEventListener('click', function() {
+            row.remove();
+        });
+        
+        row.querySelector('.btn-add-row').addEventListener('click', function() {
+            createRow();
+        });
+
+        rowsContainer.appendChild(row);
+        
+        // If initial data is provided, set values
+        if (initialData && initialData.description) {
+            updateRowData();
+        }
+    }
+
+    // Create first row
+    createRow();
+});
+</script>
+{% endblock %}
+

@@ -11,7 +11,7 @@ from extensions import db, login_manager, mail
 
 # Import models (must import after extensions to avoid circular imports)
 # Models import db from extensions
-from models import User, Product, HomemadeIngredient, HomemadeIngredientItem, Recipe, RecipeIngredient
+from models import User, Product, HomemadeIngredient, HomemadeIngredientItem, Recipe, RecipeIngredient, PurchaseRequest, PurchaseItem
 
 # Import blueprints
 from blueprints.main import main_bp
@@ -19,6 +19,7 @@ from blueprints.auth import auth_bp
 from blueprints.products import products_bp
 from blueprints.secondary import secondary_bp
 from blueprints.recipes import recipes_bp
+from blueprints.purchase import purchase_bp
 
 # Import utilities
 from utils.helpers import inject_now
@@ -85,6 +86,7 @@ def create_app(config_object='config.Config'):
     app.register_blueprint(products_bp)
     app.register_blueprint(secondary_bp)
     app.register_blueprint(recipes_bp)
+    app.register_blueprint(purchase_bp)
     
     # Register CLI commands
     @app.cli.command('link-ingredient')

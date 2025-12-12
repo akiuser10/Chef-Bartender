@@ -417,3 +417,34 @@ class RecipeIngredient(db.Model):
             import logging
             logging.error(f"Error calculating cost for RecipeIngredient {self.id}: {str(e)}")
             return 0.0
+
+# -------------------------
+# PURCHASE REQUEST MODEL
+# -------------------------
+class PurchaseRequest(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    order_number = db.Column(db.String(50), unique=True, nullable=False)
+    ordered_date = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+    status = db.Column(db.String(20), default='Pending')  # Pending, Approved, Rejected, Completed
+    organisation = db.Column(db.String(200))  # Organization name for sharing
+    created_by = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    creator = db.relationship('User', foreign_keys=[created_by], backref='created_purchase_requests')
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    items = db.relationship('PurchaseItem', backref='purchase_request', cascade='all, delete-orphan')
+
+    def calculate_total_cost(self):
+        """Calculate total cost of all items in the purchase request"""
+        return round(sum(item.cost_per_unit * item.order_quantity for item in self.items), 2)
+
+class PurchaseItem(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    purchase_request_id = db.Column(db.Integer, db.ForeignKey('purchase_request.id'), nullable=False)
+    product_id = db.Column(db.Integer, db.ForeignKey('product.id'), nullable=True)
+    code = db.Column(db.String(50))  # Store code for reference
+    description = db.Column(db.String(200), nullable=False)
+    quantity = db.Column(db.Float, nullable=False)  # Current quantity in inventory
+    supplier = db.Column(db.String(120))
+    sub_category = db.Column(db.String(50))
+    cost_per_unit = db.Column(db.Float, nullable=False)
+    order_quantity = db.Column(db.Float, nullable=False)  # Quantity to order (editable)
+    product = db.relationship('Product')
