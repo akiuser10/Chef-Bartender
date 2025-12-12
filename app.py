@@ -41,6 +41,8 @@ def create_app(config_object='config.Config'):
     def test_email_config():
         """Test endpoint to check email configuration (for debugging)"""
         config_status = {
+            'email_provider': 'SendGrid API' if app.config.get('SENDGRID_API_KEY') else 'SMTP',
+            'SENDGRID_API_KEY': 'SET' if app.config.get('SENDGRID_API_KEY') else 'NOT SET',
             'MAIL_SERVER': app.config.get('MAIL_SERVER', 'NOT SET'),
             'MAIL_PORT': app.config.get('MAIL_PORT', 'NOT SET'),
             'MAIL_USE_TLS': app.config.get('MAIL_USE_TLS', 'NOT SET'),

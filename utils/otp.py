@@ -19,19 +19,60 @@ def generate_otp(length=6):
     return ''.join([str(random.randint(0, 9)) for _ in range(length)])
 
 
-def _send_email_sync(app, email, otp, mail_config):
+def _send_email_via_sendgrid(app, email, otp, from_email, api_key):
+    """Send email using SendGrid API (HTTP-based, works on Railway)"""
+    try:
+        from sendgrid import SendGridAPIClient
+        from sendgrid.helpers.mail import Mail
+        
+        message = Mail(
+            from_email=from_email,
+            to_emails=email,
+            subject="Your Chef & Bartender Registration OTP",
+            plain_text_content=f"""
+Hello,
+
+Thank you for registering with Chef & Bartender!
+
+Your OTP (One-Time Password) for email verification is:
+
+    {otp}
+
+This OTP is valid for {OTP_EXPIRY_MINUTES} minutes.
+
+If you did not request this registration, please ignore this email.
+
+Best regards,
+Chef & Bartender Team
+"""
+        )
+        
+        sg = SendGridAPIClient(api_key)
+        response = sg.send(message)
+        
+        if response.status_code in [200, 202]:
+            app.logger.info(f"OTP email sent successfully to {email} via SendGrid (status: {response.status_code})")
+            return True
+        else:
+            app.logger.error(f"SendGrid returned status {response.status_code}: {response.body}")
+            return False
+    except Exception as e:
+        app.logger.error(f"Error sending email via SendGrid to {email}: {str(e)}", exc_info=True)
+        return False
+
+
+def _send_email_via_smtp(app, email, otp, mail_config):
     """
-    Send email synchronously (called from background thread)
+    Send email via SMTP (for development or when SendGrid is not available)
     """
-    with app.app_context():
-        try:
-            from flask_mail import Message
-            from extensions import mail
-            
-            msg = Message(
-                subject="Your Chef & Bartender Registration OTP",
-                recipients=[email],
-                body=f"""
+    try:
+        from flask_mail import Message
+        from extensions import mail
+        
+        msg = Message(
+            subject="Your Chef & Bartender Registration OTP",
+            recipients=[email],
+            body=f"""
 Hello,
 
 Thank you for registering with Chef & Bartender!
@@ -47,27 +88,43 @@ If you did not request this registration, please ignore this email.
 Best regards,
 Chef & Bartender Team
 """,
-                sender=mail_config.get('MAIL_DEFAULT_SENDER') or mail_config.get('MAIL_USERNAME')
-            )
-            
-            # Set timeout for SMTP operations
-            import socket
-            socket.setdefaulttimeout(10)  # 10 second timeout
-            
-            mail.send(msg)
-            app.logger.info(f"OTP email sent successfully to {email}")
-        except Exception as e:
-            error_msg = (
-                f"Error sending OTP email to {email}: {str(e)}\n"
-                f"MAIL_SERVER: {mail_config.get('MAIL_SERVER')}\n"
-                f"MAIL_PORT: {mail_config.get('MAIL_PORT')}\n"
-                f"MAIL_USE_TLS: {mail_config.get('MAIL_USE_TLS')}\n"
-                f"MAIL_USERNAME: {mail_config.get('MAIL_USERNAME', 'NOT SET')}"
-            )
-            try:
-                app.logger.error(error_msg, exc_info=True)
-            except:
-                print(error_msg)
+            sender=mail_config.get('MAIL_DEFAULT_SENDER') or mail_config.get('MAIL_USERNAME')
+        )
+        
+        # Set timeout for SMTP operations
+        import socket
+        socket.setdefaulttimeout(10)  # 10 second timeout
+        
+        mail.send(msg)
+        app.logger.info(f"OTP email sent successfully to {email} via SMTP")
+        return True
+    except Exception as e:
+        error_msg = (
+            f"Error sending OTP email to {email}: {str(e)}\n"
+            f"MAIL_SERVER: {mail_config.get('MAIL_SERVER')}\n"
+            f"MAIL_PORT: {mail_config.get('MAIL_PORT')}\n"
+            f"MAIL_USE_TLS: {mail_config.get('MAIL_USE_TLS')}\n"
+            f"MAIL_USERNAME: {mail_config.get('MAIL_USERNAME', 'NOT SET')}"
+        )
+        try:
+            app.logger.error(error_msg, exc_info=True)
+        except:
+            print(error_msg)
+        return False
+
+
+def _send_email_sync(app, email, otp, mail_config, sendgrid_api_key=None):
+    """
+    Send email synchronously (called from background thread)
+    Uses SendGrid API if available, otherwise falls back to SMTP
+    """
+    with app.app_context():
+        # Prefer SendGrid if API key is available (works on Railway)
+        if sendgrid_api_key:
+            from_email = mail_config.get('MAIL_DEFAULT_SENDER') or mail_config.get('MAIL_USERNAME') or 'noreply@chefandbartender.com'
+            return _send_email_via_sendgrid(app, email, otp, from_email, sendgrid_api_key)
+        else:
+            return _send_email_via_smtp(app, email, otp, mail_config)
 
 
 def send_otp_email(email, otp):
@@ -75,23 +132,46 @@ def send_otp_email(email, otp):
     Send OTP to user's email asynchronously (non-blocking)
     Returns True immediately if configuration is valid, False otherwise
     The actual email is sent in a background thread
+    Uses SendGrid API if available (recommended for Railway), otherwise SMTP
     """
     try:
-        # Check if email is configured
+        # Check for SendGrid API key first (preferred for Railway)
+        sendgrid_api_key = current_app.config.get('SENDGRID_API_KEY')
+        
+        if sendgrid_api_key:
+            # Use SendGrid API (works on Railway)
+            app = current_app._get_current_object()
+            from_email = current_app.config.get('MAIL_DEFAULT_SENDER') or current_app.config.get('MAIL_USERNAME') or 'noreply@chefandbartender.com'
+            
+            mail_config = {
+                'MAIL_DEFAULT_SENDER': from_email,
+                'MAIL_USERNAME': current_app.config.get('MAIL_USERNAME'),
+            }
+            
+            # Send email in background thread (non-blocking)
+            thread = threading.Thread(
+                target=_send_email_sync,
+                args=(app, email, otp, mail_config, sendgrid_api_key),
+                daemon=True
+            )
+            thread.start()
+            
+            current_app.logger.info(f"OTP email sending started for {email} via SendGrid (async)")
+            return True
+        
+        # Fallback to SMTP configuration
         mail_username = current_app.config.get('MAIL_USERNAME')
         mail_password = current_app.config.get('MAIL_PASSWORD')
         
         if not mail_username or not mail_password:
             current_app.logger.error(
-                f"Email configuration missing: MAIL_USERNAME={bool(mail_username)}, "
-                f"MAIL_PASSWORD={bool(mail_password)}, "
-                f"MAIL_SERVER={current_app.config.get('MAIL_SERVER')}, "
-                f"MAIL_PORT={current_app.config.get('MAIL_PORT')}"
+                f"Email configuration missing: SENDGRID_API_KEY={bool(sendgrid_api_key)}, "
+                f"MAIL_USERNAME={bool(mail_username)}, "
+                f"MAIL_PASSWORD={bool(mail_password)}"
             )
             return False
         
         # Prepare mail config to pass to thread
-        from flask import _app_ctx_stack
         app = current_app._get_current_object()
         
         mail_config = {
@@ -105,12 +185,12 @@ def send_otp_email(email, otp):
         # Send email in background thread (non-blocking)
         thread = threading.Thread(
             target=_send_email_sync,
-            args=(app, email, otp, mail_config),
+            args=(app, email, otp, mail_config, None),
             daemon=True
         )
         thread.start()
         
-        current_app.logger.info(f"OTP email sending started for {email} (async)")
+        current_app.logger.info(f"OTP email sending started for {email} via SMTP (async)")
         return True
     except Exception as e:
         error_msg = f"Error initiating OTP email send to {email}: {str(e)}"

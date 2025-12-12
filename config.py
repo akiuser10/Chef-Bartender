@@ -49,3 +49,7 @@ class Config:
     MAIL_SUPPRESS_SEND = False
     # Set timeout for SMTP connections (in seconds)
     MAIL_TIMEOUT = 10
+    
+    # SendGrid API configuration (preferred for Railway)
+    # If SENDGRID_API_KEY is set, use SendGrid API instead of SMTP
+    SENDGRID_API_KEY = _strip_quotes(os.environ.get('SENDGRID_API_KEY'))
