@@ -6,6 +6,9 @@ class Config:
     
     # Support both SQLite (development) and PostgreSQL (production) via DATABASE_URL
     database_url = os.environ.get('DATABASE_URL', 'sqlite:///bar_bartender.db')
+    # Strip quotes if present (Railway might include them)
+    if database_url:
+        database_url = database_url.strip('"\'')
     # Handle PostgreSQL URL format for Render and other platforms
     if database_url and database_url.startswith('postgres://'):
         database_url = database_url.replace('postgres://', 'postgresql://', 1)
@@ -20,10 +23,21 @@ class Config:
     ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
     
     # Email configuration for OTP
-    MAIL_SERVER = os.environ.get('MAIL_SERVER', 'smtp.gmail.com')
-    MAIL_PORT = int(os.environ.get('MAIL_PORT', 587))
-    MAIL_USE_TLS = os.environ.get('MAIL_USE_TLS', 'true').lower() in ['true', 'on', '1']
-    MAIL_USE_SSL = os.environ.get('MAIL_USE_SSL', 'false').lower() in ['true', 'on', '1']
-    MAIL_USERNAME = os.environ.get('MAIL_USERNAME')
-    MAIL_PASSWORD = os.environ.get('MAIL_PASSWORD')
-    MAIL_DEFAULT_SENDER = os.environ.get('MAIL_DEFAULT_SENDER', MAIL_USERNAME)
+    # Strip quotes from environment variables (Railway might include them)
+    def _strip_quotes(value):
+        """Strip quotes from environment variable values"""
+        if value:
+            return value.strip('"\'')
+        return value
+    
+    MAIL_SERVER = _strip_quotes(os.environ.get('MAIL_SERVER', 'smtp.gmail.com'))
+    mail_port_str = _strip_quotes(os.environ.get('MAIL_PORT', '587'))
+    MAIL_PORT = int(mail_port_str) if mail_port_str else 587
+    mail_use_tls_str = _strip_quotes(os.environ.get('MAIL_USE_TLS', 'true'))
+    MAIL_USE_TLS = mail_use_tls_str.lower() in ['true', 'on', '1'] if mail_use_tls_str else True
+    mail_use_ssl_str = _strip_quotes(os.environ.get('MAIL_USE_SSL', 'false'))
+    MAIL_USE_SSL = mail_use_ssl_str.lower() in ['true', 'on', '1'] if mail_use_ssl_str else False
+    MAIL_USERNAME = _strip_quotes(os.environ.get('MAIL_USERNAME'))
+    MAIL_PASSWORD = _strip_quotes(os.environ.get('MAIL_PASSWORD'))
+    mail_default_sender = _strip_quotes(os.environ.get('MAIL_DEFAULT_SENDER'))
+    MAIL_DEFAULT_SENDER = mail_default_sender if mail_default_sender else MAIL_USERNAME
