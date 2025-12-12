@@ -435,6 +435,10 @@ class PurchaseRequest(db.Model):
     def calculate_total_cost(self):
         """Calculate total cost of all items in the purchase request"""
         return round(sum(item.cost_per_unit * item.order_quantity for item in self.items), 2)
+    
+    def calculate_received_total_cost(self):
+        """Calculate total cost based on quantity received"""
+        return round(sum(item.calculate_received_cost() for item in self.items), 2)
 
 class PurchaseItem(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -447,4 +451,11 @@ class PurchaseItem(db.Model):
     sub_category = db.Column(db.String(50))
     cost_per_unit = db.Column(db.Float, nullable=False)
     order_quantity = db.Column(db.Float, nullable=False)  # Quantity to order (editable)
+    quantity_received = db.Column(db.Float, nullable=True)  # Quantity actually received
     product = db.relationship('Product')
+    
+    def calculate_received_cost(self):
+        """Calculate cost based on quantity received"""
+        if self.quantity_received is not None:
+            return round(self.cost_per_unit * self.quantity_received, 2)
+        return 0.0

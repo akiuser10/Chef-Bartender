@@ -3074,3 +3074,14 @@ main .page-panel .recipe-view-container {
     border-color: transparent;
     box-shadow: none;
 }
+
+/* Status badge for Order Placed and Order Received */
+.status-badge.status-order-placed {
+    background-color: #2196f3;
+    color: #fff;
+}
+
+.status-badge.status-order-received {
+    background-color: #4caf50;
+    color: #fff;
+}

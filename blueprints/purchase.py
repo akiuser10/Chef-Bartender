@@ -249,3 +249,99 @@ def view_order(purchase_id):
         current_app.logger.error(f'Error in view_order: {str(e)}', exc_info=True)
         return redirect(url_for('purchase.order_list'))
 
+
+@purchase_bp.route('/purchase/<int:purchase_id>/update-status', methods=['POST'])
+@login_required
+def update_status(purchase_id):
+    """Update purchase request status"""
+    try:
+        ensure_schema_updates()
+        org_filter = get_organization_filter(PurchaseRequest)
+        purchase_request = PurchaseRequest.query.filter(org_filter).filter_by(id=purchase_id).first_or_404()
+        
+        new_status = request.form.get('status', '').strip()
+        if not new_status:
+            flash('Status is required.', 'error')
+            return redirect(url_for('purchase.view_purchase_request', purchase_id=purchase_id))
+        
+        # Permission checks
+        if new_status == 'Order Placed':
+            # Only Purchase Manager can set to Order Placed
+            if current_user.user_role != 'Purchase Manager':
+                flash('Only Purchase Manager can change status to Order Placed.', 'error')
+                return redirect(url_for('purchase.view_purchase_request', purchase_id=purchase_id))
+        elif new_status == 'Order Received':
+            # Chef, Bartender, Manager, and Purchase Manager can set to Order Received
+            if current_user.user_role not in ['Chef', 'Bartender', 'Manager', 'Purchase Manager']:
+                flash('You do not have permission to change status to Order Received.', 'error')
+                return redirect(url_for('purchase.view_purchase_request', purchase_id=purchase_id))
+        
+        purchase_request.status = new_status
+        db.session.commit()
+        
+        flash(f'Status updated to {new_status} successfully!', 'success')
+        
+        # Redirect based on user role
+        if current_user.user_role == 'Purchase Manager':
+            return redirect(url_for('purchase.view_purchase_request', purchase_id=purchase_id))
+        else:
+            return redirect(url_for('purchase.view_order', purchase_id=purchase_id))
+    
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Error updating status: {str(e)}', 'error')
+        current_app.logger.error(f'Error in update_status: {str(e)}', exc_info=True)
+        return redirect(url_for('purchase.to_order'))
+
+
+@purchase_bp.route('/purchase/<int:purchase_id>/update-quantities', methods=['POST'])
+@login_required
+@role_required(['Chef', 'Bartender', 'Manager', 'Purchase Manager'])
+def update_quantities(purchase_id):
+    """Update quantity received for purchase items"""
+    try:
+        ensure_schema_updates()
+        org_filter = get_organization_filter(PurchaseRequest)
+        
+        # Purchase Manager can update any order, others can only update their own
+        if current_user.user_role == 'Purchase Manager':
+            purchase_request = PurchaseRequest.query.filter(org_filter).filter_by(id=purchase_id).first_or_404()
+        else:
+            purchase_request = PurchaseRequest.query.filter(org_filter).filter_by(id=purchase_id, created_by=current_user.id).first_or_404()
+        
+        # Only allow updating quantities if status is Order Received
+        if purchase_request.status != 'Order Received':
+            flash('Quantities can only be updated when status is Order Received.', 'error')
+            if current_user.user_role == 'Purchase Manager':
+                return redirect(url_for('purchase.view_purchase_request', purchase_id=purchase_id))
+            else:
+                return redirect(url_for('purchase.view_order', purchase_id=purchase_id))
+        
+        # Update quantities for each item
+        for item in purchase_request.items:
+            qty_key = f'quantity_received_{item.id}'
+            if qty_key in request.form:
+                try:
+                    qty_received = float(request.form.get(qty_key, 0) or 0)
+                    item.quantity_received = qty_received if qty_received >= 0 else None
+                except (ValueError, TypeError):
+                    item.quantity_received = None
+        
+        db.session.commit()
+        flash('Quantities updated successfully!', 'success')
+        
+        # Redirect based on user role
+        if current_user.user_role == 'Purchase Manager':
+            return redirect(url_for('purchase.view_purchase_request', purchase_id=purchase_id))
+        else:
+            return redirect(url_for('purchase.view_order', purchase_id=purchase_id))
+    
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Error updating quantities: {str(e)}', 'error')
+        current_app.logger.error(f'Error in update_quantities: {str(e)}', exc_info=True)
+        if current_user.user_role == 'Purchase Manager':
+            return redirect(url_for('purchase.view_purchase_request', purchase_id=purchase_id))
+        else:
+            return redirect(url_for('purchase.view_order', purchase_id=purchase_id))
+
