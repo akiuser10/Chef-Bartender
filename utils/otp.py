@@ -19,6 +19,44 @@ def generate_otp(length=6):
     return ''.join([str(random.randint(0, 9)) for _ in range(length)])
 
 
+def _send_email_via_resend(app, email, otp, from_email, api_key):
+    """Send email using Resend API (HTTP-based, works on Railway, no phone verification)"""
+    try:
+        import resend
+        
+        resend.api_key = api_key
+        
+        params = {
+            "from": from_email,
+            "to": [email],
+            "subject": "Your Chef & Bartender Registration OTP",
+            "text": f"""
+Hello,
+
+Thank you for registering with Chef & Bartender!
+
+Your OTP (One-Time Password) for email verification is:
+
+    {otp}
+
+This OTP is valid for {OTP_EXPIRY_MINUTES} minutes.
+
+If you did not request this registration, please ignore this email.
+
+Best regards,
+Chef & Bartender Team
+"""
+        }
+        
+        email_response = resend.Emails.send(params)
+        
+        app.logger.info(f"OTP email sent successfully to {email} via Resend (id: {email_response.get('id', 'unknown')})")
+        return True
+    except Exception as e:
+        app.logger.error(f"Error sending email via Resend to {email}: {str(e)}", exc_info=True)
+        return False
+
+
 def _send_email_via_sendgrid(app, email, otp, from_email, api_key):
     """Send email using SendGrid API (HTTP-based, works on Railway)"""
     try:
@@ -113,16 +151,21 @@ Chef & Bartender Team
         return False
 
 
-def _send_email_sync(app, email, otp, mail_config, sendgrid_api_key=None):
+def _send_email_sync(app, email, otp, mail_config, resend_api_key=None, sendgrid_api_key=None):
     """
     Send email synchronously (called from background thread)
-    Uses SendGrid API if available, otherwise falls back to SMTP
+    Priority: Resend > SendGrid > SMTP
     """
     with app.app_context():
-        # Prefer SendGrid if API key is available (works on Railway)
-        if sendgrid_api_key:
-            from_email = mail_config.get('MAIL_DEFAULT_SENDER') or mail_config.get('MAIL_USERNAME') or 'noreply@chefandbartender.com'
+        from_email = mail_config.get('MAIL_DEFAULT_SENDER') or mail_config.get('MAIL_USERNAME') or 'noreply@chefandbartender.com'
+        
+        # Prefer Resend (easiest, no phone verification)
+        if resend_api_key:
+            return _send_email_via_resend(app, email, otp, from_email, resend_api_key)
+        # Fallback to SendGrid if Resend not available
+        elif sendgrid_api_key:
             return _send_email_via_sendgrid(app, email, otp, from_email, sendgrid_api_key)
+        # Last resort: SMTP (may not work on Railway)
         else:
             return _send_email_via_smtp(app, email, otp, mail_config)
 
@@ -132,17 +175,18 @@ def send_otp_email(email, otp):
     Send OTP to user's email asynchronously (non-blocking)
     Returns True immediately if configuration is valid, False otherwise
     The actual email is sent in a background thread
-    Uses SendGrid API if available (recommended for Railway), otherwise SMTP
+    Priority: Resend API > SendGrid API > SMTP
     """
     try:
-        # Check for SendGrid API key first (preferred for Railway)
+        app = current_app._get_current_object()
+        from_email = current_app.config.get('MAIL_DEFAULT_SENDER') or current_app.config.get('MAIL_USERNAME') or 'noreply@chefandbartender.com'
+        
+        # Check for Resend API key first (easiest, no phone verification)
+        resend_api_key = current_app.config.get('RESEND_API_KEY')
         sendgrid_api_key = current_app.config.get('SENDGRID_API_KEY')
         
-        if sendgrid_api_key:
-            # Use SendGrid API (works on Railway)
-            app = current_app._get_current_object()
-            from_email = current_app.config.get('MAIL_DEFAULT_SENDER') or current_app.config.get('MAIL_USERNAME') or 'noreply@chefandbartender.com'
-            
+        if resend_api_key or sendgrid_api_key:
+            # Use API-based email service (works on Railway)
             mail_config = {
                 'MAIL_DEFAULT_SENDER': from_email,
                 'MAIL_USERNAME': current_app.config.get('MAIL_USERNAME'),
@@ -151,29 +195,29 @@ def send_otp_email(email, otp):
             # Send email in background thread (non-blocking)
             thread = threading.Thread(
                 target=_send_email_sync,
-                args=(app, email, otp, mail_config, sendgrid_api_key),
+                args=(app, email, otp, mail_config, resend_api_key, sendgrid_api_key),
                 daemon=True
             )
             thread.start()
             
-            current_app.logger.info(f"OTP email sending started for {email} via SendGrid (async)")
+            provider = 'Resend' if resend_api_key else 'SendGrid'
+            current_app.logger.info(f"OTP email sending started for {email} via {provider} (async)")
             return True
         
-        # Fallback to SMTP configuration
+        # Fallback to SMTP configuration (may not work on Railway)
         mail_username = current_app.config.get('MAIL_USERNAME')
         mail_password = current_app.config.get('MAIL_PASSWORD')
         
         if not mail_username or not mail_password:
             current_app.logger.error(
-                f"Email configuration missing: SENDGRID_API_KEY={bool(sendgrid_api_key)}, "
+                f"Email configuration missing: RESEND_API_KEY={bool(resend_api_key)}, "
+                f"SENDGRID_API_KEY={bool(sendgrid_api_key)}, "
                 f"MAIL_USERNAME={bool(mail_username)}, "
                 f"MAIL_PASSWORD={bool(mail_password)}"
             )
             return False
         
         # Prepare mail config to pass to thread
-        app = current_app._get_current_object()
-        
         mail_config = {
             'MAIL_DEFAULT_SENDER': current_app.config.get('MAIL_DEFAULT_SENDER'),
             'MAIL_USERNAME': mail_username,
@@ -185,7 +229,7 @@ def send_otp_email(email, otp):
         # Send email in background thread (non-blocking)
         thread = threading.Thread(
             target=_send_email_sync,
-            args=(app, email, otp, mail_config, None),
+            args=(app, email, otp, mail_config, None, None),
             daemon=True
         )
         thread.start()

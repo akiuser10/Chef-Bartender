@@ -50,6 +50,8 @@ class Config:
     # Set timeout for SMTP connections (in seconds)
     MAIL_TIMEOUT = 10
     
-    # SendGrid API configuration (preferred for Railway)
-    # If SENDGRID_API_KEY is set, use SendGrid API instead of SMTP
+    # Email API configurations (preferred for Railway - bypasses SMTP blocking)
+    # Resend API (simplest, no phone verification required)
+    RESEND_API_KEY = _strip_quotes(os.environ.get('RESEND_API_KEY'))
+    # SendGrid API (alternative option)
     SENDGRID_API_KEY = _strip_quotes(os.environ.get('SENDGRID_API_KEY'))
