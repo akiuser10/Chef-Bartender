@@ -3048,7 +3048,7 @@ main .page-panel .recipe-view-container {
 /* Ensure purchase details tables are centered with fixed width */
 .purchase-details .table-wrapper {
     max-width: 1800px !important;
-    width: 1700px !important; /* Fixed width of 1700px */
+    width: 1600px !important; /* Fixed width of 1600px */
     box-sizing: border-box;
     margin: 0 auto !important; /* Center the table with auto margins */
     padding-left: 50px !important; /* 50px spacing on left */
