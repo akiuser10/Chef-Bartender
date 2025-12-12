@@ -7,6 +7,8 @@ from datetime import datetime, timedelta
 from flask import session, current_app
 from flask_mail import Message
 from extensions import mail
+import threading
+import smtplib
 
 # OTP expiration time (10 minutes)
 OTP_EXPIRY_MINUTES = 10
@@ -17,10 +19,59 @@ def generate_otp(length=6):
     return ''.join([str(random.randint(0, 9)) for _ in range(length)])
 
 
+def _send_email_sync(app_context, email, otp, mail_config):
+    """
+    Send email synchronously (called from background thread)
+    """
+    with app_context:
+        try:
+            msg = Message(
+                subject="Your Chef & Bartender Registration OTP",
+                recipients=[email],
+                body=f"""
+Hello,
+
+Thank you for registering with Chef & Bartender!
+
+Your OTP (One-Time Password) for email verification is:
+
+    {otp}
+
+This OTP is valid for {OTP_EXPIRY_MINUTES} minutes.
+
+If you did not request this registration, please ignore this email.
+
+Best regards,
+Chef & Bartender Team
+""",
+                sender=mail_config.get('MAIL_DEFAULT_SENDER') or mail_config.get('MAIL_USERNAME')
+            )
+            
+            # Set timeout for SMTP operations
+            import socket
+            socket.setdefaulttimeout(10)  # 10 second timeout
+            
+            mail.send(msg)
+            current_app.logger.info(f"OTP email sent successfully to {email}")
+        except Exception as e:
+            error_msg = (
+                f"Error sending OTP email to {email}: {str(e)}\n"
+                f"MAIL_SERVER: {mail_config.get('MAIL_SERVER')}\n"
+                f"MAIL_PORT: {mail_config.get('MAIL_PORT')}\n"
+                f"MAIL_USE_TLS: {mail_config.get('MAIL_USE_TLS')}\n"
+                f"MAIL_USERNAME: {mail_config.get('MAIL_USERNAME', 'NOT SET')}"
+            )
+            try:
+                current_app.logger.error(error_msg, exc_info=True)
+            except:
+                print(error_msg)
+
+
 def send_otp_email(email, otp):
     """
-    Send OTP to user's email
-    Returns True if sent successfully, False otherwise
+    Send OTP to user's email asynchronously (non-blocking)
+    Returns True immediately if configuration is valid, False otherwise
+    The actual email is sent in a background thread
     """
     try:
         # Check if email is configured
@@ -36,43 +87,24 @@ def send_otp_email(email, otp):
             )
             return False
         
-        subject = "Your Chef & Bartender Registration OTP"
-        body = f"""
-Hello,
-
-Thank you for registering with Chef & Bartender!
-
-Your OTP (One-Time Password) for email verification is:
-
-    {otp}
-
-This OTP is valid for {OTP_EXPIRY_MINUTES} minutes.
-
-If you did not request this registration, please ignore this email.
-
-Best regards,
-Chef & Bartender Team
-"""
+        # Prepare mail config to pass to thread
+        mail_config = {
+            'MAIL_DEFAULT_SENDER': current_app.config.get('MAIL_DEFAULT_SENDER'),
+            'MAIL_USERNAME': mail_username,
+        }
         
-        msg = Message(
-            subject=subject,
-            recipients=[email],
-            body=body,
-            sender=current_app.config.get('MAIL_DEFAULT_SENDER') or current_app.config.get('MAIL_USERNAME')
+        # Send email in background thread (non-blocking)
+        thread = threading.Thread(
+            target=_send_email_sync,
+            args=(current_app.app_context(), email, otp, mail_config),
+            daemon=True
         )
+        thread.start()
         
-        mail.send(msg)
-        current_app.logger.info(f"OTP email sent successfully to {email}")
+        current_app.logger.info(f"OTP email sending started for {email} (async)")
         return True
     except Exception as e:
-        # Log the error properly with full details
-        error_msg = (
-            f"Error sending OTP email to {email}: {str(e)}\n"
-            f"MAIL_SERVER: {current_app.config.get('MAIL_SERVER')}\n"
-            f"MAIL_PORT: {current_app.config.get('MAIL_PORT')}\n"
-            f"MAIL_USE_TLS: {current_app.config.get('MAIL_USE_TLS')}\n"
-            f"MAIL_USERNAME: {current_app.config.get('MAIL_USERNAME', 'NOT SET')}"
-        )
+        error_msg = f"Error initiating OTP email send to {email}: {str(e)}"
         try:
             current_app.logger.error(error_msg, exc_info=True)
         except:

@@ -47,3 +47,5 @@ class Config:
     # Additional Flask-Mail settings for better reliability
     MAIL_DEBUG = False
     MAIL_SUPPRESS_SEND = False
+    # Set timeout for SMTP connections (in seconds)
+    MAIL_TIMEOUT = 10
