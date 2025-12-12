@@ -26,8 +26,15 @@ def _send_email_via_resend(app, email, otp, from_email, api_key):
         
         resend.api_key = api_key
         
+        # Resend requires "From Name <email>" format or just email
+        # Use a friendly name
+        if '<' not in from_email and '@' in from_email:
+            from_address = f"Chef & Bartender <{from_email}>"
+        else:
+            from_address = from_email
+        
         params = {
-            "from": from_email,
+            "from": from_address,
             "to": [email],
             "subject": "Your Chef & Bartender Registration OTP",
             "text": f"""
@@ -50,10 +57,27 @@ Chef & Bartender Team
         
         email_response = resend.Emails.send(params)
         
-        app.logger.info(f"OTP email sent successfully to {email} via Resend (id: {email_response.get('id', 'unknown')})")
-        return True
+        # Log detailed response
+        app.logger.info(f"Resend API response: {email_response}")
+        
+        # Check if response has 'id' (success) or 'error' (failure)
+        if 'id' in email_response:
+            app.logger.info(f"OTP email sent successfully to {email} via Resend (id: {email_response.get('id')})")
+            return True
+        elif 'error' in email_response:
+            error_msg = email_response.get('error', 'Unknown error')
+            app.logger.error(f"Resend API error: {error_msg}")
+            return False
+        else:
+            # Assume success if we got a response without error
+            app.logger.info(f"OTP email sent to {email} via Resend (response: {email_response})")
+            return True
     except Exception as e:
-        app.logger.error(f"Error sending email via Resend to {email}: {str(e)}", exc_info=True)
+        error_detail = str(e)
+        app.logger.error(f"Error sending email via Resend to {email}: {error_detail}", exc_info=True)
+        # Log more details about the exception
+        if hasattr(e, 'response'):
+            app.logger.error(f"Resend API response: {e.response}")
         return False
 
 

@@ -26,7 +26,17 @@ Since Railway blocks SMTP and SendGrid requires phone verification, we're using 
 4. Click **"Add"**
 5. **Copy the API key** (starts with `re_`)
 
-### 3. Add API Key to Railway
+### 3. Verify Sender Email (Important!)
+
+1. In Resend dashboard, go to **Domains** (in sidebar)
+2. Click **"Add Domain"** OR **"Verify Email"** (if available)
+3. For quick testing, you can use Resend's default domain first
+4. **Better option**: Add and verify your sender email address
+   - Go to **Settings** → **Sender Emails**
+   - Add `akiuser10@gmail.com`
+   - Verify it by clicking the verification link sent to your email
+
+### 4. Add API Key to Railway
 
 1. Go to Railway Dashboard → Your Service → **Variables** tab
 2. Add new variable:
@@ -34,9 +44,12 @@ Since Railway blocks SMTP and SendGrid requires phone verification, we're using 
    - **Value**: `re_xxxxxxxxxxxxxxxxxxxxxxxxxxxxx` (your API key)
 3. Keep `MAIL_DEFAULT_SENDER=akiuser10@gmail.com`
 
-### 4. That's It!
+### 5. Important: Sender Verification
 
-No domain verification or sender verification needed. Resend will automatically handle email delivery.
+Resend requires the sender email to be verified. If emails aren't being delivered:
+- Check Resend dashboard → **Logs** to see delivery status
+- Verify your sender email in Resend dashboard
+- Or use Resend's default domain for testing
 
 ### 5. Test
 
