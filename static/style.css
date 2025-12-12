@@ -3048,10 +3048,10 @@ main .page-panel .recipe-view-container {
 /* Ensure purchase details tables match the width of purchase-header-info and expand wider */
 .purchase-details .table-wrapper {
     max-width: none !important;
-    width: calc(100% + 500px) !important; /* Expand 500px wider than container */
+    width: calc(100% + 800px) !important; /* Expand 800px wider than container */
     box-sizing: border-box;
-    margin-left: -250px !important; /* Negative margin to center the expansion */
-    margin-right: -250px !important;
+    margin-left: -400px !important; /* Negative margin to center the expansion */
+    margin-right: -400px !important;
     overflow-x: hidden !important; /* Remove horizontal scrolling */
     overflow-y: auto; /* Keep vertical scrolling if needed */
 }
