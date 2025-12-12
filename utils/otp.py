@@ -84,7 +84,17 @@ Chef & Bartender Team
             return True
     except Exception as e:
         error_detail = str(e)
-        app.logger.error(f"Error sending email via Resend to {email}: {error_detail}", exc_info=True)
+        
+        # Check for specific Resend test domain limitation error
+        if "only send testing emails to your own email address" in error_detail.lower():
+            app.logger.error(
+                f"Resend test domain limitation: Cannot send to {email} using test domain. "
+                f"Resend test domain (onboarding@resend.dev) can only send to your account email. "
+                f"To send to any email address, please verify a domain at https://resend.com/domains"
+            )
+        else:
+            app.logger.error(f"Error sending email via Resend to {email}: {error_detail}", exc_info=True)
+        
         # Log more details about the exception
         if hasattr(e, 'response'):
             app.logger.error(f"Resend API response: {e.response}")
@@ -185,26 +195,30 @@ Chef & Bartender Team
 def _send_email_sync(app, email, otp, mail_config, resend_api_key=None, sendgrid_api_key=None):
     """
     Send email synchronously (called from background thread)
-    Priority: Resend > SendGrid > SMTP
-    Falls back to next method if previous one fails
+    Priority: Resend > SMTP
+    Falls back to SMTP if Resend fails
     """
     with app.app_context():
         from_email = mail_config.get('MAIL_DEFAULT_SENDER') or mail_config.get('MAIL_USERNAME') or 'noreply@chefandbartender.com'
         
-        # Try Resend first (easiest, no phone verification)
+        # Try Resend first (primary email service)
         if resend_api_key:
-            if _send_email_via_resend(app, email, otp, from_email, resend_api_key):
+            result = _send_email_via_resend(app, email, otp, from_email, resend_api_key)
+            if result:
                 return True
-            app.logger.warning(f"Resend failed for {email}, falling back to alternative method")
+            app.logger.warning(f"Resend failed for {email}, falling back to SMTP")
         
-        # Fallback to SendGrid if Resend failed or not available
-        if sendgrid_api_key:
-            if _send_email_via_sendgrid(app, email, otp, from_email, sendgrid_api_key):
-                return True
-            app.logger.warning(f"SendGrid failed for {email}, falling back to SMTP")
-        
-        # Last resort: SMTP (may not work on Railway)
-        return _send_email_via_smtp(app, email, otp, mail_config)
+        # Fallback to SMTP if Resend failed or not available
+        # Check if SMTP is configured
+        if mail_config.get('MAIL_SERVER') and mail_config.get('MAIL_PASSWORD'):
+            return _send_email_via_smtp(app, email, otp, mail_config)
+        else:
+            app.logger.error(
+                f"Email sending failed: Resend unavailable and SMTP not configured. "
+                f"Please verify your domain in Resend at https://resend.com/domains "
+                f"or configure SMTP settings."
+            )
+            return False
 
 
 def send_otp_email(email, otp):
@@ -212,15 +226,14 @@ def send_otp_email(email, otp):
     Send OTP to user's email asynchronously (non-blocking)
     Returns True immediately if configuration is valid, False otherwise
     The actual email is sent in a background thread
-    Priority: Resend API > SendGrid API > SMTP
+    Priority: Resend API > SMTP
     """
     try:
         app = current_app._get_current_object()
         from_email = current_app.config.get('MAIL_DEFAULT_SENDER') or current_app.config.get('MAIL_USERNAME') or 'noreply@chefandbartender.com'
         
-        # Check for Resend API key first (easiest, no phone verification)
+        # Check for Resend API key (primary email service)
         resend_api_key = current_app.config.get('RESEND_API_KEY')
-        sendgrid_api_key = current_app.config.get('SENDGRID_API_KEY')
         
         # Prepare mail config with all SMTP settings for fallback
         mail_config = {
@@ -232,18 +245,17 @@ def send_otp_email(email, otp):
             'MAIL_PASSWORD': current_app.config.get('MAIL_PASSWORD'),
         }
         
-        if resend_api_key or sendgrid_api_key:
-            # Use API-based email service (works on Railway) with SMTP fallback
+        if resend_api_key:
+            # Use Resend API (works on Railway) with SMTP fallback
             # Send email in background thread (non-blocking)
             thread = threading.Thread(
                 target=_send_email_sync,
-                args=(app, email, otp, mail_config, resend_api_key, sendgrid_api_key),
+                args=(app, email, otp, mail_config, resend_api_key, None),
                 daemon=True
             )
             thread.start()
             
-            provider = 'Resend' if resend_api_key else 'SendGrid'
-            current_app.logger.info(f"OTP email sending started for {email} via {provider} (with fallback) (async)")
+            current_app.logger.info(f"OTP email sending started for {email} via Resend (with SMTP fallback) (async)")
             return True
         
         # Fallback to SMTP configuration (may not work on Railway)
@@ -253,7 +265,6 @@ def send_otp_email(email, otp):
         if not mail_username or not mail_password:
             current_app.logger.error(
                 f"Email configuration missing: RESEND_API_KEY={bool(resend_api_key)}, "
-                f"SENDGRID_API_KEY={bool(sendgrid_api_key)}, "
                 f"MAIL_USERNAME={bool(mail_username)}, "
                 f"MAIL_PASSWORD={bool(mail_password)}"
             )
