@@ -11,6 +11,18 @@ Set the following environment variables in your Railway project settings:
 3. Go to the "Variables" tab
 4. Add the following environment variables:
 
+**Option 1: Gmail with SSL (Port 465) - Recommended for Railway**
+```
+MAIL_SERVER=smtp.gmail.com
+MAIL_PORT=465
+MAIL_USE_TLS=false
+MAIL_USE_SSL=true
+MAIL_USERNAME=akiuser10@gmail.com
+MAIL_PASSWORD=<your-gmail-app-password>
+MAIL_DEFAULT_SENDER=akiuser10@gmail.com
+```
+
+**Option 2: Gmail with TLS (Port 587) - May not work on Railway**
 ```
 MAIL_SERVER=smtp.gmail.com
 MAIL_PORT=587
@@ -20,6 +32,8 @@ MAIL_USERNAME=akiuser10@gmail.com
 MAIL_PASSWORD=<your-gmail-app-password>
 MAIL_DEFAULT_SENDER=akiuser10@gmail.com
 ```
+
+**Note:** Railway may block port 587. If you see "Network is unreachable" errors, use Option 1 (port 465 with SSL).
 
 **Note:** Replace `<your-gmail-app-password>` with your actual Gmail App Password (remove spaces if present).
 

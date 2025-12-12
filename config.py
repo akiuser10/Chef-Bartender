@@ -31,12 +31,14 @@ class Config:
         return value
     
     MAIL_SERVER = _strip_quotes(os.environ.get('MAIL_SERVER', 'smtp.gmail.com'))
-    mail_port_str = _strip_quotes(os.environ.get('MAIL_PORT', '587'))
-    MAIL_PORT = int(mail_port_str) if mail_port_str else 587
-    mail_use_tls_str = _strip_quotes(os.environ.get('MAIL_USE_TLS', 'true'))
-    MAIL_USE_TLS = mail_use_tls_str.lower() in ['true', 'on', '1'] if mail_use_tls_str else True
-    mail_use_ssl_str = _strip_quotes(os.environ.get('MAIL_USE_SSL', 'false'))
-    MAIL_USE_SSL = mail_use_ssl_str.lower() in ['true', 'on', '1'] if mail_use_ssl_str else False
+    # Try port 465 with SSL first (Railway may block port 587)
+    mail_port_str = _strip_quotes(os.environ.get('MAIL_PORT', '465'))
+    MAIL_PORT = int(mail_port_str) if mail_port_str else 465
+    mail_use_tls_str = _strip_quotes(os.environ.get('MAIL_USE_TLS', 'false'))
+    MAIL_USE_TLS = mail_use_tls_str.lower() in ['true', 'on', '1'] if mail_use_tls_str else False
+    # Use SSL for port 465
+    mail_use_ssl_str = _strip_quotes(os.environ.get('MAIL_USE_SSL', 'true'))
+    MAIL_USE_SSL = mail_use_ssl_str.lower() in ['true', 'on', '1'] if mail_use_ssl_str else True
     MAIL_USERNAME = _strip_quotes(os.environ.get('MAIL_USERNAME'))
     MAIL_PASSWORD = _strip_quotes(os.environ.get('MAIL_PASSWORD'))
     mail_default_sender = _strip_quotes(os.environ.get('MAIL_DEFAULT_SENDER'))
