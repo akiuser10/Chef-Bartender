@@ -114,25 +114,31 @@
         const menu = document.getElementById('userDropdownMenu');
         
         if (trigger && menu) {
-            // Toggle dropdown on click
-            trigger.addEventListener('click', function(e) {
-                e.stopPropagation();
-                menu.classList.toggle('show');
+            let hoverTimeout;
+            
+            // Show dropdown on hover
+            trigger.addEventListener('mouseenter', function() {
+                clearTimeout(hoverTimeout);
+                menu.classList.add('show');
             });
             
-            // Close dropdown when clicking outside
-            document.addEventListener('click', function(e) {
-                if (!trigger.contains(e.target) && !menu.contains(e.target)) {
-                    menu.classList.remove('show');
-                }
+            // Keep dropdown open when hovering over menu
+            menu.addEventListener('mouseenter', function() {
+                clearTimeout(hoverTimeout);
+                menu.classList.add('show');
             });
             
-            // Close dropdown when clicking on a menu item
-            const menuItems = menu.querySelectorAll('.user-dropdown-item');
-            menuItems.forEach(function(item) {
-                item.addEventListener('click', function() {
+            // Hide dropdown when mouse leaves
+            trigger.addEventListener('mouseleave', function() {
+                hoverTimeout = setTimeout(function() {
                     menu.classList.remove('show');
-                });
+                }, 200);
+            });
+            
+            menu.addEventListener('mouseleave', function() {
+                hoverTimeout = setTimeout(function() {
+                    menu.classList.remove('show');
+                }, 200);
             });
         }
 
@@ -141,25 +147,31 @@
         const knowledgeMenu = document.getElementById('knowledgeDropdownMenu');
         
         if (knowledgeTrigger && knowledgeMenu) {
-            // Toggle dropdown on click
-            knowledgeTrigger.addEventListener('click', function(e) {
-                e.stopPropagation();
-                knowledgeMenu.classList.toggle('show');
+            let hoverTimeout;
+            
+            // Show dropdown on hover
+            knowledgeTrigger.addEventListener('mouseenter', function() {
+                clearTimeout(hoverTimeout);
+                knowledgeMenu.classList.add('show');
             });
             
-            // Close dropdown when clicking outside
-            document.addEventListener('click', function(e) {
-                if (!knowledgeTrigger.contains(e.target) && !knowledgeMenu.contains(e.target)) {
-                    knowledgeMenu.classList.remove('show');
-                }
+            // Keep dropdown open when hovering over menu
+            knowledgeMenu.addEventListener('mouseenter', function() {
+                clearTimeout(hoverTimeout);
+                knowledgeMenu.classList.add('show');
             });
             
-            // Close dropdown when clicking on a menu item
-            const knowledgeMenuItems = knowledgeMenu.querySelectorAll('.nav-dropdown-item');
-            knowledgeMenuItems.forEach(function(item) {
-                item.addEventListener('click', function() {
+            // Hide dropdown when mouse leaves
+            knowledgeTrigger.addEventListener('mouseleave', function() {
+                hoverTimeout = setTimeout(function() {
                     knowledgeMenu.classList.remove('show');
-                });
+                }, 200);
+            });
+            
+            knowledgeMenu.addEventListener('mouseleave', function() {
+                hoverTimeout = setTimeout(function() {
+                    knowledgeMenu.classList.remove('show');
+                }, 200);
             });
         }
 
@@ -168,25 +180,31 @@
         const purchaseCenterMenu = document.getElementById('purchaseCenterDropdownMenu');
         
         if (purchaseCenterTrigger && purchaseCenterMenu) {
-            // Toggle dropdown on click
-            purchaseCenterTrigger.addEventListener('click', function(e) {
-                e.stopPropagation();
-                purchaseCenterMenu.classList.toggle('show');
+            let hoverTimeout;
+            
+            // Show dropdown on hover
+            purchaseCenterTrigger.addEventListener('mouseenter', function() {
+                clearTimeout(hoverTimeout);
+                purchaseCenterMenu.classList.add('show');
             });
             
-            // Close dropdown when clicking outside
-            document.addEventListener('click', function(e) {
-                if (!purchaseCenterTrigger.contains(e.target) && !purchaseCenterMenu.contains(e.target)) {
-                    purchaseCenterMenu.classList.remove('show');
-                }
+            // Keep dropdown open when hovering over menu
+            purchaseCenterMenu.addEventListener('mouseenter', function() {
+                clearTimeout(hoverTimeout);
+                purchaseCenterMenu.classList.add('show');
             });
             
-            // Close dropdown when clicking on a menu item
-            const purchaseCenterMenuItems = purchaseCenterMenu.querySelectorAll('.nav-dropdown-item');
-            purchaseCenterMenuItems.forEach(function(item) {
-                item.addEventListener('click', function() {
+            // Hide dropdown when mouse leaves
+            purchaseCenterTrigger.addEventListener('mouseleave', function() {
+                hoverTimeout = setTimeout(function() {
                     purchaseCenterMenu.classList.remove('show');
-                });
+                }, 200);
+            });
+            
+            purchaseCenterMenu.addEventListener('mouseleave', function() {
+                hoverTimeout = setTimeout(function() {
+                    purchaseCenterMenu.classList.remove('show');
+                }, 200);
             });
         }
 
@@ -195,25 +213,31 @@
         const recipeCenterMenu = document.getElementById('recipeCenterDropdownMenu');
         
         if (recipeCenterTrigger && recipeCenterMenu) {
-            // Toggle dropdown on click
-            recipeCenterTrigger.addEventListener('click', function(e) {
-                e.stopPropagation();
-                recipeCenterMenu.classList.toggle('show');
+            let hoverTimeout;
+            
+            // Show dropdown on hover
+            recipeCenterTrigger.addEventListener('mouseenter', function() {
+                clearTimeout(hoverTimeout);
+                recipeCenterMenu.classList.add('show');
             });
             
-            // Close dropdown when clicking outside
-            document.addEventListener('click', function(e) {
-                if (!recipeCenterTrigger.contains(e.target) && !recipeCenterMenu.contains(e.target)) {
-                    recipeCenterMenu.classList.remove('show');
-                }
+            // Keep dropdown open when hovering over menu
+            recipeCenterMenu.addEventListener('mouseenter', function() {
+                clearTimeout(hoverTimeout);
+                recipeCenterMenu.classList.add('show');
             });
             
-            // Close dropdown when clicking on a menu item
-            const recipeCenterMenuItems = recipeCenterMenu.querySelectorAll('.nav-dropdown-item');
-            recipeCenterMenuItems.forEach(function(item) {
-                item.addEventListener('click', function() {
+            // Hide dropdown when mouse leaves
+            recipeCenterTrigger.addEventListener('mouseleave', function() {
+                hoverTimeout = setTimeout(function() {
                     recipeCenterMenu.classList.remove('show');
-                });
+                }, 200);
+            });
+            
+            recipeCenterMenu.addEventListener('mouseleave', function() {
+                hoverTimeout = setTimeout(function() {
+                    recipeCenterMenu.classList.remove('show');
+                }, 200);
             });
         }
 
