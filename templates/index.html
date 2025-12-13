@@ -58,6 +58,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const prevBtn = document.getElementById('heroPrevBtn');
     const nextBtn = document.getElementById('heroNextBtn');
     let currentSlide = 0;
+    let autoSlideInterval;
     
     function showSlide(index) {
         // Remove active class from all slides
@@ -72,11 +73,27 @@ document.addEventListener('DOMContentLoaded', function() {
     function nextSlide() {
         currentSlide = (currentSlide + 1) % slides.length;
         showSlide(currentSlide);
+        resetAutoSlide();
     }
     
     function prevSlide() {
         currentSlide = (currentSlide - 1 + slides.length) % slides.length;
         showSlide(currentSlide);
+        resetAutoSlide();
+    }
+    
+    function startAutoSlide() {
+        // Clear any existing interval
+        if (autoSlideInterval) {
+            clearInterval(autoSlideInterval);
+        }
+        // Start auto-advance every 5 seconds
+        autoSlideInterval = setInterval(nextSlide, 5000);
+    }
+    
+    function resetAutoSlide() {
+        // Reset the auto-slide timer when user manually navigates
+        startAutoSlide();
     }
     
     // Event listeners
@@ -88,8 +105,8 @@ document.addEventListener('DOMContentLoaded', function() {
         prevBtn.addEventListener('click', prevSlide);
     }
     
-    // Optional: Auto-advance slides every 5 seconds
-    // setInterval(nextSlide, 5000);
+    // Start auto-advance slides every 5 seconds
+    startAutoSlide();
 });
 </script>
 {% endblock %}
