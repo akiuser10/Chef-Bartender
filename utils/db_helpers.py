@@ -242,6 +242,29 @@ def ensure_schema_updates():
                 # Purchase request table updates
                 if table_exists(conn, 'purchase_request'):
                     purchase_request_columns = get_table_columns(conn, 'purchase_request')
+                    # Update status column size if it exists and is too small
+                    try:
+                        # Check current column type and alter if needed
+                        db_url = str(db.engine.url)
+                        is_postgres = 'postgresql' in db_url.lower() or 'postgres' in db_url.lower()
+                        if is_postgres:
+                            # For PostgreSQL, check and alter the column type
+                            result = conn.execute(db.text("""
+                                SELECT character_maximum_length 
+                                FROM information_schema.columns 
+                                WHERE table_name = 'purchase_request' AND column_name = 'status'
+                            """))
+                            max_length = result.scalar()
+                            if max_length and max_length < 50:
+                                conn.execute(db.text("ALTER TABLE purchase_request ALTER COLUMN status TYPE VARCHAR(50)"))
+                        else:
+                            # For SQLite, we can't easily check, but we can try to alter
+                            # SQLite doesn't support ALTER COLUMN, so we'll need to recreate
+                            # For now, just ensure the model is correct
+                            pass
+                    except Exception as e:
+                        current_app.logger.warning(f"Could not update status column size: {str(e)}")
+                    
                     if 'invoice_number' not in purchase_request_columns:
                         conn.execute(db.text("ALTER TABLE purchase_request ADD COLUMN invoice_number VARCHAR(100)"))
                     if 'invoice_value' not in purchase_request_columns:

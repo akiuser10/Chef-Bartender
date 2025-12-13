@@ -426,7 +426,7 @@ class PurchaseRequest(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     order_number = db.Column(db.String(50), unique=True, nullable=False)
     ordered_date = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
-    status = db.Column(db.String(20), default='Pending')  # Pending, Approved, Rejected, Completed
+    status = db.Column(db.String(50), default='Pending')  # Pending, Pending Manager Approval, Approved, Rejected, Completed, Order Placed, Order Received, Order Cancelled
     organisation = db.Column(db.String(200))  # Organization name for sharing
     created_by = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     creator = db.relationship('User', foreign_keys=[created_by], backref='created_purchase_requests')
