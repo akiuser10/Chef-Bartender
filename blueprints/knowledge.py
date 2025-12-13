@@ -197,30 +197,50 @@ def add_book():
 def view_book_pdf(book_id):
     """Serve PDF file for a book"""
     from utils.db_helpers import ensure_schema_updates
+    from werkzeug.exceptions import NotFound
     ensure_schema_updates()
     
-    org_filter = get_organization_filter(Book)
-    book = Book.query.filter(org_filter).filter_by(id=book_id).first_or_404()
-    
-    if not book.pdf_path:
-        flash('PDF file not found.', 'error')
+    try:
+        org_filter = get_organization_filter(Book)
+        book = Book.query.filter(org_filter).filter_by(id=book_id).first()
+        
+        if not book:
+            current_app.logger.error(f'Book with id {book_id} not found for user {current_user.id}')
+            raise NotFound(description=f'Book with id {book_id} not found')
+        
+        if not book.pdf_path:
+            current_app.logger.error(f'Book {book_id} has no pdf_path')
+            flash('PDF file not found.', 'error')
+            return redirect(url_for('knowledge.bartender_library'))
+        
+        # book.pdf_path is stored as 'uploads/books/pdfs/filename.pdf'
+        # Remove 'uploads/' prefix to get the relative path
+        if book.pdf_path.startswith('uploads/'):
+            file_path = book.pdf_path.replace('uploads/', '', 1)
+        else:
+            file_path = book.pdf_path
+        
+        # Construct full path to check if file exists
+        full_path = os.path.join(current_app.config['UPLOAD_FOLDER'], file_path)
+        
+        if not os.path.exists(full_path):
+            current_app.logger.error(f'PDF file not found at: {full_path}, stored path: {book.pdf_path}')
+            flash('PDF file not found on server.', 'error')
+            return redirect(url_for('knowledge.bartender_library'))
+        
+        # Use send_from_directory to serve the file directly
+        return send_from_directory(
+            current_app.config['UPLOAD_FOLDER'],
+            file_path,
+            as_attachment=False,
+            mimetype='application/pdf'
+        )
+    except NotFound:
+        raise
+    except Exception as e:
+        current_app.logger.error(f'Error serving PDF for book {book_id}: {str(e)}')
+        flash('Error loading PDF file.', 'error')
         return redirect(url_for('knowledge.bartender_library'))
-    
-    # book.pdf_path is stored as 'uploads/books/pdfs/filename.pdf'
-    # Remove 'uploads/' prefix to get the relative path
-    if book.pdf_path.startswith('uploads/'):
-        file_path = book.pdf_path.replace('uploads/', '', 1)
-    else:
-        file_path = book.pdf_path
-    
-    # Use send_from_directory to serve the file directly
-    # This matches how the uploaded_file route works
-    return send_from_directory(
-        current_app.config['UPLOAD_FOLDER'],
-        file_path,
-        as_attachment=False,
-        mimetype='application/pdf'
-    )
 
 
 @knowledge_bp.route('/book/<int:book_id>/edit', methods=['POST'])
