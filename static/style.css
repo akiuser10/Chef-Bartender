@@ -3140,3 +3140,13 @@ main .page-panel .recipe-view-container {
     background-color: #dc3545; /* Red */
     color: #fff;
 }
+
+.status-badge.status-partially-ordered {
+    background-color: #9c27b0; /* Purple */
+    color: #fff;
+}
+
+.status-badge.status-partially-received {
+    background-color: #00bcd4; /* Cyan */
+    color: #fff;
+}

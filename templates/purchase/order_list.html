@@ -33,8 +33,9 @@
                     <td>{{ purchase_request.items|length }} item(s)</td>
                     <td>{{ user_currency_info.symbol }} {{ "%.2f"|format(purchase_request.calculate_total_cost()) }}</td>
                     <td>
-                        <span class="status-badge status-{{ purchase_request.status.lower().replace(' ', '-') }}">
-                            {{ purchase_request.status }}
+                        {% set overall_status = purchase_request.get_overall_status() %}
+                        <span class="status-badge status-{{ overall_status.lower().replace(' ', '-') }}">
+                            {{ overall_status }}
                         </span>
                     </td>
                     <td>

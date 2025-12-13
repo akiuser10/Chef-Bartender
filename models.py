@@ -481,6 +481,40 @@ class PurchaseRequest(db.Model):
         """Get status for a specific supplier, defaults to main status if not set"""
         statuses = self.get_supplier_statuses()
         return statuses.get(supplier, self.status)
+    
+    def get_overall_status(self):
+        """Calculate overall status based on supplier statuses for display in order lists"""
+        # Get all unique suppliers from items
+        suppliers = set(item.supplier or 'N/A' for item in self.items if item.supplier)
+        if not suppliers:
+            return self.status
+        
+        # Get status for each supplier
+        supplier_statuses = {}
+        for supplier in suppliers:
+            supplier_statuses[supplier] = self.get_supplier_status(supplier)
+        
+        # Check for partial statuses
+        status_values = list(supplier_statuses.values())
+        
+        # Check for Partially Received
+        received_count = sum(1 for s in status_values if s == 'Order Received')
+        if received_count > 0 and received_count < len(status_values):
+            return 'Partially Received'
+        
+        # Check for Partially Ordered
+        placed_count = sum(1 for s in status_values if s == 'Order Placed')
+        if placed_count > 0 and placed_count < len(status_values):
+            # Make sure none are received (if some are received, it's partially received, not partially ordered)
+            if received_count == 0:
+                return 'Partially Ordered'
+        
+        # If all suppliers have the same status, return that status
+        if len(set(status_values)) == 1:
+            return status_values[0]
+        
+        # Default to main status
+        return self.status
 
     def calculate_total_cost(self):
         """Calculate total cost of all items in the purchase request"""
