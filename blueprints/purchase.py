@@ -458,6 +458,15 @@ def update_supplier_status(purchase_id):
                     return redirect(url_for('purchase.view_purchase_request', purchase_id=purchase_id))
                 else:
                     return redirect(url_for('purchase.view_order', purchase_id=purchase_id))
+            
+            # Check if order is already placed - cannot cancel once placed
+            current_supplier_status = purchase_request.get_supplier_status(supplier)
+            if current_supplier_status in ['Order Placed', 'Order Received']:
+                flash('Cannot cancel order once it has been placed or received.', 'error')
+                if current_user.user_role == 'Purchase Manager':
+                    return redirect(url_for('purchase.view_purchase_request', purchase_id=purchase_id))
+                else:
+                    return redirect(url_for('purchase.view_order', purchase_id=purchase_id))
         
         purchase_request.set_supplier_status(supplier, new_status)
         db.session.commit()
