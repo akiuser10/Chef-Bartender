@@ -845,3 +845,193 @@ def export_purchase_pdf(purchase_id):
             return redirect(url_for('purchase.view_purchase_request', purchase_id=purchase_id))
         else:
             return redirect(url_for('purchase.view_order', purchase_id=purchase_id))
+
+
+@purchase_bp.route('/purchase/<int:purchase_id>/export-new-pdf')
+@login_required
+@role_required(['Chef', 'Bartender', 'Manager'])
+def export_new_purchase_pdf(purchase_id):
+    """Export new purchase request to PDF (simplified format for initial creation)"""
+    try:
+        from reportlab.lib.pagesizes import A4
+        from reportlab.lib import colors
+        from reportlab.lib.units import inch
+        from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer, PageBreak
+        from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+        from reportlab.lib.enums import TA_CENTER, TA_LEFT, TA_RIGHT
+        from io import BytesIO
+        from flask import make_response
+        from sqlalchemy.orm import joinedload
+        from utils.currency import get_currency_info, format_currency
+        import re
+        
+        ensure_schema_updates()
+        org_filter = get_organization_filter(PurchaseRequest)
+        
+        # User can only view their own orders
+        purchase_request = PurchaseRequest.query.filter(org_filter).filter_by(id=purchase_id, created_by=current_user.id).options(
+            joinedload(PurchaseRequest.items),
+            joinedload(PurchaseRequest.creator)
+        ).first_or_404()
+        
+        # Get currency code
+        currency_code = current_user.currency or 'AED'
+        currency_info = get_currency_info(currency_code)
+        
+        # Group items by supplier
+        suppliers = {}
+        for item in purchase_request.items:
+            supplier_name = item.supplier or 'N/A'
+            if supplier_name not in suppliers:
+                suppliers[supplier_name] = []
+            suppliers[supplier_name].append(item)
+        
+        # Create a BytesIO buffer for the PDF
+        buffer = BytesIO()
+        doc = SimpleDocTemplate(buffer, pagesize=A4, topMargin=0.5*inch, bottomMargin=0.5*inch, 
+                                leftMargin=0.5*inch, rightMargin=0.5*inch)
+        
+        # Container for the 'Flowable' objects
+        elements = []
+        
+        # Define styles
+        styles = getSampleStyleSheet()
+        title_style = ParagraphStyle(
+            'CustomTitle',
+            parent=styles['Heading1'],
+            fontSize=18,
+            textColor=colors.HexColor('#1a2a2a'),
+            spaceAfter=15,
+            alignment=TA_CENTER
+        )
+        
+        supplier_heading_style = ParagraphStyle(
+            'SupplierHeading',
+            parent=styles['Heading2'],
+            fontSize=14,
+            textColor=colors.HexColor('#1a2a2a'),
+            spaceAfter=8,
+            spaceBefore=12,
+            alignment=TA_LEFT
+        )
+        
+        # Title
+        elements.append(Paragraph("PURCHASE REQUEST", title_style))
+        elements.append(Spacer(1, 0.15*inch))
+        
+        # Order Information
+        info_data = [
+            ['Order Number:', purchase_request.order_number],
+            ['Ordered Date & Time:', purchase_request.ordered_date.strftime('%Y-%m-%d %H:%M:%S')],
+        ]
+        
+        if purchase_request.creator:
+            creator_name = f"{purchase_request.creator.first_name or ''} {purchase_request.creator.last_name or ''}".strip()
+            if creator_name:
+                info_data.append(['Ordered By:', creator_name])
+        
+        info_table = Table(info_data, colWidths=[2*inch, 4.5*inch])
+        info_table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (0, -1), colors.HexColor('#f0f0f0')),
+            ('TEXTCOLOR', (0, 0), (-1, -1), colors.black),
+            ('ALIGN', (0, 0), (0, -1), 'LEFT'),
+            ('ALIGN', (1, 0), (1, -1), 'LEFT'),
+            ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
+            ('FONTNAME', (1, 0), (1, -1), 'Helvetica'),
+            ('FONTSIZE', (0, 0), (-1, -1), 10),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
+            ('TOPPADDING', (0, 0), (-1, -1), 6),
+            ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
+        ]))
+        elements.append(info_table)
+        elements.append(Spacer(1, 0.25*inch))
+        
+        # Process each supplier
+        supplier_names = list(suppliers.keys())
+        for idx, (supplier_name, supplier_items) in enumerate(suppliers.items()):
+            # Supplier heading
+            elements.append(Paragraph(f"Supplier: {supplier_name}", supplier_heading_style))
+            elements.append(Spacer(1, 0.1*inch))
+            
+            # Items Table with columns: Code, Description, Quantity, Cost Per Unit, Quantity Ordered
+            table_data = [['Code', 'Description', 'Quantity', 'Cost Per Unit', 'Quantity Ordered']]
+            
+            supplier_total = 0
+            
+            for item in supplier_items:
+                cost_per_unit = item.cost_per_unit or 0
+                order_quantity = item.order_quantity or 0
+                item_total = cost_per_unit * order_quantity
+                supplier_total += item_total
+                
+                row = [
+                    item.code or 'N/A',
+                    item.description or 'N/A',
+                    f"{item.quantity:.2f}" if item.quantity else '0.00',
+                    format_currency(cost_per_unit, currency_code),
+                    f"{order_quantity:.2f}"
+                ]
+                table_data.append(row)
+            
+            # Add total row
+            total_row = ['', '', '', 'Total:', format_currency(supplier_total, currency_code)]
+            table_data.append(total_row)
+            
+            # Create table with appropriate column widths for A4
+            col_widths = [0.8*inch, 2.5*inch, 0.8*inch, 1.2*inch, 1.2*inch]
+            items_table = Table(table_data, colWidths=col_widths)
+            items_table.setStyle(TableStyle([
+                ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#4a5568')),
+                ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+                ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+                ('ALIGN', (1, 0), (1, -1), 'LEFT'),
+                ('ALIGN', (2, 0), (2, -1), 'RIGHT'),
+                ('ALIGN', (3, 0), (3, -1), 'RIGHT'),
+                ('ALIGN', (4, 0), (4, -1), 'RIGHT'),
+                ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                ('FONTSIZE', (0, 0), (-1, 0), 9),
+                ('FONTSIZE', (0, 1), (-1, -1), 8),
+                ('BOTTOMPADDING', (0, 0), (-1, 0), 10),
+                ('TOPPADDING', (0, 0), (-1, 0), 10),
+                ('BOTTOMPADDING', (0, 1), (-1, -1), 5),
+                ('TOPPADDING', (0, 1), (-1, -1), 5),
+                ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
+                ('BACKGROUND', (0, -1), (-1, -1), colors.HexColor('#e0e0e0')),
+                ('FONTNAME', (0, -1), (-1, -1), 'Helvetica-Bold'),
+            ]))
+            elements.append(items_table)
+            
+            # Add page break if not last supplier
+            if idx < len(supplier_names) - 1:
+                elements.append(Spacer(1, 0.2*inch))
+                elements.append(PageBreak())
+            else:
+                elements.append(Spacer(1, 0.2*inch))
+        
+        # Footer
+        footer_text = f"Generated on {datetime.now().strftime('%Y-%m-%d %H:%M:%S')} | Chef & Bartender"
+        elements.append(Paragraph(footer_text, ParagraphStyle('Footer', parent=styles['Normal'], fontSize=8, textColor=colors.grey, alignment=TA_CENTER)))
+        
+        # Build PDF
+        doc.build(elements)
+        
+        # Get the value of the BytesIO buffer
+        buffer.seek(0)
+        pdf_data = buffer.getvalue()
+        buffer.close()
+        
+        # Create response with order number as filename
+        order_number = purchase_request.order_number or "purchase_request"
+        safe_filename = re.sub(r'[^\w\s-]', '', order_number).strip()
+        safe_filename = re.sub(r'[-\s]+', '_', safe_filename)
+        filename = f"{safe_filename}.pdf"
+        
+        response = make_response(pdf_data)
+        response.headers['Content-Type'] = 'application/pdf'
+        response.headers['Content-Disposition'] = f'attachment; filename="{filename}"'
+        return response
+        
+    except Exception as e:
+        current_app.logger.error(f'Error generating PDF: {str(e)}', exc_info=True)
+        flash(f'Error generating PDF: {str(e)}', 'error')
+        return redirect(url_for('purchase.order_list'))
