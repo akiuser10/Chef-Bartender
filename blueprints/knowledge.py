@@ -156,3 +156,123 @@ def view_book_pdf(book_id):
         flash('PDF file not found.', 'error')
         return redirect(url_for('knowledge.bartender_library'))
 
+
+@knowledge_bp.route('/book/<int:book_id>/edit', methods=['POST'])
+@login_required
+@role_required('Manager')
+def edit_book(book_id):
+    """Edit an existing book"""
+    from utils.db_helpers import ensure_schema_updates
+    ensure_schema_updates()
+    
+    try:
+        org_filter = get_organization_filter(Book)
+        book = Book.query.filter(org_filter).filter_by(id=book_id).first_or_404()
+        
+        title = request.form.get('title', '').strip()
+        author = request.form.get('author', '').strip()
+        
+        if not title:
+            flash('Title is required.', 'error')
+            return redirect(url_for(f'knowledge.{book.library_type}_library'))
+        
+        # Update book details
+        book.title = title
+        book.author = author
+        
+        # Handle PDF upload (optional - only if new file is provided)
+        pdf_file = request.files.get('pdf_file')
+        if pdf_file and pdf_file.filename != '':
+            if not allowed_file(pdf_file.filename) or not pdf_file.filename.lower().endswith('.pdf'):
+                flash('Only PDF files are allowed.', 'error')
+                return redirect(url_for(f'knowledge.{book.library_type}_library'))
+            
+            # Delete old PDF file
+            if book.pdf_path:
+                old_pdf_path = os.path.join(current_app.config['UPLOAD_FOLDER'], book.pdf_path.replace('uploads/', '', 1))
+                try:
+                    if os.path.exists(old_pdf_path):
+                        os.remove(old_pdf_path)
+                except Exception as e:
+                    current_app.logger.warning(f'Could not delete old PDF: {str(e)}')
+            
+            # Save new PDF
+            pdf_path = save_uploaded_file(pdf_file, 'books/pdfs')
+            if pdf_path:
+                book.pdf_path = pdf_path
+        
+        # Handle cover image upload (optional)
+        cover_file = request.files.get('cover_image')
+        if cover_file and cover_file.filename != '':
+            if allowed_file(cover_file.filename):
+                # Delete old cover image if exists
+                if book.cover_image_path:
+                    old_cover_path = os.path.join(current_app.config['UPLOAD_FOLDER'], book.cover_image_path.replace('uploads/', '', 1))
+                    try:
+                        if os.path.exists(old_cover_path):
+                            os.remove(old_cover_path)
+                    except Exception as e:
+                        current_app.logger.warning(f'Could not delete old cover: {str(e)}')
+                
+                # Save new cover image
+                cover_image_path = save_uploaded_file(cover_file, 'books/covers')
+                if cover_image_path:
+                    book.cover_image_path = cover_image_path
+        
+        db.session.commit()
+        
+        flash('Book updated successfully!', 'success')
+        return redirect(url_for(f'knowledge.{book.library_type}_library'))
+        
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(f'Error editing book: {str(e)}', exc_info=True)
+        flash(f'Error editing book: {str(e)}', 'error')
+        return redirect(url_for('knowledge.bartender_library'))
+
+
+@knowledge_bp.route('/book/<int:book_id>/delete', methods=['POST'])
+@login_required
+@role_required('Manager')
+def delete_book(book_id):
+    """Delete a book"""
+    from utils.db_helpers import ensure_schema_updates
+    ensure_schema_updates()
+    
+    try:
+        org_filter = get_organization_filter(Book)
+        book = Book.query.filter(org_filter).filter_by(id=book_id).first_or_404()
+        
+        library_type = book.library_type
+        
+        # Delete PDF file
+        if book.pdf_path:
+            pdf_path = os.path.join(current_app.config['UPLOAD_FOLDER'], book.pdf_path.replace('uploads/', '', 1))
+            try:
+                if os.path.exists(pdf_path):
+                    os.remove(pdf_path)
+            except Exception as e:
+                current_app.logger.warning(f'Could not delete PDF file: {str(e)}')
+        
+        # Delete cover image
+        if book.cover_image_path:
+            cover_path = os.path.join(current_app.config['UPLOAD_FOLDER'], book.cover_image_path.replace('uploads/', '', 1))
+            try:
+                if os.path.exists(cover_path):
+                    os.remove(cover_path)
+            except Exception as e:
+                current_app.logger.warning(f'Could not delete cover image: {str(e)}')
+        
+        # Delete book record
+        db.session.delete(book)
+        db.session.commit()
+        
+        flash('Book deleted successfully!', 'success')
+        return redirect(url_for(f'knowledge.{library_type}_library'))
+        
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(f'Error deleting book: {str(e)}', exc_info=True)
+        flash(f'Error deleting book: {str(e)}', 'error')
+        return redirect(url_for('knowledge.bartender_library'))
+

@@ -3230,6 +3230,7 @@ main .page-panel .recipe-view-container {
     height: 280px;
     display: flex;
     flex-direction: column;
+    position: relative;
 }
 
 .book-card:hover {
@@ -3453,4 +3454,48 @@ main .page-panel .recipe-view-container {
 
 .btn-secondary:hover {
     background: #4a4a4a;
+}
+
+/* Book Actions (Edit/Delete buttons) */
+.book-actions {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    display: flex;
+    gap: 6px;
+    z-index: 10;
+}
+
+.btn-edit,
+.btn-delete {
+    background: rgba(42, 42, 42, 0.9);
+    border: 1px solid #555;
+    border-radius: 4px;
+    padding: 6px 10px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(5px);
+    line-height: 1;
+}
+
+.btn-edit:hover {
+    background: rgba(212, 90, 42, 0.9);
+    border-color: #d45a2a;
+    transform: scale(1.1);
+}
+
+.btn-delete:hover {
+    background: rgba(220, 53, 69, 0.9);
+    border-color: #dc3545;
+    transform: scale(1.1);
+}
+
+.book-card:hover .book-actions {
+    opacity: 1;
+}
+
+.book-actions {
+    opacity: 0.8;
+    transition: opacity 0.3s ease;
 }

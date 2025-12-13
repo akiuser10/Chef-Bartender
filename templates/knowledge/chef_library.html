@@ -33,6 +33,16 @@
                     {% endif %}
                 </div>
             </a>
+            {% if current_user.user_role == 'Manager' %}
+            <div class="book-actions">
+                <button class="btn-edit" onclick="openEditBookModal({{ book.id }}, '{{ book.title|e }}', '{{ book.author|e if book.author else '' }}', 'chef')" title="Edit Book">
+                    ✏️
+                </button>
+                <button class="btn-delete" onclick="confirmDeleteBook({{ book.id }}, 'chef')" title="Delete Book">
+                    🗑️
+                </button>
+            </div>
+            {% endif %}
         </div>
         {% endfor %}
     </div>
@@ -74,6 +84,42 @@
         </form>
     </div>
 </div>
+
+<!-- Edit Book Modal -->
+<div id="editBookModal" class="modal">
+    <div class="modal-content">
+        <span class="close-modal" onclick="closeEditBookModal()">&times;</span>
+        <h2>Edit Book</h2>
+        <form action="" method="POST" enctype="multipart/form-data" id="editBookForm">
+            <input type="hidden" id="editBookId" name="book_id">
+            
+            <div class="form-group">
+                <label for="edit_book_title">Title *</label>
+                <input type="text" id="edit_book_title" name="title" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="edit_book_author">Author</label>
+                <input type="text" id="edit_book_author" name="author">
+            </div>
+            
+            <div class="form-group">
+                <label for="edit_cover_image">Cover Image (Optional - leave empty to keep current)</label>
+                <input type="file" id="edit_cover_image" name="cover_image" accept="image/*">
+            </div>
+            
+            <div class="form-group">
+                <label for="edit_pdf_file">PDF File (Optional - leave empty to keep current)</label>
+                <input type="file" id="edit_pdf_file" name="pdf_file" accept=".pdf">
+            </div>
+            
+            <div class="form-actions">
+                <button type="button" class="btn btn-secondary" onclick="closeEditBookModal()">Cancel</button>
+                <button type="submit" class="btn btn-primary">Update Book</button>
+            </div>
+        </form>
+    </div>
+</div>
 {% endif %}
 
 <script>
@@ -87,11 +133,38 @@ function closeAddBookModal() {
     document.getElementById('addBookForm').reset();
 }
 
+function openEditBookModal(bookId, title, author, libraryType) {
+    document.getElementById('editBookId').value = bookId;
+    document.getElementById('edit_book_title').value = title;
+    document.getElementById('edit_book_author').value = author || '';
+    document.getElementById('editBookForm').action = '{{ url_for("knowledge.edit_book", book_id=0) }}'.replace('0', bookId);
+    document.getElementById('editBookModal').style.display = 'block';
+}
+
+function closeEditBookModal() {
+    document.getElementById('editBookModal').style.display = 'none';
+    document.getElementById('editBookForm').reset();
+}
+
+function confirmDeleteBook(bookId, libraryType) {
+    if (confirm('Are you sure you want to delete this book? This action cannot be undone.')) {
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = '{{ url_for("knowledge.delete_book", book_id=0) }}'.replace('0', bookId);
+        document.body.appendChild(form);
+        form.submit();
+    }
+}
+
 // Close modal when clicking outside
 window.onclick = function(event) {
-    const modal = document.getElementById('addBookModal');
-    if (event.target == modal) {
+    const addModal = document.getElementById('addBookModal');
+    const editModal = document.getElementById('editBookModal');
+    if (event.target == addModal) {
         closeAddBookModal();
+    }
+    if (event.target == editModal) {
+        closeEditBookModal();
     }
 }
 </script>
