@@ -171,6 +171,20 @@
                         {% set supplier_received_total = supplier_received_total_list | sum %}
                         <br>
                         <strong>Total Cost (Received):</strong> {{ user_currency_info.symbol }} {{ "%.2f"|format(supplier_received_total) }}
+                        <br>
+                        {% set variance = supplier_total - supplier_received_total %}
+                        {% if variance != 0 %}
+                        <strong style="color: {% if variance > 0 %}#ff9800{% else %}#4caf50{% endif %};">
+                            Variance: {{ user_currency_info.symbol }} {{ "%.2f"|format(variance) }}
+                            {% if variance > 0 %}
+                                (Ordered more than received)
+                            {% else %}
+                                (Received more than ordered)
+                            {% endif %}
+                        </strong>
+                        {% else %}
+                        <strong style="color: #4caf50;">Variance: {{ user_currency_info.symbol }} 0.00 (No variance)</strong>
+                        {% endif %}
                         {% endif %}
                     </td>
                 </tr>
@@ -202,9 +216,10 @@ document.addEventListener('DOMContentLoaded', function() {
         if (targetElement) {
             // Small delay to ensure page is fully rendered
             setTimeout(function() {
-                targetElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                // Add a slight offset to account for fixed headers if any
-                window.scrollBy(0, -20);
+                // Scroll to the bottom of the supplier table section
+                targetElement.scrollIntoView({ behavior: 'smooth', block: 'end' });
+                // Scroll to bottom of page to show the table at the bottom
+                window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
             }, 100);
         }
     }
