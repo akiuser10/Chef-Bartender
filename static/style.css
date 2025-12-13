@@ -2438,10 +2438,6 @@ main .page-panel .recipe-view-container {
     margin-top: 4px;
 }
 
-.table-input-right {
-    text-align: right;
-}
-
 .ingredient-input,
 .qty-input {
     width: 100%;
