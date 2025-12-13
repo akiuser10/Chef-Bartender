@@ -192,12 +192,9 @@
         </table>
     </div>
     {% if supplier_status == 'Order Received' %}
-        {% set supplier_received_date_check = purchase_request.get_supplier_received_date(supplier_name) %}
-        {% if not supplier_received_date_check %}
         <div class="actions purchase-actions">
             <button type="submit" class="btn btn-primary">Update Quantities</button>
         </div>
-        {% endif %}
     {% endif %}
     </form>
 </div>

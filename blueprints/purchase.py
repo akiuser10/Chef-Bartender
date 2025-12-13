@@ -620,34 +620,44 @@ def export_purchase_pdf(purchase_id):
             supplier_received_date = purchase_request.get_supplier_received_date(supplier_name)
             supplier_invoice = purchase_request.get_supplier_invoice(supplier_name)
             
-            # Supplier Header
-            elements.append(Paragraph(f"Supplier: {supplier_name}", heading_style))
+            # Supplier Info Table with all required headings
+            supplier_info = [
+                ['Supplier:', supplier_name],
+                ['Order Number:', purchase_request.order_number],
+                ['Ordered Date & Time:', purchase_request.ordered_date.strftime('%Y-%m-%d %H:%M:%S')],
+                ['Status:', supplier_status]
+            ]
             
-            # Supplier Info
-            supplier_info = [['Status:', supplier_status]]
+            # Add Invoice Number (always show, even if empty)
+            invoice_number = supplier_invoice.get('invoice_number', '') if supplier_invoice else ''
+            supplier_info.append(['Invoice Number:', invoice_number])
+            
+            # Add Invoice Value (always show, even if empty)
+            invoice_value = supplier_invoice.get('invoice_value', '') if supplier_invoice else ''
+            if invoice_value:
+                supplier_info.append(['Invoice Value:', format_currency(invoice_value, currency_code)])
+            else:
+                supplier_info.append(['Invoice Value:', ''])
+            
+            # Add Received Date & Time if available
             if supplier_received_date:
                 supplier_info.append(['Received Date & Time:', supplier_received_date])
-            if supplier_invoice.get('invoice_number'):
-                supplier_info.append(['Invoice Number:', supplier_invoice.get('invoice_number', '')])
-            if supplier_invoice.get('invoice_value'):
-                supplier_info.append(['Invoice Value:', format_currency(supplier_invoice.get('invoice_value', 0), currency_code)])
             
-            if len(supplier_info) > 1:
-                supplier_info_table = Table(supplier_info, colWidths=[2*inch, 4.5*inch])
-                supplier_info_table.setStyle(TableStyle([
-                    ('BACKGROUND', (0, 0), (0, -1), colors.HexColor('#f0f0f0')),
-                    ('TEXTCOLOR', (0, 0), (-1, -1), colors.black),
-                    ('ALIGN', (0, 0), (0, -1), 'LEFT'),
-                    ('ALIGN', (1, 0), (1, -1), 'LEFT'),
-                    ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
-                    ('FONTNAME', (1, 0), (1, -1), 'Helvetica'),
-                    ('FONTSIZE', (0, 0), (-1, -1), 9),
-                    ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
-                    ('TOPPADDING', (0, 0), (-1, -1), 6),
-                    ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
-                ]))
-                elements.append(supplier_info_table)
-                elements.append(Spacer(1, 0.2*inch))
+            supplier_info_table = Table(supplier_info, colWidths=[2*inch, 4.5*inch])
+            supplier_info_table.setStyle(TableStyle([
+                ('BACKGROUND', (0, 0), (0, -1), colors.HexColor('#f0f0f0')),
+                ('TEXTCOLOR', (0, 0), (-1, -1), colors.black),
+                ('ALIGN', (0, 0), (0, -1), 'LEFT'),
+                ('ALIGN', (1, 0), (1, -1), 'LEFT'),
+                ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
+                ('FONTNAME', (1, 0), (1, -1), 'Helvetica'),
+                ('FONTSIZE', (0, 0), (-1, -1), 9),
+                ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
+                ('TOPPADDING', (0, 0), (-1, -1), 6),
+                ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
+            ]))
+            elements.append(supplier_info_table)
+            elements.append(Spacer(1, 0.2*inch))
             
             # Items Table
             table_data = [['Code', 'Description', 'Qty', 'Cost/Unit', 'Order Qty', 'Total Cost']]
