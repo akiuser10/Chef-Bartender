@@ -44,6 +44,7 @@
     <div class="actions purchase-actions">
         <button type="submit" class="btn btn-primary" onclick="return validatePurchaseForm(event)">Create Purchase Request</button>
     </div>
+    <input type="hidden" name="download_pdf" id="downloadPdfFlag" value="0">
 </form>
 
 <script>
@@ -68,6 +69,10 @@ function validatePurchaseForm(event) {
         form.reportValidity();
         return false;
     }
+    
+    // Ask user if they want to download PDF
+    const downloadPdf = confirm('Do you want to download a PDF version of this purchase request?');
+    document.getElementById('downloadPdfFlag').value = downloadPdf ? '1' : '0';
     
     return true;
 }

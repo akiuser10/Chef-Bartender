@@ -135,6 +135,12 @@ def create_purchase_request():
         
         db.session.commit()
         flash(f'Purchase request {order_number} created successfully!', 'success')
+        
+        # Check if user wants to download PDF
+        download_pdf = request.form.get('download_pdf', '0') == '1'
+        if download_pdf:
+            return redirect(url_for('purchase.export_new_purchase_pdf', purchase_id=purchase_request.id))
+        
         return redirect(url_for('purchase.order_list'))
     
     except Exception as e:
