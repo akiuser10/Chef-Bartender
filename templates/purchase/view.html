@@ -30,6 +30,12 @@
         <div class="info-row">
             <strong>Ordered Date & Time:</strong> {{ purchase_request.ordered_date.strftime('%Y-%m-%d %H:%M:%S') }}
         </div>
+        {% set supplier_received_date = purchase_request.get_supplier_received_date(supplier_name) %}
+        {% if supplier_received_date %}
+        <div class="info-row">
+            <strong>Received Date & Time:</strong> {{ supplier_received_date }}
+        </div>
+        {% endif %}
         <div class="info-row">
             <strong>Created By:</strong> 
             {% if purchase_request.creator %}
