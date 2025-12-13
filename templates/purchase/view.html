@@ -263,6 +263,7 @@
 </div>
 {% endif %}
 
+{% set is_manager_approval = current_user.user_role == 'Manager' and purchase_request.status == 'Pending Manager Approval' %}
 <script>
 // Scroll to supplier section if anchor is present in URL
 document.addEventListener('DOMContentLoaded', function() {
@@ -282,22 +283,21 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     // Auto-calculate total cost when order quantity changes (for Manager approval)
-    var isManagerApproval = {% if current_user.user_role == 'Manager' and purchase_request.status == 'Pending Manager Approval' %}true{% else %}false{% endif %};
-    if (isManagerApproval) {
-        const quantityInputs = document.querySelectorAll('input[name^="order_quantity_"]');
-        quantityInputs.forEach(function(input) {
-            input.addEventListener('input', function() {
-                const itemId = this.name.replace('order_quantity_', '');
-                const quantity = parseFloat(this.value) || 0;
-                const costPerUnit = parseFloat(this.closest('tr').querySelector('td:nth-child(7)').textContent.replace(/[^\d.]/g, '')) || 0;
-                const totalCost = quantity * costPerUnit;
-                const totalCostElement = document.getElementById('total_cost_' + itemId);
-                if (totalCostElement) {
-                    totalCostElement.textContent = '{{ user_currency_info.symbol }} ' + totalCost.toFixed(2);
-                }
-            });
+    {% if is_manager_approval %}
+    var quantityInputs = document.querySelectorAll('input[name^="order_quantity_"]');
+    quantityInputs.forEach(function(input) {
+        input.addEventListener('input', function() {
+            var itemId = this.name.replace('order_quantity_', '');
+            var quantity = parseFloat(this.value) || 0;
+            var costPerUnit = parseFloat(this.closest('tr').querySelector('td:nth-child(7)').textContent.replace(/[^\d.]/g, '')) || 0;
+            var totalCost = quantity * costPerUnit;
+            var totalCostElement = document.getElementById('total_cost_' + itemId);
+            if (totalCostElement) {
+                totalCostElement.textContent = '{{ user_currency_info.symbol }} ' + totalCost.toFixed(2);
+            }
         });
-    }
+    });
+    {% endif %}
 });
 </script>
 {% endblock %}
