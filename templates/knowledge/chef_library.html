@@ -121,10 +121,9 @@ function closeAddBookModal() {
     document.getElementById('addBookForm').reset();
 }
 
-function openEditBookModal(bookId, title, author, libraryType) {
+function openEditBookModal(bookId, title, libraryType) {
     document.getElementById('editBookId').value = bookId;
     document.getElementById('edit_book_title').value = title;
-    document.getElementById('edit_book_author').value = author || '';
     document.getElementById('editBookForm').action = '{{ url_for("knowledge.edit_book", book_id=0) }}'.replace('0', bookId);
     document.getElementById('editBookModal').style.display = 'block';
 }
