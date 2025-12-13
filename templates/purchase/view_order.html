@@ -19,7 +19,8 @@
 
 {% for supplier_name, supplier_items in suppliers.items() %}
 {% set supplier_status = purchase_request.get_supplier_status(supplier_name) %}
-<div class="purchase-details" style="margin-bottom: 40px;">
+{% set supplier_id = supplier_name|replace(' ', '_')|replace('/', '_')|replace('\\', '_')|replace('.', '_')|replace('-', '_') %}
+<div class="purchase-details" id="supplier_{{ supplier_id }}" style="margin-bottom: 40px;">
     <div class="purchase-header-info">
         <div class="info-row">
             <strong>Supplier:</strong> <span style="font-size: 1.2em; font-weight: bold; color: #ffd700;">{{ supplier_name }}</span>

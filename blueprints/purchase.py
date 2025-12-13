@@ -487,11 +487,18 @@ def update_quantities(purchase_id):
         db.session.commit()
         flash('Quantities and invoice information updated successfully!', 'success')
         
-        # Redirect based on user role
+        # Create supplier anchor for scroll position (sanitize supplier name for URL)
+        supplier_anchor = ''
+        if supplier:
+            supplier_anchor = '#' + supplier.replace(' ', '_').replace('/', '_').replace('\\', '_').replace('.', '_').replace('-', '_')
+            supplier_anchor = 'supplier_' + supplier_anchor.lstrip('#')
+            supplier_anchor = '#' + supplier_anchor
+        
+        # Redirect based on user role with supplier anchor
         if current_user.user_role == 'Purchase Manager':
-            return redirect(url_for('purchase.view_purchase_request', purchase_id=purchase_id))
+            return redirect(url_for('purchase.view_purchase_request', purchase_id=purchase_id) + supplier_anchor)
         else:
-            return redirect(url_for('purchase.view_order', purchase_id=purchase_id))
+            return redirect(url_for('purchase.view_order', purchase_id=purchase_id) + supplier_anchor)
     
     except Exception as e:
         db.session.rollback()
