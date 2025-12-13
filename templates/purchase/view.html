@@ -256,8 +256,8 @@
 {% endfor %}
 
 {% if all_suppliers_received and suppliers %}
-<div style="text-align: center; margin: 40px 0;">
-    <a href="{{ url_for('purchase.export_purchase_pdf', purchase_id=purchase_request.id) }}" class="btn btn-primary" style="font-size: 16px; padding: 12px 30px;">
+<div class="pdf-generate-container">
+    <a href="{{ url_for('purchase.export_purchase_pdf', purchase_id=purchase_request.id) }}" class="btn btn-primary btn-generate-pdf">
         Generate PDF
     </a>
 </div>

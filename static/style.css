@@ -2451,6 +2451,16 @@ main .page-panel .recipe-view-container {
     color: #4caf50;
 }
 
+.pdf-generate-container {
+    text-align: center;
+    margin: 40px 0;
+}
+
+.btn-generate-pdf {
+    font-size: 16px;
+    padding: 12px 30px;
+}
+
 .ingredient-input,
 .qty-input {
     width: 100%;
