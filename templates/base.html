@@ -33,11 +33,16 @@
         <a href="{{ url_for('purchase.purchase') }}" class="nav-link">PURCHASE ORDER</a>
         <a href="{{ url_for('purchase.order_list') }}" class="nav-link">ORDER LIST</a>
         {% endif %}
-        {% if current_user.is_authenticated and current_user.user_role != 'Purchase Manager' %}
-        <a href="{{ url_for('recipes.recipes_list') }}" class="nav-link">RECIPES</a>
-        {% endif %}
         {% if current_user.is_authenticated and current_user.user_role not in ['Purchase Manager', 'Cost Controller'] %}
-        <a href="{{ url_for('secondary.secondary_ingredients') }}" class="nav-link">SECONDARY RECIPES</a>
+        <div class="nav-dropdown-container">
+            <span class="nav-link recipe-center-dropdown-trigger" id="recipeCenterDropdownTrigger">RECIPE CENTER</span>
+            <div class="nav-dropdown-menu" id="recipeCenterDropdownMenu">
+                {% if current_user.user_role != 'Purchase Manager' %}
+                <a href="{{ url_for('recipes.recipes_list') }}" class="nav-dropdown-item">Recipes</a>
+                {% endif %}
+                <a href="{{ url_for('secondary.secondary_ingredients') }}" class="nav-dropdown-item">Secondary Recipes</a>
+            </div>
+        </div>
         {% endif %}
         {% if current_user.is_authenticated and current_user.user_role in ['Purchase Manager', 'Manager'] %}
         <a href="{{ url_for('purchase.to_order') }}" class="nav-link">TO ORDER</a>
@@ -147,6 +152,33 @@
             knowledgeMenuItems.forEach(function(item) {
                 item.addEventListener('click', function() {
                     knowledgeMenu.classList.remove('show');
+                });
+            });
+        }
+
+        // Recipe Center dropdown functionality
+        const recipeCenterTrigger = document.getElementById('recipeCenterDropdownTrigger');
+        const recipeCenterMenu = document.getElementById('recipeCenterDropdownMenu');
+        
+        if (recipeCenterTrigger && recipeCenterMenu) {
+            // Toggle dropdown on click
+            recipeCenterTrigger.addEventListener('click', function(e) {
+                e.stopPropagation();
+                recipeCenterMenu.classList.toggle('show');
+            });
+            
+            // Close dropdown when clicking outside
+            document.addEventListener('click', function(e) {
+                if (!recipeCenterTrigger.contains(e.target) && !recipeCenterMenu.contains(e.target)) {
+                    recipeCenterMenu.classList.remove('show');
+                }
+            });
+            
+            // Close dropdown when clicking on a menu item
+            const recipeCenterMenuItems = recipeCenterMenu.querySelectorAll('.nav-dropdown-item');
+            recipeCenterMenuItems.forEach(function(item) {
+                item.addEventListener('click', function() {
+                    recipeCenterMenu.classList.remove('show');
                 });
             });
         }
