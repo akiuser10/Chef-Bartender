@@ -230,6 +230,57 @@ canvas {
     color: white;
 }
 
+/* Knowledge Hub Dropdown */
+.nav-dropdown-container {
+    position: relative;
+    display: inline-block;
+}
+
+.knowledge-dropdown-trigger {
+    cursor: pointer;
+    user-select: none;
+}
+
+.nav-dropdown-menu {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    margin-top: 8px;
+    background: #2a2a2a;
+    border: 1px solid #3a3a3a;
+    border-radius: 4px;
+    min-width: 200px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    z-index: 1000;
+    overflow: hidden;
+}
+
+.nav-dropdown-menu.show {
+    display: block;
+}
+
+.nav-dropdown-item {
+    display: block;
+    padding: 12px 16px;
+    color: white;
+    text-decoration: none;
+    font-size: 0.9rem;
+    transition: background 0.3s ease;
+    border-bottom: 1px solid #3a3a3a;
+    text-transform: none;
+    letter-spacing: 0.5px;
+}
+
+.nav-dropdown-item:last-child {
+    border-bottom: none;
+}
+
+.nav-dropdown-item:hover {
+    background: #3a3a3a;
+    color: #d45a2a;
+}
+
 .user-dropdown-item.nav-logout-small {
     background: transparent;
     border: none;
