@@ -2439,6 +2439,18 @@ main .page-panel .recipe-view-container {
     margin-top: 4px;
 }
 
+.variance-positive {
+    color: #ff9800;
+}
+
+.variance-negative {
+    color: #4caf50;
+}
+
+.variance-zero {
+    color: #4caf50;
+}
+
 .ingredient-input,
 .qty-input {
     width: 100%;

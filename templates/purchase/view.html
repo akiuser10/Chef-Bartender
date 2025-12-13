@@ -207,16 +207,19 @@
                         <br>
                         {% set variance = supplier_total - supplier_received_total %}
                         {% if variance != 0 %}
-                        <strong style="color: {% if variance > 0 %}#ff9800{% else %}#4caf50{% endif %};">
-                            Variance: {{ user_currency_info.symbol }} {{ "%.2f"|format(variance) }}
                             {% if variance > 0 %}
+                            <strong class="variance-positive">
+                                Variance: {{ user_currency_info.symbol }} {{ "%.2f"|format(variance) }}
                                 (Ordered more than received)
+                            </strong>
                             {% else %}
+                            <strong class="variance-negative">
+                                Variance: {{ user_currency_info.symbol }} {{ "%.2f"|format(variance) }}
                                 (Received more than ordered)
+                            </strong>
                             {% endif %}
-                        </strong>
                         {% else %}
-                        <strong style="color: #4caf50;">Variance: {{ user_currency_info.symbol }} 0.00 (No variance)</strong>
+                        <strong class="variance-zero">Variance: {{ user_currency_info.symbol }} 0.00 (No variance)</strong>
                         {% endif %}
                         {% endif %}
                     </td>
