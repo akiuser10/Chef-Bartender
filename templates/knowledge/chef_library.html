@@ -29,14 +29,11 @@
                 {% endif %}
                 <div class="book-info">
                     <h3 class="book-title">{{ book.title }}</h3>
-                    {% if book.author %}
-                    <p class="book-author">{{ book.author }}</p>
-                    {% endif %}
                 </div>
             </a>
             {% if current_user.user_role == 'Manager' %}
             <div class="book-actions">
-                <button class="btn-edit" onclick="openEditBookModal({{ book.id }}, '{{ book.title|e }}', '{{ book.author|e if book.author else '' }}', 'chef')" title="Edit Book">
+                <button class="btn-edit" onclick="openEditBookModal({{ book.id }}, '{{ book.title|e }}', 'chef')" title="Edit Book">
                     ✏️
                 </button>
                 <button class="btn-delete" onclick="confirmDeleteBook({{ book.id }}, 'chef')" title="Delete Book">
@@ -59,13 +56,8 @@
             <input type="hidden" name="library_type" id="modalLibraryType" value="chef">
             
             <div class="form-group">
-                <label for="book_title">Title *</label>
-                <input type="text" id="book_title" name="title" required>
-            </div>
-            
-            <div class="form-group">
-                <label for="book_author">Author</label>
-                <input type="text" id="book_author" name="author">
+                <label for="book_title">Title (Optional - will use first 3 words of PDF filename if not provided)</label>
+                <input type="text" id="book_title" name="title">
             </div>
             
             <div class="form-group">
@@ -97,11 +89,6 @@
             <div class="form-group">
                 <label for="edit_book_title">Title *</label>
                 <input type="text" id="edit_book_title" name="title" required>
-            </div>
-            
-            <div class="form-group">
-                <label for="edit_book_author">Author</label>
-                <input type="text" id="edit_book_author" name="author">
             </div>
             
             <div class="form-group">

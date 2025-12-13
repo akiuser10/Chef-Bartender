@@ -127,12 +127,11 @@ def add_book():
     
     try:
         title = request.form.get('title', '').strip()
-        author = request.form.get('author', '').strip()
         library_type = request.form.get('library_type', '').strip()
         
-        if not title or not library_type:
-            flash('Title and library type are required.', 'error')
-            return redirect(url_for(f'knowledge.{library_type}_library'))
+        if not library_type:
+            flash('Library type is required.', 'error')
+            return redirect(url_for('knowledge.bartender_library'))
         
         if library_type not in ['bartender', 'chef']:
             flash('Invalid library type.', 'error')
@@ -147,6 +146,23 @@ def add_book():
         if not allowed_file(pdf_file.filename) or not pdf_file.filename.lower().endswith('.pdf'):
             flash('Only PDF files are allowed.', 'error')
             return redirect(url_for(f'knowledge.{library_type}_library'))
+        
+        # If no title provided, extract first 3 words from PDF filename
+        if not title:
+            # Get the original filename without extension
+            pdf_filename = secure_filename(pdf_file.filename)
+            filename_without_ext = os.path.splitext(pdf_filename)[0]
+            # Remove timestamp prefix if present (format: YYYYMMDD_HHMMSS_filename.pdf)
+            # Split by underscore and check if first part is a timestamp
+            parts = filename_without_ext.split('_')
+            if len(parts) > 2 and len(parts[0]) == 8 and len(parts[1]) == 6:
+                # Likely a timestamp prefix, use the rest
+                filename_without_ext = '_'.join(parts[2:])
+            # Extract first 3 words
+            words = filename_without_ext.replace('_', ' ').replace('-', ' ').split()
+            title = ' '.join(words[:3]) if words else filename_without_ext[:50]  # Fallback to first 50 chars if no words
+            if not title:
+                title = 'Untitled Book'
         
         # Save PDF
         pdf_path = save_uploaded_file(pdf_file, 'books/pdfs')
@@ -170,7 +186,7 @@ def add_book():
         # Create book record
         book = Book(
             title=title,
-            author=author,
+            author=None,  # Author field removed
             library_type=library_type,
             pdf_path=pdf_path,
             cover_image_path=cover_image_path,
@@ -270,7 +286,6 @@ def edit_book(book_id):
         book = Book.query.filter(org_filter).filter_by(id=book_id).first_or_404()
         
         title = request.form.get('title', '').strip()
-        author = request.form.get('author', '').strip()
         
         if not title:
             flash('Title is required.', 'error')
@@ -278,7 +293,7 @@ def edit_book(book_id):
         
         # Update book details
         book.title = title
-        book.author = author
+        book.author = None  # Author field removed
         
         # Handle PDF upload (optional - only if new file is provided)
         pdf_file = request.files.get('pdf_file')
