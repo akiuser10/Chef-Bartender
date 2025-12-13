@@ -246,6 +246,8 @@ def ensure_schema_updates():
                         conn.execute(db.text("ALTER TABLE purchase_request ADD COLUMN invoice_number VARCHAR(100)"))
                     if 'invoice_value' not in purchase_request_columns:
                         conn.execute(db.text("ALTER TABLE purchase_request ADD COLUMN invoice_value FLOAT"))
+                    if 'supplier_invoices' not in purchase_request_columns:
+                        conn.execute(db.text("ALTER TABLE purchase_request ADD COLUMN supplier_invoices TEXT"))
                 
                 # Backfill organization for existing items based on creator's organization
                 # This helps migrate existing data to the new organization system

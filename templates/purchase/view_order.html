@@ -7,8 +7,22 @@
     </div>
 </div>
 
-<div class="purchase-details">
+{# Group items by supplier #}
+{% set suppliers = {} %}
+{% for item in purchase_request.items %}
+    {% set supplier_name = item.supplier or 'N/A' %}
+    {% if supplier_name not in suppliers %}
+        {% set _ = suppliers.update({supplier_name: []}) %}
+    {% endif %}
+    {% set _ = suppliers[supplier_name].append(item) %}
+{% endfor %}
+
+{% for supplier_name, supplier_items in suppliers.items() %}
+<div class="purchase-details" style="margin-bottom: 40px;">
     <div class="purchase-header-info">
+        <div class="info-row">
+            <strong>Supplier:</strong> <span style="font-size: 1.2em; font-weight: bold; color: #ffd700;">{{ supplier_name }}</span>
+        </div>
         <div class="info-row">
             <strong>Order Number:</strong> {{ purchase_request.order_number }}
         </div>
@@ -57,24 +71,25 @@
             {% endif %}
         </div>
         {% if purchase_request.status == 'Order Received' %}
+        {% set supplier_invoice = purchase_request.get_supplier_invoice(supplier_name) %}
         <div class="info-row">
             <strong>Invoice Number:</strong>
-            <input type="text" name="invoice_number" form="quantitiesForm" 
-                   value="{{ purchase_request.invoice_number or '' }}" 
+            <input type="text" name="invoice_number_{{ supplier_name }}" form="quantitiesForm_{{ supplier_name }}" 
+                   value="{{ supplier_invoice.invoice_number or '' }}" 
                    placeholder="Enter Invoice Number" 
                    style="padding: 5px 10px; margin-left: 10px; border: 1px solid #3a3a3a; background: #1a1a1a; color: white; border-radius: 4px; min-width: 200px;">
         </div>
         <div class="info-row">
             <strong>Invoice Value:</strong>
-            <input type="text" name="invoice_value" form="quantitiesForm" 
-                   value="{{ "%.2f"|format(purchase_request.invoice_value) if purchase_request.invoice_value else '' }}" 
+            <input type="text" name="invoice_value_{{ supplier_name }}" form="quantitiesForm_{{ supplier_name }}" 
+                   value="{{ "%.2f"|format(supplier_invoice.invoice_value) if supplier_invoice.invoice_value else '' }}" 
                    placeholder="Enter Invoice Value" 
                    style="padding: 5px 10px; margin-left: 10px; border: 1px solid #3a3a3a; background: #1a1a1a; color: white; border-radius: 4px; min-width: 200px;">
         </div>
         {% endif %}
     </div>
 
-    <form method="POST" action="{{ url_for('purchase.update_quantities', purchase_id=purchase_request.id) }}" id="quantitiesForm">
+    <form method="POST" action="{{ url_for('purchase.update_quantities', purchase_id=purchase_request.id) }}" id="quantitiesForm_{{ supplier_name }}">
     <div class="table-wrapper">
         <table class="data-table">
             <thead>
@@ -94,7 +109,7 @@
                 </tr>
             </thead>
             <tbody>
-                {% for item in purchase_request.items %}
+                {% for item in supplier_items %}
                 <tr>
                     <td>{{ item.code or 'N/A' }}</td>
                     <td>{{ item.description }}</td>
@@ -118,9 +133,20 @@
             <tfoot>
                 <tr class="total-row">
                     <td colspan="{% if purchase_request.status == 'Order Received' %}9{% else %}7{% endif %}">
-                        <strong>Total Cost:</strong> {{ user_currency_info.symbol }} {{ "%.2f"|format(purchase_request.calculate_total_cost()) }}
+                        {% set supplier_total = supplier_items | sum(attribute='cost_per_unit', start=0) * supplier_items | sum(attribute='order_quantity', start=0) %}
+                        {% set supplier_total_cost = supplier_items | sum(attribute='cost_per_unit', start=0) %}
+                        {% set supplier_order_qty = supplier_items | sum(attribute='order_quantity', start=0) %}
+                        {% set supplier_total = 0 %}
+                        {% for item in supplier_items %}
+                            {% set supplier_total = supplier_total + (item.cost_per_unit * item.order_quantity) %}
+                        {% endfor %}
+                        <strong>Total Cost:</strong> {{ user_currency_info.symbol }} {{ "%.2f"|format(supplier_total) }}
                         {% if purchase_request.status == 'Order Received' %}
-                        <br><strong>Total Cost (Received):</strong> {{ user_currency_info.symbol }} {{ "%.2f"|format(purchase_request.calculate_received_total_cost()) }}
+                        {% set supplier_received_total = 0 %}
+                        {% for item in supplier_items %}
+                            {% set supplier_received_total = supplier_received_total + item.calculate_received_cost() %}
+                        {% endfor %}
+                        <br><strong>Total Cost (Received):</strong> {{ user_currency_info.symbol }} {{ "%.2f"|format(supplier_received_total) }}
                         {% endif %}
                     </td>
                 </tr>
@@ -134,5 +160,5 @@
     {% endif %}
     </form>
 </div>
+{% endfor %}
 {% endblock %}
-

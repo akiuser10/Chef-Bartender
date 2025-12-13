@@ -1,5 +1,6 @@
 from flask_login import UserMixin
 from datetime import datetime
+import json
 
 # Import db from extensions (will be initialized in app factory)
 from extensions import db
@@ -430,9 +431,35 @@ class PurchaseRequest(db.Model):
     created_by = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     creator = db.relationship('User', foreign_keys=[created_by], backref='created_purchase_requests')
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    invoice_number = db.Column(db.String(100), nullable=True)  # Invoice number when order received
-    invoice_value = db.Column(db.Float, nullable=True)  # Invoice value when order received
+    invoice_number = db.Column(db.String(100), nullable=True)  # Invoice number when order received (legacy, kept for backward compatibility)
+    invoice_value = db.Column(db.Float, nullable=True)  # Invoice value when order received (legacy, kept for backward compatibility)
+    supplier_invoices = db.Column(db.Text, nullable=True)  # JSON string storing invoice data per supplier: {"Supplier Name": {"invoice_number": "...", "invoice_value": 0.0}}
     items = db.relationship('PurchaseItem', backref='purchase_request', cascade='all, delete-orphan')
+    
+    def get_supplier_invoices(self):
+        """Get supplier invoices as a dictionary"""
+        if self.supplier_invoices:
+            try:
+                return json.loads(self.supplier_invoices)
+            except (json.JSONDecodeError, TypeError):
+                return {}
+        return {}
+    
+    def set_supplier_invoice(self, supplier, invoice_number=None, invoice_value=None):
+        """Set invoice data for a specific supplier"""
+        invoices = self.get_supplier_invoices()
+        if supplier not in invoices:
+            invoices[supplier] = {}
+        if invoice_number is not None:
+            invoices[supplier]['invoice_number'] = invoice_number
+        if invoice_value is not None:
+            invoices[supplier]['invoice_value'] = invoice_value
+        self.supplier_invoices = json.dumps(invoices)
+    
+    def get_supplier_invoice(self, supplier):
+        """Get invoice data for a specific supplier"""
+        invoices = self.get_supplier_invoices()
+        return invoices.get(supplier, {'invoice_number': '', 'invoice_value': None})
 
     def calculate_total_cost(self):
         """Calculate total cost of all items in the purchase request"""

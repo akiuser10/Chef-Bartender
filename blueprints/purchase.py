@@ -350,10 +350,32 @@ def update_quantities(purchase_id):
                 except (ValueError, TypeError):
                     item.quantity_received = None
         
-        # Update invoice number and invoice value if provided
-        if 'invoice_number' in request.form:
+        # Update invoice number and invoice value per supplier if provided
+        # Check for supplier-specific invoice fields (format: invoice_number_{supplier} and invoice_value_{supplier})
+        suppliers = set(item.supplier or 'N/A' for item in purchase_request.items)
+        for supplier in suppliers:
+            invoice_num_key = f'invoice_number_{supplier}'
+            invoice_val_key = f'invoice_value_{supplier}'
+            
+            invoice_number = None
+            invoice_value = None
+            
+            if invoice_num_key in request.form:
+                invoice_number = request.form.get(invoice_num_key, '').strip() or None
+            if invoice_val_key in request.form:
+                try:
+                    invoice_val = request.form.get(invoice_val_key, '').strip()
+                    invoice_value = float(invoice_val) if invoice_val else None
+                except (ValueError, TypeError):
+                    invoice_value = None
+            
+            if invoice_number is not None or invoice_value is not None:
+                purchase_request.set_supplier_invoice(supplier, invoice_number, invoice_value)
+        
+        # Also handle legacy invoice fields (for backward compatibility)
+        if 'invoice_number' in request.form and not any(f'invoice_number_{s}' in request.form for s in suppliers):
             purchase_request.invoice_number = request.form.get('invoice_number', '').strip() or None
-        if 'invoice_value' in request.form:
+        if 'invoice_value' in request.form and not any(f'invoice_value_{s}' in request.form for s in suppliers):
             try:
                 invoice_val = request.form.get('invoice_value', '').strip()
                 purchase_request.invoice_value = float(invoice_val) if invoice_val else None
