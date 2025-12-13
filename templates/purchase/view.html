@@ -192,11 +192,8 @@
         </table>
     </div>
     {% if supplier_status == 'Order Received' %}
-        {% set supplier_received_total_check = 0 %}
-        {% for item in supplier_items %}
-            {% set supplier_received_total_check = supplier_received_total_check + item.calculate_received_cost() %}
-        {% endfor %}
-        {% if supplier_received_total_check == 0 %}
+        {% set supplier_received_date_check = purchase_request.get_supplier_received_date(supplier_name) %}
+        {% if not supplier_received_date_check %}
         <div class="actions purchase-actions">
             <button type="submit" class="btn btn-primary">Update Quantities</button>
         </div>
