@@ -211,7 +211,9 @@ def view_book_pdf(book_id):
         if not book.pdf_path:
             current_app.logger.error(f'Book {book_id} has no pdf_path')
             flash('PDF file not found.', 'error')
-            return redirect(url_for('knowledge.bartender_library'))
+            # Redirect to the correct library based on book type
+            library_route = f'{book.library_type}_library' if book.library_type in ['bartender', 'chef'] else 'bartender_library'
+            return redirect(url_for(f'knowledge.{library_route}'))
         
         # book.pdf_path is stored as 'uploads/books/pdfs/filename.pdf'
         # Remove 'uploads/' prefix to get the relative path
@@ -224,9 +226,11 @@ def view_book_pdf(book_id):
         full_path = os.path.join(current_app.config['UPLOAD_FOLDER'], file_path)
         
         if not os.path.exists(full_path):
-            current_app.logger.error(f'PDF file not found at: {full_path}, stored path: {book.pdf_path}')
+            current_app.logger.error(f'PDF file not found at: {full_path}, stored path: {book.pdf_path}, UPLOAD_FOLDER: {current_app.config["UPLOAD_FOLDER"]}')
             flash('PDF file not found on server.', 'error')
-            return redirect(url_for('knowledge.bartender_library'))
+            # Redirect to the correct library based on book type
+            library_route = f'{book.library_type}_library' if book.library_type in ['bartender', 'chef'] else 'bartender_library'
+            return redirect(url_for(f'knowledge.{library_route}'))
         
         # Use send_from_directory to serve the file directly
         return send_from_directory(
@@ -238,9 +242,19 @@ def view_book_pdf(book_id):
     except NotFound:
         raise
     except Exception as e:
-        current_app.logger.error(f'Error serving PDF for book {book_id}: {str(e)}')
+        current_app.logger.error(f'Error serving PDF for book {book_id}: {str(e)}', exc_info=True)
         flash('Error loading PDF file.', 'error')
-        return redirect(url_for('knowledge.bartender_library'))
+        # Try to get the book to determine which library to redirect to
+        try:
+            org_filter = get_organization_filter(Book)
+            book = Book.query.filter(org_filter).filter_by(id=book_id).first()
+            if book and book.library_type in ['bartender', 'chef']:
+                library_route = f'{book.library_type}_library'
+            else:
+                library_route = 'bartender_library'
+        except:
+            library_route = 'bartender_library'
+        return redirect(url_for(f'knowledge.{library_route}'))
 
 
 @knowledge_bp.route('/book/<int:book_id>/edit', methods=['POST'])
