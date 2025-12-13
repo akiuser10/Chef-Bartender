@@ -183,4 +183,23 @@
     </form>
 </div>
 {% endfor %}
+
+<script>
+// Scroll to supplier section if anchor is present in URL
+document.addEventListener('DOMContentLoaded', function() {
+    const hash = window.location.hash;
+    if (hash && hash.startsWith('#supplier_')) {
+        const targetId = hash.substring(1); // Remove the #
+        const targetElement = document.getElementById(targetId);
+        if (targetElement) {
+            // Small delay to ensure page is fully rendered
+            setTimeout(function() {
+                targetElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                // Add a slight offset to account for fixed headers if any
+                window.scrollBy(0, -20);
+            }, 100);
+        }
+    }
+});
+</script>
 {% endblock %}
