@@ -2,17 +2,94 @@
 {% block page_panel %}
 <div class="hero-section">
     <div class="hero-image-container">
-        <div class="hero-image"></div>
-        <div class="hero-overlay"></div>
+        <!-- Carousel Slides -->
+        <div class="hero-slide active" data-slide="0">
+            <div class="hero-image slide-0"></div>
+            <div class="hero-overlay"></div>
+            <div class="hero-content">
+                <h1 class="hero-title">Less is more.</h1>
+            </div>
+        </div>
+        <div class="hero-slide" data-slide="1">
+            <div class="hero-image slide-1"></div>
+            <div class="hero-overlay"></div>
+            <div class="hero-content">
+                <h1 class="hero-title">Clarity takes courage.</h1>
+            </div>
+        </div>
+        <div class="hero-slide" data-slide="2">
+            <div class="hero-image slide-2"></div>
+            <div class="hero-overlay"></div>
+            <div class="hero-content">
+                <h1 class="hero-title">Complexity hides; simplicity reveals.</h1>
+            </div>
+        </div>
+        <div class="hero-slide" data-slide="3">
+            <div class="hero-image slide-3"></div>
+            <div class="hero-overlay"></div>
+            <div class="hero-content">
+                <h1 class="hero-title">Minimal is intentional.</h1>
+            </div>
+        </div>
+        <div class="hero-slide" data-slide="4">
+            <div class="hero-image slide-4"></div>
+            <div class="hero-overlay"></div>
+            <div class="hero-content">
+                <h1 class="hero-title">Order creates freedom.</h1>
+            </div>
+        </div>
+        <div class="hero-slide" data-slide="5">
+            <div class="hero-image slide-5"></div>
+            <div class="hero-overlay"></div>
+            <div class="hero-content">
+                <h1 class="hero-title">Focus is a form of power.</h1>
+            </div>
+        </div>
         
         <!-- Carousel Navigation -->
-        <button class="carousel-nav carousel-prev" aria-label="Previous">‹</button>
-        <button class="carousel-nav carousel-next" aria-label="Next">›</button>
-        
-        <!-- Hero Content -->
-        <div class="hero-content">
-            <h1 class="hero-title">Simplicity is complex</h1>
-        </div>
+        <button class="carousel-nav carousel-prev" aria-label="Previous" id="heroPrevBtn">‹</button>
+        <button class="carousel-nav carousel-next" aria-label="Next" id="heroNextBtn">›</button>
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const slides = document.querySelectorAll('.hero-slide');
+    const prevBtn = document.getElementById('heroPrevBtn');
+    const nextBtn = document.getElementById('heroNextBtn');
+    let currentSlide = 0;
+    
+    function showSlide(index) {
+        // Remove active class from all slides
+        slides.forEach(slide => slide.classList.remove('active'));
+        
+        // Add active class to current slide
+        if (slides[index]) {
+            slides[index].classList.add('active');
+        }
+    }
+    
+    function nextSlide() {
+        currentSlide = (currentSlide + 1) % slides.length;
+        showSlide(currentSlide);
+    }
+    
+    function prevSlide() {
+        currentSlide = (currentSlide - 1 + slides.length) % slides.length;
+        showSlide(currentSlide);
+    }
+    
+    // Event listeners
+    if (nextBtn) {
+        nextBtn.addEventListener('click', nextSlide);
+    }
+    
+    if (prevBtn) {
+        prevBtn.addEventListener('click', prevSlide);
+    }
+    
+    // Optional: Auto-advance slides every 5 seconds
+    // setInterval(nextSlide, 5000);
+});
+</script>
 {% endblock %}
