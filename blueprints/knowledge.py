@@ -197,6 +197,7 @@ def add_book():
 def view_book_pdf(book_id):
     """Serve PDF file for a book"""
     from utils.db_helpers import ensure_schema_updates
+    from flask import redirect as flask_redirect
     ensure_schema_updates()
     
     org_filter = get_organization_filter(Book)
@@ -207,32 +208,15 @@ def view_book_pdf(book_id):
         return redirect(url_for('knowledge.bartender_library'))
     
     # book.pdf_path is stored as 'uploads/books/pdfs/filename.pdf'
-    # We need to get the path relative to UPLOAD_FOLDER
-    # Remove 'uploads/' prefix if present to get the relative path
+    # Use the existing uploaded_file route which handles path correctly
+    # Remove 'uploads/' prefix to get the relative path for the route
     if book.pdf_path.startswith('uploads/'):
-        relative_path = book.pdf_path.replace('uploads/', '', 1)
+        file_path = book.pdf_path.replace('uploads/', '', 1)
     else:
-        relative_path = book.pdf_path
+        file_path = book.pdf_path
     
-    # Construct full path
-    full_path = os.path.join(current_app.config['UPLOAD_FOLDER'], relative_path)
-    
-    # Check if file exists
-    if os.path.exists(full_path):
-        # Extract directory and filename
-        pdf_dir = os.path.dirname(full_path)
-        pdf_filename = os.path.basename(full_path)
-        
-        return send_from_directory(
-            pdf_dir,
-            pdf_filename,
-            as_attachment=False,
-            mimetype='application/pdf'
-        )
-    else:
-        current_app.logger.error(f'PDF file not found at: {full_path}, stored path: {book.pdf_path}')
-        flash('PDF file not found.', 'error')
-        return redirect(url_for('knowledge.bartender_library'))
+    # Redirect to the uploaded_file route which properly serves files
+    return flask_redirect(url_for('main.uploaded_file', filename=file_path))
 
 
 @knowledge_bp.route('/book/<int:book_id>/edit', methods=['POST'])
