@@ -148,16 +148,23 @@
             <tfoot>
                 <tr class="total-row">
                     <td colspan="{% if supplier_status == 'Order Received' %}9{% else %}7{% endif %}">
+                        {% if supplier_status in ['Order Placed', 'Order Received'] %}
                         {% set supplier_total = 0 %}
                         {% for item in supplier_items %}
                             {% set supplier_total = supplier_total + (item.cost_per_unit * item.order_quantity) %}
                         {% endfor %}
                         <strong>Total Cost (Ordered):</strong> {{ user_currency_info.symbol }} {{ "%.2f"|format(supplier_total) }}
+                        {% endif %}
+                        {% if supplier_status == 'Order Received' %}
                         {% set supplier_received_total = 0 %}
                         {% for item in supplier_items %}
                             {% set supplier_received_total = supplier_received_total + item.calculate_received_cost() %}
                         {% endfor %}
-                        <br><strong>Total Cost (Received):</strong> {{ user_currency_info.symbol }} {{ "%.2f"|format(supplier_received_total) }}
+                        {% if supplier_status in ['Order Placed', 'Order Received'] %}
+                        <br>
+                        {% endif %}
+                        <strong>Total Cost (Received):</strong> {{ user_currency_info.symbol }} {{ "%.2f"|format(supplier_received_total) }}
+                        {% endif %}
                     </td>
                 </tr>
             </tfoot>
