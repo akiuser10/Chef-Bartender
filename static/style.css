@@ -238,6 +238,7 @@ canvas {
 
 .knowledge-dropdown-trigger {
     cursor: pointer;
+    -webkit-user-select: none;
     user-select: none;
 }
 
