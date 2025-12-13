@@ -6,7 +6,7 @@ from flask import Blueprint, render_template, request, redirect, url_for, flash,
 from flask_login import login_required, current_user
 from functools import wraps
 from models import Book, db
-from utils.db_helpers import get_organization_filter
+from utils.helpers import get_organization_filter
 from utils.file_upload import save_uploaded_file, allowed_file
 import os
 from werkzeug.utils import secure_filename
