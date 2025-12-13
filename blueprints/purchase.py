@@ -1002,12 +1002,9 @@ def export_new_purchase_pdf(purchase_id):
             ]))
             elements.append(items_table)
             
-            # Add page break if not last supplier
+            # Add spacing between suppliers (no page break - tables will flow naturally)
             if idx < len(supplier_names) - 1:
-                elements.append(Spacer(1, 0.2*inch))
-                elements.append(PageBreak())
-            else:
-                elements.append(Spacer(1, 0.2*inch))
+                elements.append(Spacer(1, 0.3*inch))
         
         # Footer
         footer_text = f"Generated on {datetime.now().strftime('%Y-%m-%d %H:%M:%S')} | Chef & Bartender"
