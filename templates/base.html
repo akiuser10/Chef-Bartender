@@ -42,6 +42,15 @@
         {% if current_user.is_authenticated and current_user.user_role in ['Purchase Manager', 'Manager'] %}
         <a href="{{ url_for('purchase.to_order') }}" class="nav-link">TO ORDER</a>
         {% endif %}
+        {% if current_user.is_authenticated and current_user.user_role in ['Chef', 'Bartender', 'Manager'] %}
+        <div class="nav-dropdown-container">
+            <span class="nav-link knowledge-dropdown-trigger" id="knowledgeDropdownTrigger">KNOWLEDGE HUB</span>
+            <div class="nav-dropdown-menu" id="knowledgeDropdownMenu">
+                <a href="{{ url_for('knowledge.bartender_library') }}" class="nav-dropdown-item">Bartender Library</a>
+                <a href="{{ url_for('knowledge.chef_library') }}" class="nav-dropdown-item">Chef Library</a>
+            </div>
+        </div>
+        {% endif %}
         <a href="{{ url_for('main.about') }}" class="nav-link">ABOUT</a>
         <a href="{{ url_for('main.contact') }}" class="nav-link">CONTACT</a>
         {% if current_user.is_authenticated %}
@@ -111,6 +120,33 @@
             menuItems.forEach(function(item) {
                 item.addEventListener('click', function() {
                     menu.classList.remove('show');
+                });
+            });
+        }
+
+        // Knowledge Hub dropdown functionality
+        const knowledgeTrigger = document.getElementById('knowledgeDropdownTrigger');
+        const knowledgeMenu = document.getElementById('knowledgeDropdownMenu');
+        
+        if (knowledgeTrigger && knowledgeMenu) {
+            // Toggle dropdown on click
+            knowledgeTrigger.addEventListener('click', function(e) {
+                e.stopPropagation();
+                knowledgeMenu.classList.toggle('show');
+            });
+            
+            // Close dropdown when clicking outside
+            document.addEventListener('click', function(e) {
+                if (!knowledgeTrigger.contains(e.target) && !knowledgeMenu.contains(e.target)) {
+                    knowledgeMenu.classList.remove('show');
+                }
+            });
+            
+            // Close dropdown when clicking on a menu item
+            const knowledgeMenuItems = knowledgeMenu.querySelectorAll('.nav-dropdown-item');
+            knowledgeMenuItems.forEach(function(item) {
+                item.addEventListener('click', function() {
+                    knowledgeMenu.classList.remove('show');
                 });
             });
         }
