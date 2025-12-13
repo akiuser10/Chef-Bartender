@@ -7,6 +7,13 @@
     </div>
 </div>
 
+{% if current_user.user_role == 'Manager' and purchase_request.status == 'Pending Manager Approval' %}
+<div style="background: #fff3cd; border: 1px solid #ffc107; border-radius: 4px; padding: 15px; margin-bottom: 20px;">
+    <strong>⚠️ Manager Approval Required</strong>
+    <p style="margin: 10px 0 0 0;">Review this order and modify quantities or remove items as needed. Click "Approve Order" to forward it to the Purchase Manager.</p>
+</div>
+{% endif %}
+
 {# Group items by supplier #}
 {% set suppliers = {} %}
 {% for item in purchase_request.items %}
@@ -50,7 +57,9 @@
             <span class="status-badge status-{{ supplier_status.lower().replace(' ', '-') }}">
                 {{ supplier_status }}
             </span>
-            {% if current_user.user_role == 'Purchase Manager' %}
+            {% if current_user.user_role == 'Manager' and purchase_request.status == 'Pending Manager Approval' %}
+            <span style="margin-left: 10px; color: #ffc107;">(Pending Your Approval)</span>
+            {% elif current_user.user_role == 'Purchase Manager' %}
                 {% if supplier_status == 'Pending' %}
                 <form method="POST" action="{{ url_for('purchase.update_supplier_status', purchase_id=purchase_request.id) }}" style="display: inline; margin-left: 10px;">
                     <input type="hidden" name="supplier" value="{{ supplier_name }}">
@@ -116,6 +125,9 @@
         <table class="data-table">
             <thead>
                 <tr>
+                    {% if current_user.user_role == 'Manager' and purchase_request.status == 'Pending Manager Approval' %}
+                    <th style="width: 40px;">Remove</th>
+                    {% endif %}
                     <th>Code</th>
                     <th>Description</th>
                     <th>Quantity</th>
@@ -133,14 +145,38 @@
             <tbody>
                 {% for item in supplier_items %}
                 <tr>
+                    {% if current_user.user_role == 'Manager' and purchase_request.status == 'Pending Manager Approval' %}
+                    <td style="text-align: center;">
+                        <input type="checkbox" name="remove_item" value="{{ item.id }}" form="approveForm">
+                    </td>
+                    {% endif %}
                     <td>{{ item.code or 'N/A' }}</td>
                     <td>{{ item.description }}</td>
                     <td>{{ "%.2f"|format(item.quantity) }}</td>
                     <td>{{ item.supplier or 'N/A' }}</td>
                     <td>{{ item.sub_category or 'Other' }}</td>
                     <td>{{ user_currency_info.symbol }} {{ "%.2f"|format(item.cost_per_unit) }}</td>
-                    <td><strong>{{ "%.2f"|format(item.order_quantity) }}</strong></td>
-                    <td><strong>{{ user_currency_info.symbol }} {{ "%.2f"|format(item.cost_per_unit * item.order_quantity) }}</strong></td>
+                    <td>
+                        {% if current_user.user_role == 'Manager' and purchase_request.status == 'Pending Manager Approval' %}
+                        <input type="text" step="0.01" min="0" name="order_quantity_{{ item.id }}" 
+                               value="{{ "%.2f"|format(item.order_quantity) }}" 
+                               form="approveForm"
+                               class="table-input table-input-right" 
+                               style="width: 100px; text-align: right;"
+                               required>
+                        {% else %}
+                        <strong>{{ "%.2f"|format(item.order_quantity) }}</strong>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <strong>
+                            {% if current_user.user_role == 'Manager' and purchase_request.status == 'Pending Manager Approval' %}
+                            <span id="total_cost_{{ item.id }}">{{ user_currency_info.symbol }} {{ "%.2f"|format(item.cost_per_unit * item.order_quantity) }}</span>
+                            {% else %}
+                            {{ user_currency_info.symbol }} {{ "%.2f"|format(item.cost_per_unit * item.order_quantity) }}
+                            {% endif %}
+                        </strong>
+                    </td>
                     {% if supplier_status == 'Order Received' %}
                     <td>
                         <input type="number" step="0.01" min="0" name="quantity_received_{{ item.id }}" 
@@ -154,7 +190,7 @@
             </tbody>
             <tfoot>
                 <tr class="total-row">
-                    <td colspan="{% if supplier_status == 'Order Received' %}9{% else %}7{% endif %}">
+                    <td colspan="{% if current_user.user_role == 'Manager' and purchase_request.status == 'Pending Manager Approval' %}{% if supplier_status == 'Order Received' %}10{% else %}8{% endif %}{% else %}{% if supplier_status == 'Order Received' %}9{% else %}7{% endif %}{% endif %}">
                         {% set supplier_total_list = [] %}
                         {% for item in supplier_items %}
                             {% set item_total_cost = (item.cost_per_unit or 0) * (item.order_quantity or 0) %}
@@ -200,6 +236,16 @@
 </div>
 {% endfor %}
 
+{% if current_user.user_role == 'Manager' and purchase_request.status == 'Pending Manager Approval' %}
+<div style="text-align: center; margin: 40px 0; padding: 20px; background: #f8f9fa; border-radius: 8px;">
+    <form id="approveForm" method="POST" action="{{ url_for('purchase.approve_purchase_request', purchase_id=purchase_request.id) }}" style="display: inline;">
+        <button type="submit" class="btn btn-primary" style="font-size: 16px; padding: 12px 30px; background-color: #28a745;">
+            ✓ Approve Order & Forward to Purchase Manager
+        </button>
+    </form>
+</div>
+{% endif %}
+
 {# Check if all suppliers have received dates #}
 {% set all_suppliers_received = true %}
 {% for supplier_name in suppliers.keys() %}
@@ -234,6 +280,23 @@ document.addEventListener('DOMContentLoaded', function() {
             }, 100);
         }
     }
+    
+    // Auto-calculate total cost when order quantity changes (for Manager approval)
+    {% if current_user.user_role == 'Manager' and purchase_request.status == 'Pending Manager Approval' %}
+    const quantityInputs = document.querySelectorAll('input[name^="order_quantity_"]');
+    quantityInputs.forEach(function(input) {
+        input.addEventListener('input', function() {
+            const itemId = this.name.replace('order_quantity_', '');
+            const quantity = parseFloat(this.value) || 0;
+            const costPerUnit = parseFloat(this.closest('tr').querySelector('td:nth-child(7)').textContent.replace(/[^\d.]/g, '')) || 0;
+            const totalCost = quantity * costPerUnit;
+            const totalCostElement = document.getElementById('total_cost_' + itemId);
+            if (totalCostElement) {
+                totalCostElement.textContent = '{{ user_currency_info.symbol }} ' + totalCost.toFixed(2);
+            }
+        });
+    });
+    {% endif %}
 });
 </script>
 {% endblock %}

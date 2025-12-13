@@ -61,11 +61,19 @@ def create_purchase_request():
         # Generate unique order number
         order_number = f"PO-{datetime.utcnow().strftime('%Y%m%d')}-{uuid.uuid4().hex[:6].upper()}"
         
+        # Determine initial status based on user role
+        # Chef/Bartender orders need Manager approval first
+        # Manager orders go directly to Purchase Manager
+        if current_user.user_role in ['Chef', 'Bartender']:
+            initial_status = 'Pending Manager Approval'
+        else:
+            initial_status = 'Pending'
+        
         # Create purchase request
         purchase_request = PurchaseRequest(
             order_number=order_number,
             ordered_date=datetime.utcnow(),
-            status='Pending',
+            status=initial_status,
             organisation=(current_user.organisation.strip() if current_user.organisation and current_user.organisation.strip() else None),
             created_by=current_user.id
         )
@@ -145,16 +153,17 @@ def to_order():
         from sqlalchemy.orm import joinedload
         org_filter = get_organization_filter(PurchaseRequest)
         
-        # Purchase Manager sees all orders, Manager sees only pending orders
+        # Purchase Manager sees only orders approved by Manager (status = 'Pending')
+        # Manager sees orders pending their approval (status = 'Pending Manager Approval')
         # Use joinedload to ensure creator relationship is loaded
         if current_user.user_role == 'Purchase Manager':
-            # Show all orders for Purchase Manager (this is their Order List)
-            purchase_requests = PurchaseRequest.query.filter(org_filter).options(
+            # Show only orders approved by Manager (ready for Purchase Manager to process)
+            purchase_requests = PurchaseRequest.query.filter(org_filter).filter_by(status='Pending').options(
                 joinedload(PurchaseRequest.creator)
             ).order_by(PurchaseRequest.ordered_date.desc()).all()
         else:
-            # Manager sees only pending orders
-            purchase_requests = PurchaseRequest.query.filter(org_filter).filter_by(status='Pending').options(
+            # Manager sees only orders pending their approval
+            purchase_requests = PurchaseRequest.query.filter(org_filter).filter_by(status='Pending Manager Approval').options(
                 joinedload(PurchaseRequest.creator)
             ).order_by(PurchaseRequest.ordered_date.desc()).all()
         
@@ -212,6 +221,16 @@ def view_purchase_request(purchase_id):
         org_filter = get_organization_filter(PurchaseRequest)
         purchase_request = PurchaseRequest.query.filter(org_filter).filter_by(id=purchase_id).first_or_404()
         
+        # Manager can only view orders pending their approval
+        if current_user.user_role == 'Manager' and purchase_request.status != 'Pending Manager Approval':
+            flash('This order is not pending your approval.', 'error')
+            return redirect(url_for('purchase.to_order'))
+        
+        # Purchase Manager can only view orders approved by Manager
+        if current_user.user_role == 'Purchase Manager' and purchase_request.status != 'Pending':
+            flash('This order is not ready for processing.', 'error')
+            return redirect(url_for('purchase.to_order'))
+        
         from utils.currency import get_currency_info
         currency_info = get_currency_info(current_user.currency or 'AED')
         
@@ -222,6 +241,66 @@ def view_purchase_request(purchase_id):
         flash(f'Error loading purchase request: {str(e)}', 'error')
         current_app.logger.error(f'Error in view_purchase_request: {str(e)}', exc_info=True)
         return redirect(url_for('purchase.to_order'))
+
+
+@purchase_bp.route('/purchase/<int:purchase_id>/approve', methods=['POST'])
+@login_required
+@role_required(['Manager'])
+def approve_purchase_request(purchase_id):
+    """Manager approves a purchase request, with optional modifications"""
+    try:
+        ensure_schema_updates()
+        org_filter = get_organization_filter(PurchaseRequest)
+        purchase_request = PurchaseRequest.query.filter(org_filter).filter_by(id=purchase_id).first_or_404()
+        
+        # Only allow approval of orders pending Manager approval
+        if purchase_request.status != 'Pending Manager Approval':
+            flash('This order is not pending your approval.', 'error')
+            return redirect(url_for('purchase.to_order'))
+        
+        # Process item modifications
+        items_to_remove = request.form.getlist('remove_item')  # List of item IDs to remove
+        items_to_update = {}  # Dictionary of item_id: new_order_quantity
+        
+        # Get all items and check for updates
+        for item in purchase_request.items:
+            item_id = str(item.id)
+            new_quantity_key = f'order_quantity_{item_id}'
+            
+            if item_id in items_to_remove:
+                # Mark item for deletion
+                db.session.delete(item)
+            elif new_quantity_key in request.form:
+                # Update order quantity
+                try:
+                    new_quantity = float(request.form.get(new_quantity_key, 0) or 0)
+                    if new_quantity > 0:
+                        item.order_quantity = new_quantity
+                    else:
+                        # If quantity is 0 or negative, remove the item
+                        db.session.delete(item)
+                except (ValueError, TypeError):
+                    pass  # Skip invalid values
+        
+        # Check if any items remain
+        remaining_items = [item for item in purchase_request.items if item.id not in [int(i) for i in items_to_remove]]
+        if not remaining_items:
+            db.session.rollback()
+            flash('Cannot approve order with no items. Please add at least one item.', 'error')
+            return redirect(url_for('purchase.view_purchase_request', purchase_id=purchase_id))
+        
+        # Update status to 'Pending' (ready for Purchase Manager)
+        purchase_request.status = 'Pending'
+        
+        db.session.commit()
+        flash('Purchase request approved and forwarded to Purchase Manager!', 'success')
+        return redirect(url_for('purchase.to_order'))
+        
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Error approving purchase request: {str(e)}', 'error')
+        current_app.logger.error(f'Error in approve_purchase_request: {str(e)}', exc_info=True)
+        return redirect(url_for('purchase.view_purchase_request', purchase_id=purchase_id))
 
 
 @purchase_bp.route('/purchase/<int:purchase_id>/view-order', methods=['GET'])
