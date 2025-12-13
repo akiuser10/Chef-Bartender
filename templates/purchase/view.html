@@ -154,6 +154,9 @@
                                value="{{ "%.2f"|format(item.order_quantity) }}" 
                                form="approveForm"
                                class="table-input table-input-right table-input-quantity" 
+                               title="Order quantity for {{ item.description }}"
+                               placeholder="0.00"
+                               aria-label="Order quantity for {{ item.description }}"
                                required>
                         <small class="quantity-hint">
                             Set to 0 to remove
