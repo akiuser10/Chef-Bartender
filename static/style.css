@@ -3152,6 +3152,6 @@ main .page-panel .recipe-view-container {
 }
 
 .status-badge.status-order-received-order-cancelled {
-    background-color: #dc3545 !important; /* Red - cancelled takes priority */
+    background-color: #2196f3 !important; /* Blue */
     color: #fff;
 }
