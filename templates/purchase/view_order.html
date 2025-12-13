@@ -140,18 +140,20 @@
             <tfoot>
                 <tr class="total-row">
                     <td colspan="{% if supplier_status == 'Order Received' %}9{% else %}7{% endif %}">
-                        {% set supplier_total = 0 %}
+                        {% set supplier_total_list = [] %}
                         {% for item in supplier_items %}
-                            {% set item_total_cost = item.cost_per_unit * item.order_quantity %}
-                            {% set supplier_total = supplier_total + item_total_cost %}
+                            {% set item_total_cost = (item.cost_per_unit or 0) * (item.order_quantity or 0) %}
+                            {% set _ = supplier_total_list.append(item_total_cost) %}
                         {% endfor %}
+                        {% set supplier_total = supplier_total_list | sum %}
                         <strong>Total Cost (Ordered):</strong> {{ user_currency_info.symbol }} {{ "%.2f"|format(supplier_total) }}
                         {% if supplier_status == 'Order Received' %}
-                        {% set supplier_received_total = 0 %}
+                        {% set supplier_received_total_list = [] %}
                         {% for item in supplier_items %}
                             {% set item_received_cost = item.calculate_received_cost() %}
-                            {% set supplier_received_total = supplier_received_total + item_received_cost %}
+                            {% set _ = supplier_received_total_list.append(item_received_cost) %}
                         {% endfor %}
+                        {% set supplier_received_total = supplier_received_total_list | sum %}
                         <br>
                         <strong>Total Cost (Received):</strong> {{ user_currency_info.symbol }} {{ "%.2f"|format(supplier_received_total) }}
                         {% endif %}
