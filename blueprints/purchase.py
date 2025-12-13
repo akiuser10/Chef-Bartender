@@ -509,3 +509,244 @@ def update_quantities(purchase_id):
         else:
             return redirect(url_for('purchase.view_order', purchase_id=purchase_id))
 
+
+
+@purchase_bp.route('/purchase/<int:purchase_id>/export-pdf')
+@login_required
+@role_required(['Chef', 'Bartender', 'Manager', 'Purchase Manager'])
+def export_purchase_pdf(purchase_id):
+    """Export purchase order details to PDF"""
+    try:
+        from reportlab.lib.pagesizes import A4
+        from reportlab.lib import colors
+        from reportlab.lib.units import inch
+        from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer, PageBreak
+        from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+        from reportlab.lib.enums import TA_CENTER, TA_LEFT, TA_RIGHT
+        from io import BytesIO
+        from flask import make_response
+        from sqlalchemy.orm import joinedload
+        from utils.currency import get_currency_info, format_currency
+        import re
+        
+        ensure_schema_updates()
+        org_filter = get_organization_filter(PurchaseRequest)
+        
+        # Purchase Manager can view any order, others can only view their own
+        if current_user.user_role == 'Purchase Manager':
+            purchase_request = PurchaseRequest.query.filter(org_filter).filter_by(id=purchase_id).options(
+                joinedload(PurchaseRequest.items),
+                joinedload(PurchaseRequest.creator)
+            ).first_or_404()
+        else:
+            purchase_request = PurchaseRequest.query.filter(org_filter).filter_by(id=purchase_id, created_by=current_user.id).options(
+                joinedload(PurchaseRequest.items),
+                joinedload(PurchaseRequest.creator)
+            ).first_or_404()
+        
+        # Get currency info
+        currency_info = get_currency_info(current_user.currency or 'AED')
+        
+        # Group items by supplier
+        suppliers = {}
+        for item in purchase_request.items:
+            supplier_name = item.supplier or 'N/A'
+            if supplier_name not in suppliers:
+                suppliers[supplier_name] = []
+            suppliers[supplier_name].append(item)
+        
+        # Create a BytesIO buffer for the PDF
+        buffer = BytesIO()
+        doc = SimpleDocTemplate(buffer, pagesize=A4, topMargin=0.5*inch, bottomMargin=0.5*inch)
+        
+        # Container for the 'Flowable' objects
+        elements = []
+        
+        # Define styles
+        styles = getSampleStyleSheet()
+        title_style = ParagraphStyle(
+            'CustomTitle',
+            parent=styles['Heading1'],
+            fontSize=20,
+            textColor=colors.HexColor('#1a2a2a'),
+            spaceAfter=20,
+            alignment=TA_CENTER
+        )
+        
+        heading_style = ParagraphStyle(
+            'CustomHeading',
+            parent=styles['Heading2'],
+            fontSize=14,
+            textColor=colors.HexColor('#1a2a2a'),
+            spaceAfter=10,
+            spaceBefore=10
+        )
+        
+        # Title
+        elements.append(Paragraph("PURCHASE ORDER DETAILS", title_style))
+        elements.append(Spacer(1, 0.2*inch))
+        
+        # Order Information
+        info_data = [
+            ['Order Number:', purchase_request.order_number],
+            ['Ordered Date & Time:', purchase_request.ordered_date.strftime('%Y-%m-%d %H:%M:%S')],
+        ]
+        
+        if purchase_request.creator:
+            creator_name = f"{purchase_request.creator.first_name or ''} {purchase_request.creator.last_name or ''}".strip()
+            if creator_name:
+                info_data.append(['Ordered By:', creator_name])
+        
+        info_table = Table(info_data, colWidths=[2.5*inch, 4*inch])
+        info_table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (0, -1), colors.HexColor('#f0f0f0')),
+            ('TEXTCOLOR', (0, 0), (-1, -1), colors.black),
+            ('ALIGN', (0, 0), (0, -1), 'LEFT'),
+            ('ALIGN', (1, 0), (1, -1), 'LEFT'),
+            ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
+            ('FONTNAME', (1, 0), (1, -1), 'Helvetica'),
+            ('FONTSIZE', (0, 0), (-1, -1), 10),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
+            ('TOPPADDING', (0, 0), (-1, -1), 8),
+            ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
+        ]))
+        elements.append(info_table)
+        elements.append(Spacer(1, 0.3*inch))
+        
+        # Process each supplier
+        for supplier_name, supplier_items in suppliers.items():
+            supplier_status = purchase_request.get_supplier_status(supplier_name)
+            supplier_received_date = purchase_request.get_supplier_received_date(supplier_name)
+            supplier_invoice = purchase_request.get_supplier_invoice(supplier_name)
+            
+            # Supplier Header
+            elements.append(Paragraph(f"Supplier: {supplier_name}", heading_style))
+            
+            # Supplier Info
+            supplier_info = [['Status:', supplier_status]]
+            if supplier_received_date:
+                supplier_info.append(['Received Date & Time:', supplier_received_date])
+            if supplier_invoice.get('invoice_number'):
+                supplier_info.append(['Invoice Number:', supplier_invoice.get('invoice_number', '')])
+            if supplier_invoice.get('invoice_value'):
+                supplier_info.append(['Invoice Value:', format_currency(supplier_invoice.get('invoice_value', 0), currency_info.code)])
+            
+            if len(supplier_info) > 1:
+                supplier_info_table = Table(supplier_info, colWidths=[2*inch, 4.5*inch])
+                supplier_info_table.setStyle(TableStyle([
+                    ('BACKGROUND', (0, 0), (0, -1), colors.HexColor('#f0f0f0')),
+                    ('TEXTCOLOR', (0, 0), (-1, -1), colors.black),
+                    ('ALIGN', (0, 0), (0, -1), 'LEFT'),
+                    ('ALIGN', (1, 0), (1, -1), 'LEFT'),
+                    ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
+                    ('FONTNAME', (1, 0), (1, -1), 'Helvetica'),
+                    ('FONTSIZE', (0, 0), (-1, -1), 9),
+                    ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
+                    ('TOPPADDING', (0, 0), (-1, -1), 6),
+                    ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
+                ]))
+                elements.append(supplier_info_table)
+                elements.append(Spacer(1, 0.2*inch))
+            
+            # Items Table
+            table_data = [['Code', 'Description', 'Qty', 'Cost/Unit', 'Order Qty', 'Total Cost']]
+            
+            if supplier_status == 'Order Received':
+                table_data[0].extend(['Qty Received', 'Total Cost (Received)'])
+            
+            supplier_total = 0
+            supplier_received_total = 0
+            
+            for item in supplier_items:
+                row = [
+                    item.code or 'N/A',
+                    item.description or 'N/A',
+                    f"{item.quantity:.2f}" if item.quantity else '0.00',
+                    format_currency(item.cost_per_unit or 0, currency_info.code),
+                    f"{item.order_quantity:.2f}" if item.order_quantity else '0.00',
+                    format_currency((item.cost_per_unit or 0) * (item.order_quantity or 0), currency_info.code)
+                ]
+                
+                item_total = (item.cost_per_unit or 0) * (item.order_quantity or 0)
+                supplier_total += item_total
+                
+                if supplier_status == 'Order Received':
+                    qty_received = item.quantity_received if item.quantity_received is not None else 0
+                    received_cost = (item.cost_per_unit or 0) * qty_received
+                    supplier_received_total += received_cost
+                    row.extend([
+                        f"{qty_received:.2f}",
+                        format_currency(received_cost, currency_info.code)
+                    ])
+                
+                table_data.append(row)
+            
+            # Add totals row
+            total_row = ['', '', '', '', 'Total:', format_currency(supplier_total, currency_info.code)]
+            if supplier_status == 'Order Received':
+                total_row.extend(['', format_currency(supplier_received_total, currency_info.code)])
+                variance = supplier_total - supplier_received_total
+                if variance != 0:
+                    total_row.append(f"Variance: {format_currency(variance, currency_info.code)}")
+            table_data.append(total_row)
+            
+            # Create table
+            col_widths = [0.8*inch, 2*inch, 0.6*inch, 0.8*inch, 0.8*inch, 1*inch]
+            if supplier_status == 'Order Received':
+                col_widths.extend([0.8*inch, 1.2*inch])
+            
+            items_table = Table(table_data, colWidths=col_widths)
+            items_table.setStyle(TableStyle([
+                ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#4a5568')),
+                ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+                ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+                ('ALIGN', (1, 0), (1, -1), 'LEFT'),
+                ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                ('FONTSIZE', (0, 0), (-1, 0), 9),
+                ('FONTSIZE', (0, 1), (-1, -1), 8),
+                ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+                ('TOPPADDING', (0, 0), (-1, 0), 12),
+                ('BOTTOMPADDING', (0, 1), (-1, -1), 6),
+                ('TOPPADDING', (0, 1), (-1, -1), 6),
+                ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
+                ('BACKGROUND', (0, -1), (-1, -1), colors.HexColor('#e0e0e0')),
+                ('FONTNAME', (0, -1), (-1, -1), 'Helvetica-Bold'),
+            ]))
+            elements.append(items_table)
+            elements.append(Spacer(1, 0.3*inch))
+            
+            # Add page break if not last supplier
+            if supplier_name != list(suppliers.keys())[-1]:
+                elements.append(PageBreak())
+        
+        # Footer
+        elements.append(Spacer(1, 0.3*inch))
+        footer_text = f"Generated on {datetime.now().strftime('%Y-%m-%d %H:%M:%S')} | Chef & Bartender"
+        elements.append(Paragraph(footer_text, ParagraphStyle('Footer', parent=styles['Normal'], fontSize=8, textColor=colors.grey, alignment=TA_CENTER)))
+        
+        # Build PDF
+        doc.build(elements)
+        
+        # Get the value of the BytesIO buffer
+        buffer.seek(0)
+        pdf_data = buffer.getvalue()
+        buffer.close()
+        
+        # Create response with order number as filename
+        order_number = purchase_request.order_number or "purchase_order"
+        safe_filename = re.sub(r'[^\w\s-]', '', order_number).strip()
+        safe_filename = re.sub(r'[-\s]+', '_', safe_filename)
+        filename = f"{safe_filename}.pdf"
+        
+        response = make_response(pdf_data)
+        response.headers['Content-Type'] = 'application/pdf'
+        response.headers['Content-Disposition'] = f'attachment; filename="{filename}"'
+        return response
+        
+    except Exception as e:
+        current_app.logger.error(f'Error generating PDF: {str(e)}', exc_info=True)
+        flash(f'Error generating PDF: {str(e)}', 'error')
+        if current_user.user_role == 'Purchase Manager':
+            return redirect(url_for('purchase.view_purchase_request', purchase_id=purchase_id))
+        else:
+            return redirect(url_for('purchase.view_order', purchase_id=purchase_id))
