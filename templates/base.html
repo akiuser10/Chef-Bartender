@@ -56,6 +56,19 @@
         {% endif %}
         {% if current_user.is_authenticated and current_user.user_role in ['Chef', 'Bartender', 'Manager'] %}
         <div class="nav-dropdown-container">
+            <span class="nav-link checklist-dropdown-trigger" id="checklistDropdownTrigger">CHECKLIST</span>
+            <div class="nav-dropdown-menu" id="checklistDropdownMenu">
+                {% if current_user.user_role in ['Manager', 'Bartender'] %}
+                <a href="{{ url_for('checklist.bar_checklist') }}" class="nav-dropdown-item">Bar</a>
+                {% endif %}
+                {% if current_user.user_role in ['Chef', 'Manager'] %}
+                <a href="{{ url_for('checklist.kitchen_checklist') }}" class="nav-dropdown-item">Kitchen</a>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+        {% if current_user.is_authenticated and current_user.user_role in ['Chef', 'Bartender', 'Manager'] %}
+        <div class="nav-dropdown-container">
             <span class="nav-link knowledge-dropdown-trigger" id="knowledgeDropdownTrigger">KNOWLEDGE HUB</span>
             <div class="nav-dropdown-menu" id="knowledgeDropdownMenu">
                 <a href="{{ url_for('knowledge.bartender_library') }}" class="nav-dropdown-item">Bartender Library</a>
@@ -242,6 +255,39 @@
             recipeCenterMenu.addEventListener('mouseleave', function() {
                 hoverTimeout = setTimeout(function() {
                     recipeCenterMenu.classList.remove('show');
+                }, 200);
+            });
+        }
+
+        // Checklist dropdown functionality
+        const checklistTrigger = document.getElementById('checklistDropdownTrigger');
+        const checklistMenu = document.getElementById('checklistDropdownMenu');
+        
+        if (checklistTrigger && checklistMenu) {
+            let hoverTimeout;
+            
+            // Show dropdown on hover
+            checklistTrigger.addEventListener('mouseenter', function() {
+                clearTimeout(hoverTimeout);
+                checklistMenu.classList.add('show');
+            });
+            
+            // Keep dropdown open when hovering over menu
+            checklistMenu.addEventListener('mouseenter', function() {
+                clearTimeout(hoverTimeout);
+                checklistMenu.classList.add('show');
+            });
+            
+            // Hide dropdown when mouse leaves
+            checklistTrigger.addEventListener('mouseleave', function() {
+                hoverTimeout = setTimeout(function() {
+                    checklistMenu.classList.remove('show');
+                }, 200);
+            });
+            
+            checklistMenu.addEventListener('mouseleave', function() {
+                hoverTimeout = setTimeout(function() {
+                    checklistMenu.classList.remove('show');
                 }, 200);
             });
         }

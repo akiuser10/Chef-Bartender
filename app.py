@@ -21,6 +21,7 @@ from blueprints.secondary import secondary_bp
 from blueprints.recipes import recipes_bp
 from blueprints.purchase import purchase_bp
 from blueprints.knowledge import knowledge_bp
+from blueprints.checklist import checklist_bp
 
 # Import utilities
 from utils.helpers import inject_now
@@ -89,6 +90,7 @@ def create_app(config_object='config.Config'):
     app.register_blueprint(recipes_bp)
     app.register_blueprint(purchase_bp)
     app.register_blueprint(knowledge_bp)
+    app.register_blueprint(checklist_bp)
     
     # Register CLI commands
     @app.cli.command('link-ingredient')
