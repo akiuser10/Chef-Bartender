@@ -2422,6 +2422,23 @@ main .page-panel .recipe-view-container {
 }
 
 .table-input-right {
+    width: 100px;
+    text-align: right;
+}
+
+.table-input-quantity {
+    width: 100px;
+    text-align: right;
+}
+
+.quantity-hint {
+    display: block;
+    color: #999;
+    font-size: 0.75rem;
+    margin-top: 4px;
+}
+
+.table-input-right {
     text-align: right;
 }
 
