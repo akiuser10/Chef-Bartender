@@ -434,6 +434,7 @@ class PurchaseRequest(db.Model):
     invoice_number = db.Column(db.String(100), nullable=True)  # Invoice number when order received (legacy, kept for backward compatibility)
     invoice_value = db.Column(db.Float, nullable=True)  # Invoice value when order received (legacy, kept for backward compatibility)
     supplier_invoices = db.Column(db.Text, nullable=True)  # JSON string storing invoice data per supplier: {"Supplier Name": {"invoice_number": "...", "invoice_value": 0.0}}
+    supplier_status = db.Column(db.Text, nullable=True)  # JSON string storing status per supplier: {"Supplier Name": "Pending"}
     items = db.relationship('PurchaseItem', backref='purchase_request', cascade='all, delete-orphan')
     
     def get_supplier_invoices(self):
@@ -460,6 +461,26 @@ class PurchaseRequest(db.Model):
         """Get invoice data for a specific supplier"""
         invoices = self.get_supplier_invoices()
         return invoices.get(supplier, {'invoice_number': '', 'invoice_value': None})
+    
+    def get_supplier_statuses(self):
+        """Get supplier statuses as a dictionary"""
+        if self.supplier_status:
+            try:
+                return json.loads(self.supplier_status)
+            except (json.JSONDecodeError, TypeError):
+                return {}
+        return {}
+    
+    def set_supplier_status(self, supplier, status):
+        """Set status for a specific supplier"""
+        statuses = self.get_supplier_statuses()
+        statuses[supplier] = status
+        self.supplier_status = json.dumps(statuses)
+    
+    def get_supplier_status(self, supplier):
+        """Get status for a specific supplier, defaults to main status if not set"""
+        statuses = self.get_supplier_statuses()
+        return statuses.get(supplier, self.status)
 
     def calculate_total_cost(self):
         """Calculate total cost of all items in the purchase request"""
