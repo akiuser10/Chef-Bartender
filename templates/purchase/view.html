@@ -282,8 +282,8 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     // Auto-calculate total cost when order quantity changes (for Manager approval)
-    {% if current_user.user_role == 'Manager' and purchase_request.status == 'Pending Manager Approval' %}
-    (function() {
+    var isManagerApproval = {% if current_user.user_role == 'Manager' and purchase_request.status == 'Pending Manager Approval' %}true{% else %}false{% endif %};
+    if (isManagerApproval) {
         const quantityInputs = document.querySelectorAll('input[name^="order_quantity_"]');
         quantityInputs.forEach(function(input) {
             input.addEventListener('input', function() {
@@ -297,8 +297,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             });
         });
-    })();
-    {% endif %}
+    }
 });
 </script>
 {% endblock %}
