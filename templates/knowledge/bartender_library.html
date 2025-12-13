@@ -4,11 +4,95 @@
     <h2>Bartender Library</h2>
 </div>
 
-<div class="page-panel">
-    <div class="content-section">
-        <p>Welcome to the Bartender Library. This section contains resources, guides, and information for bartenders.</p>
-        <!-- Add your bartender library content here -->
+<div class="library-container">
+    <div class="books-grid">
+        {% if current_user.user_role == 'Manager' %}
+        <!-- Add Book Button -->
+        <div class="book-card add-book-card" onclick="openAddBookModal('bartender')">
+            <div class="add-book-button">
+                <span class="plus-icon">+</span>
+            </div>
+        </div>
+        {% endif %}
+        
+        <!-- Book Cards -->
+        {% for book in books %}
+        <div class="book-card">
+            <a href="{{ url_for('knowledge.view_book_pdf', book_id=book.id) }}" target="_blank" class="book-link">
+                {% if book.cover_image_path %}
+                <img src="{{ url_for('main.uploaded_file', filename=book.cover_image_path) }}" alt="{{ book.title }}" class="book-cover">
+                {% else %}
+                <div class="book-cover-placeholder">
+                    <span class="book-icon">📚</span>
+                </div>
+                {% endif %}
+                <div class="book-info">
+                    <h3 class="book-title">{{ book.title }}</h3>
+                    {% if book.author %}
+                    <p class="book-author">{{ book.author }}</p>
+                    {% endif %}
+                </div>
+            </a>
+        </div>
+        {% endfor %}
     </div>
 </div>
-{% endblock %}
 
+<!-- Add Book Modal -->
+{% if current_user.user_role == 'Manager' %}
+<div id="addBookModal" class="modal">
+    <div class="modal-content">
+        <span class="close-modal" onclick="closeAddBookModal()">&times;</span>
+        <h2>Add New Book</h2>
+        <form action="{{ url_for('knowledge.add_book') }}" method="POST" enctype="multipart/form-data" id="addBookForm">
+            <input type="hidden" name="library_type" id="modalLibraryType" value="bartender">
+            
+            <div class="form-group">
+                <label for="book_title">Title *</label>
+                <input type="text" id="book_title" name="title" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="book_author">Author</label>
+                <input type="text" id="book_author" name="author">
+            </div>
+            
+            <div class="form-group">
+                <label for="cover_image">Cover Image (Optional)</label>
+                <input type="file" id="cover_image" name="cover_image" accept="image/*">
+            </div>
+            
+            <div class="form-group">
+                <label for="pdf_file">PDF File *</label>
+                <input type="file" id="pdf_file" name="pdf_file" accept=".pdf" required>
+            </div>
+            
+            <div class="form-actions">
+                <button type="button" class="btn btn-secondary" onclick="closeAddBookModal()">Cancel</button>
+                <button type="submit" class="btn btn-primary">Add Book</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endif %}
+
+<script>
+function openAddBookModal(libraryType) {
+    document.getElementById('modalLibraryType').value = libraryType;
+    document.getElementById('addBookModal').style.display = 'block';
+}
+
+function closeAddBookModal() {
+    document.getElementById('addBookModal').style.display = 'none';
+    document.getElementById('addBookForm').reset();
+}
+
+// Close modal when clicking outside
+window.onclick = function(event) {
+    const modal = document.getElementById('addBookModal');
+    if (event.target == modal) {
+        closeAddBookModal();
+    }
+}
+</script>
+{% endblock %}

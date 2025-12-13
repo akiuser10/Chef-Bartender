@@ -19,8 +19,8 @@ class Config:
     # Upload folder - use environment variable for production, or default to static/uploads
     upload_base = os.environ.get('UPLOAD_FOLDER') or os.path.join(os.path.dirname(os.path.abspath(__file__)), 'static', 'uploads')
     UPLOAD_FOLDER = upload_base
-    MAX_CONTENT_LENGTH = 16 * 1024 * 1024  # 16MB max file size
-    ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
+    MAX_CONTENT_LENGTH = 50 * 1024 * 1024  # 50MB max file size (for PDFs)
+    ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp', 'pdf'}
     
     # Email configuration for OTP
     # Strip quotes from environment variables (Railway might include them)

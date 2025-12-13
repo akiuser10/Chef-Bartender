@@ -11,7 +11,7 @@ from extensions import db, login_manager, mail
 
 # Import models (must import after extensions to avoid circular imports)
 # Models import db from extensions
-from models import User, Product, HomemadeIngredient, HomemadeIngredientItem, Recipe, RecipeIngredient, PurchaseRequest, PurchaseItem
+from models import User, Product, HomemadeIngredient, HomemadeIngredientItem, Recipe, RecipeIngredient, PurchaseRequest, PurchaseItem, Book
 
 # Import blueprints
 from blueprints.main import main_bp
@@ -208,6 +208,9 @@ def create_app(config_object='config.Config'):
                 os.makedirs(upload_folder, exist_ok=True)
                 os.makedirs(os.path.join(upload_folder, 'products'), exist_ok=True)
                 os.makedirs(os.path.join(upload_folder, 'recipes'), exist_ok=True)
+                os.makedirs(os.path.join(upload_folder, 'books'), exist_ok=True)
+                os.makedirs(os.path.join(upload_folder, 'books', 'covers'), exist_ok=True)
+                os.makedirs(os.path.join(upload_folder, 'books', 'pdfs'), exist_ok=True)
                 
                 # Create all tables first (this will create tables with all model columns)
                 db.create_all()

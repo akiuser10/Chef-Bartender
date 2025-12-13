@@ -586,3 +586,18 @@ class PurchaseItem(db.Model):
         if self.quantity_received is not None:
             return round(self.cost_per_unit * self.quantity_received, 2)
         return 0.0
+
+# -------------------------
+# BOOK MODEL
+# -------------------------
+class Book(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(200), nullable=False)
+    author = db.Column(db.String(200))
+    library_type = db.Column(db.String(20), nullable=False)  # 'bartender' or 'chef'
+    cover_image_path = db.Column(db.String(255))  # Path to cover image
+    pdf_path = db.Column(db.String(255), nullable=False)  # Path to PDF file
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_by = db.Column(db.Integer, db.ForeignKey('user.id'))
+    organisation = db.Column(db.String(200))  # Organization name for sharing
+    creator = db.relationship('User', foreign_keys=[created_by], backref='created_books')
