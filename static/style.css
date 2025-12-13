@@ -3052,6 +3052,11 @@ main .page-panel .recipe-view-container {
     color: #fff;
 }
 
+.status-badge.status-pending-manager-approval {
+    background-color: #ffc107;
+    color: #000;
+}
+
 .status-badge.status-approved {
     background-color: #4caf50;
     color: #fff;
