@@ -375,8 +375,8 @@ def update_status(purchase_id):
                 else:
                     return redirect(url_for('purchase.view_order', purchase_id=purchase_id))
         elif new_status == 'Order Cancelled':
-            # Purchase Manager, Chef, Bartender, and Manager can cancel orders
-            if current_user.user_role not in ['Purchase Manager', 'Chef', 'Bartender', 'Manager']:
+            # Chef, Bartender, and Manager can cancel orders (Purchase Manager cannot)
+            if current_user.user_role not in ['Chef', 'Bartender', 'Manager']:
                 flash('You do not have permission to cancel orders.', 'error')
                 if current_user.user_role == 'Purchase Manager':
                     return redirect(url_for('purchase.view_purchase_request', purchase_id=purchase_id))
@@ -451,7 +451,8 @@ def update_supplier_status(purchase_id):
                 else:
                     return redirect(url_for('purchase.view_order', purchase_id=purchase_id))
         elif new_status == 'Order Cancelled':
-            if current_user.user_role not in ['Purchase Manager', 'Chef', 'Bartender', 'Manager']:
+            # Chef, Bartender, and Manager can cancel orders (Purchase Manager cannot)
+            if current_user.user_role not in ['Chef', 'Bartender', 'Manager']:
                 flash('You do not have permission to cancel orders.', 'error')
                 if current_user.user_role == 'Purchase Manager':
                     return redirect(url_for('purchase.view_purchase_request', purchase_id=purchase_id))

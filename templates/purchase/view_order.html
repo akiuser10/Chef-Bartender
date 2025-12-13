@@ -73,7 +73,7 @@
                 </form>
                 {% endif %}
             {% endif %}
-            {% if current_user.user_role in ['Purchase Manager', 'Chef', 'Bartender', 'Manager'] %}
+            {% if current_user.user_role in ['Chef', 'Bartender', 'Manager'] %}
                 {% if supplier_status != 'Order Cancelled' %}
                 <form method="POST" action="{{ url_for('purchase.update_supplier_status', purchase_id=purchase_request.id) }}" style="display: inline; margin-left: 10px;">
                     <input type="hidden" name="supplier" value="{{ supplier_name }}">
