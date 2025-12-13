@@ -143,14 +143,16 @@
                         {% if supplier_status in ['Order Placed', 'Order Received'] %}
                         {% set supplier_total = 0 %}
                         {% for item in supplier_items %}
-                            {% set supplier_total = supplier_total + (item.cost_per_unit * item.order_quantity) %}
+                            {% set item_total_cost = item.cost_per_unit * item.order_quantity %}
+                            {% set supplier_total = supplier_total + item_total_cost %}
                         {% endfor %}
                         <strong>Total Cost (Ordered):</strong> {{ user_currency_info.symbol }} {{ "%.2f"|format(supplier_total) }}
                         {% endif %}
                         {% if supplier_status == 'Order Received' %}
                         {% set supplier_received_total = 0 %}
                         {% for item in supplier_items %}
-                            {% set supplier_received_total = supplier_received_total + item.calculate_received_cost() %}
+                            {% set item_received_cost = item.calculate_received_cost() %}
+                            {% set supplier_received_total = supplier_received_total + item_received_cost %}
                         {% endfor %}
                         {% if supplier_status in ['Order Placed', 'Order Received'] %}
                         <br>
