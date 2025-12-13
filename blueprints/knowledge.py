@@ -202,24 +202,35 @@ def view_book_pdf(book_id):
     org_filter = get_organization_filter(Book)
     book = Book.query.filter(org_filter).filter_by(id=book_id).first_or_404()
     
-    # Extract filename from path
-    pdf_filename = os.path.basename(book.pdf_path)
-    pdf_folder = os.path.dirname(book.pdf_path)
+    if not book.pdf_path:
+        flash('PDF file not found.', 'error')
+        return redirect(url_for('knowledge.bartender_library'))
     
-    # Remove 'uploads/' prefix if present
-    if pdf_folder.startswith('uploads/'):
-        pdf_folder = pdf_folder.replace('uploads/', '', 1)
+    # book.pdf_path is stored as 'uploads/books/pdfs/filename.pdf'
+    # We need to get the path relative to UPLOAD_FOLDER
+    # Remove 'uploads/' prefix if present to get the relative path
+    if book.pdf_path.startswith('uploads/'):
+        relative_path = book.pdf_path.replace('uploads/', '', 1)
+    else:
+        relative_path = book.pdf_path
     
-    pdf_path = os.path.join(current_app.config['UPLOAD_FOLDER'], pdf_folder, pdf_filename)
+    # Construct full path
+    full_path = os.path.join(current_app.config['UPLOAD_FOLDER'], relative_path)
     
-    if os.path.exists(pdf_path):
+    # Check if file exists
+    if os.path.exists(full_path):
+        # Extract directory and filename
+        pdf_dir = os.path.dirname(full_path)
+        pdf_filename = os.path.basename(full_path)
+        
         return send_from_directory(
-            os.path.join(current_app.config['UPLOAD_FOLDER'], pdf_folder),
+            pdf_dir,
             pdf_filename,
             as_attachment=False,
             mimetype='application/pdf'
         )
     else:
+        current_app.logger.error(f'PDF file not found at: {full_path}, stored path: {book.pdf_path}')
         flash('PDF file not found.', 'error')
         return redirect(url_for('knowledge.bartender_library'))
 
