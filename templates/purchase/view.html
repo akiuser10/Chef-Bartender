@@ -283,19 +283,21 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Auto-calculate total cost when order quantity changes (for Manager approval)
     {% if current_user.user_role == 'Manager' and purchase_request.status == 'Pending Manager Approval' %}
-    const quantityInputs = document.querySelectorAll('input[name^="order_quantity_"]');
-    quantityInputs.forEach(function(input) {
-        input.addEventListener('input', function() {
-            const itemId = this.name.replace('order_quantity_', '');
-            const quantity = parseFloat(this.value) || 0;
-            const costPerUnit = parseFloat(this.closest('tr').querySelector('td:nth-child(7)').textContent.replace(/[^\d.]/g, '')) || 0;
-            const totalCost = quantity * costPerUnit;
-            const totalCostElement = document.getElementById('total_cost_' + itemId);
-            if (totalCostElement) {
-                totalCostElement.textContent = '{{ user_currency_info.symbol }} ' + totalCost.toFixed(2);
-            }
+    (function() {
+        const quantityInputs = document.querySelectorAll('input[name^="order_quantity_"]');
+        quantityInputs.forEach(function(input) {
+            input.addEventListener('input', function() {
+                const itemId = this.name.replace('order_quantity_', '');
+                const quantity = parseFloat(this.value) || 0;
+                const costPerUnit = parseFloat(this.closest('tr').querySelector('td:nth-child(7)').textContent.replace(/[^\d.]/g, '')) || 0;
+                const totalCost = quantity * costPerUnit;
+                const totalCostElement = document.getElementById('total_cost_' + itemId);
+                if (totalCostElement) {
+                    totalCostElement.textContent = '{{ user_currency_info.symbol }} ' + totalCost.toFixed(2);
+                }
+            });
         });
-    });
+    })();
     {% endif %}
 });
 </script>
