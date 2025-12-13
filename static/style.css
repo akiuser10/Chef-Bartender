@@ -3150,3 +3150,8 @@ main .page-panel .recipe-view-container {
     background-color: #00bcd4; /* Cyan */
     color: #fff;
 }
+
+.status-badge.status-order-received-order-cancelled {
+    background-color: #ff9800; /* Orange - to show both received and cancelled */
+    color: #fff;
+}

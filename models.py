@@ -521,7 +521,26 @@ class PurchaseRequest(db.Model):
         # Check for partial statuses
         status_values = list(supplier_statuses.values())
         
-        # Check for Partially Received
+        # Check for cancelled orders
+        cancelled_count = sum(1 for s in status_values if s == 'Order Cancelled')
+        has_cancelled = cancelled_count > 0
+        
+        # Get non-cancelled suppliers
+        non_cancelled_statuses = [s for s in status_values if s != 'Order Cancelled']
+        non_cancelled_count = len(non_cancelled_statuses)
+        
+        # If there are cancelled orders
+        if has_cancelled:
+            # Check if all non-cancelled suppliers are received
+            received_count = sum(1 for s in non_cancelled_statuses if s == 'Order Received')
+            if received_count == non_cancelled_count and non_cancelled_count > 0:
+                # All non-cancelled are received, but some are cancelled
+                return 'Order Received, Order Cancelled'
+            else:
+                # Some cancelled, but not all non-cancelled are received
+                return 'Order Cancelled'
+        
+        # No cancelled orders - check for partial statuses
         received_count = sum(1 for s in status_values if s == 'Order Received')
         if received_count > 0 and received_count < len(status_values):
             return 'Partially Received'
