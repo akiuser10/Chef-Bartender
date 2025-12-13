@@ -544,8 +544,9 @@ def export_purchase_pdf(purchase_id):
                 joinedload(PurchaseRequest.creator)
             ).first_or_404()
         
-        # Get currency info
-        currency_info = get_currency_info(current_user.currency or 'AED')
+        # Get currency code
+        currency_code = current_user.currency or 'AED'
+        currency_info = get_currency_info(currency_code)
         
         # Group items by supplier
         suppliers = {}
@@ -629,7 +630,7 @@ def export_purchase_pdf(purchase_id):
             if supplier_invoice.get('invoice_number'):
                 supplier_info.append(['Invoice Number:', supplier_invoice.get('invoice_number', '')])
             if supplier_invoice.get('invoice_value'):
-                supplier_info.append(['Invoice Value:', format_currency(supplier_invoice.get('invoice_value', 0), currency_info.code)])
+                supplier_info.append(['Invoice Value:', format_currency(supplier_invoice.get('invoice_value', 0), currency_code)])
             
             if len(supplier_info) > 1:
                 supplier_info_table = Table(supplier_info, colWidths=[2*inch, 4.5*inch])
@@ -662,9 +663,9 @@ def export_purchase_pdf(purchase_id):
                     item.code or 'N/A',
                     item.description or 'N/A',
                     f"{item.quantity:.2f}" if item.quantity else '0.00',
-                    format_currency(item.cost_per_unit or 0, currency_info.code),
+                    format_currency(item.cost_per_unit or 0, currency_code),
                     f"{item.order_quantity:.2f}" if item.order_quantity else '0.00',
-                    format_currency((item.cost_per_unit or 0) * (item.order_quantity or 0), currency_info.code)
+                    format_currency((item.cost_per_unit or 0) * (item.order_quantity or 0), currency_code)
                 ]
                 
                 item_total = (item.cost_per_unit or 0) * (item.order_quantity or 0)
@@ -676,18 +677,18 @@ def export_purchase_pdf(purchase_id):
                     supplier_received_total += received_cost
                     row.extend([
                         f"{qty_received:.2f}",
-                        format_currency(received_cost, currency_info.code)
+                        format_currency(received_cost, currency_code)
                     ])
                 
                 table_data.append(row)
             
             # Add totals row
-            total_row = ['', '', '', '', 'Total:', format_currency(supplier_total, currency_info.code)]
+            total_row = ['', '', '', '', 'Total:', format_currency(supplier_total, currency_code)]
             if supplier_status == 'Order Received':
-                total_row.extend(['', format_currency(supplier_received_total, currency_info.code)])
+                total_row.extend(['', format_currency(supplier_received_total, currency_code)])
                 variance = supplier_total - supplier_received_total
                 if variance != 0:
-                    total_row.append(f"Variance: {format_currency(variance, currency_info.code)}")
+                    total_row.append(f"Variance: {format_currency(variance, currency_code)}")
             table_data.append(total_row)
             
             # Create table
