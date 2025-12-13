@@ -462,6 +462,8 @@ def update_quantities(purchase_id):
             
             if invoice_number is not None or invoice_value is not None:
                 purchase_request.set_supplier_invoice(supplier, invoice_number, invoice_value)
+                # Set received date when quantities are updated for this supplier
+                purchase_request.set_supplier_received_date(supplier)
         
         # Also handle legacy invoice fields (for backward compatibility)
         if 'invoice_number' in request.form and not any(f'invoice_number_{s}' in request.form for s in suppliers):
@@ -472,6 +474,17 @@ def update_quantities(purchase_id):
                 purchase_request.invoice_value = float(invoice_val) if invoice_val else None
             except (ValueError, TypeError):
                 purchase_request.invoice_value = None
+        
+        # Set received date for the supplier if quantities were updated
+        if supplier:
+            # Check if any quantities were actually updated (not all None/0)
+            has_quantities = any(
+                item.quantity_received and item.quantity_received > 0 
+                for item in purchase_request.items 
+                if item.supplier == supplier
+            )
+            if has_quantities:
+                purchase_request.set_supplier_received_date(supplier)
         
         db.session.commit()
         flash('Quantities and invoice information updated successfully!', 'success')

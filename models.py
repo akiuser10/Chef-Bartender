@@ -435,6 +435,7 @@ class PurchaseRequest(db.Model):
     invoice_value = db.Column(db.Float, nullable=True)  # Invoice value when order received (legacy, kept for backward compatibility)
     supplier_invoices = db.Column(db.Text, nullable=True)  # JSON string storing invoice data per supplier: {"Supplier Name": {"invoice_number": "...", "invoice_value": 0.0}}
     supplier_status = db.Column(db.Text, nullable=True)  # JSON string storing status per supplier: {"Supplier Name": "Pending"}
+    supplier_received_dates = db.Column(db.Text, nullable=True)  # JSON string storing received dates per supplier: {"Supplier Name": "2025-12-13 00:01:37"}
     items = db.relationship('PurchaseItem', backref='purchase_request', cascade='all, delete-orphan')
     
     def get_supplier_invoices(self):
@@ -481,6 +482,29 @@ class PurchaseRequest(db.Model):
         """Get status for a specific supplier, defaults to main status if not set"""
         statuses = self.get_supplier_statuses()
         return statuses.get(supplier, self.status)
+    
+    def get_supplier_received_dates(self):
+        """Get supplier received dates as a dictionary"""
+        if self.supplier_received_dates:
+            try:
+                return json.loads(self.supplier_received_dates)
+            except (json.JSONDecodeError, TypeError):
+                return {}
+        return {}
+    
+    def set_supplier_received_date(self, supplier, received_date=None):
+        """Set received date for a specific supplier"""
+        dates = self.get_supplier_received_dates()
+        if received_date is None:
+            from datetime import datetime
+            received_date = datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')
+        dates[supplier] = received_date
+        self.supplier_received_dates = json.dumps(dates)
+    
+    def get_supplier_received_date(self, supplier):
+        """Get received date for a specific supplier"""
+        dates = self.get_supplier_received_dates()
+        return dates.get(supplier, None)
     
     def get_overall_status(self):
         """Calculate overall status based on supplier statuses for display in order lists"""
