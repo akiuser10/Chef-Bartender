@@ -29,9 +29,19 @@
     <nav class="main-nav">
         <a href="{{ url_for('main.index') }}" class="nav-link">HOME</a>
         <a href="{{ url_for('products.ingredients_master') }}" class="nav-link">MASTER LIST</a>
-        {% if current_user.is_authenticated and current_user.user_role in ['Chef', 'Bartender', 'Manager'] %}
-        <a href="{{ url_for('purchase.purchase') }}" class="nav-link">PURCHASE ORDER</a>
-        <a href="{{ url_for('purchase.order_list') }}" class="nav-link">ORDER LIST</a>
+        {% if current_user.is_authenticated and (current_user.user_role in ['Chef', 'Bartender', 'Manager', 'Purchase Manager']) %}
+        <div class="nav-dropdown-container">
+            <span class="nav-link purchase-center-dropdown-trigger" id="purchaseCenterDropdownTrigger">PURCHASE CENTER</span>
+            <div class="nav-dropdown-menu" id="purchaseCenterDropdownMenu">
+                {% if current_user.user_role in ['Chef', 'Bartender', 'Manager'] %}
+                <a href="{{ url_for('purchase.purchase') }}" class="nav-dropdown-item">Purchase Order</a>
+                <a href="{{ url_for('purchase.order_list') }}" class="nav-dropdown-item">Order List</a>
+                {% endif %}
+                {% if current_user.user_role in ['Purchase Manager', 'Manager'] %}
+                <a href="{{ url_for('purchase.to_order') }}" class="nav-dropdown-item">To Order</a>
+                {% endif %}
+            </div>
+        </div>
         {% endif %}
         {% if current_user.is_authenticated and current_user.user_role not in ['Purchase Manager', 'Cost Controller'] %}
         <div class="nav-dropdown-container">
@@ -43,9 +53,6 @@
                 <a href="{{ url_for('secondary.secondary_ingredients') }}" class="nav-dropdown-item">Secondary Recipes</a>
             </div>
         </div>
-        {% endif %}
-        {% if current_user.is_authenticated and current_user.user_role in ['Purchase Manager', 'Manager'] %}
-        <a href="{{ url_for('purchase.to_order') }}" class="nav-link">TO ORDER</a>
         {% endif %}
         {% if current_user.is_authenticated and current_user.user_role in ['Chef', 'Bartender', 'Manager'] %}
         <div class="nav-dropdown-container">
@@ -152,6 +159,33 @@
             knowledgeMenuItems.forEach(function(item) {
                 item.addEventListener('click', function() {
                     knowledgeMenu.classList.remove('show');
+                });
+            });
+        }
+
+        // Purchase Center dropdown functionality
+        const purchaseCenterTrigger = document.getElementById('purchaseCenterDropdownTrigger');
+        const purchaseCenterMenu = document.getElementById('purchaseCenterDropdownMenu');
+        
+        if (purchaseCenterTrigger && purchaseCenterMenu) {
+            // Toggle dropdown on click
+            purchaseCenterTrigger.addEventListener('click', function(e) {
+                e.stopPropagation();
+                purchaseCenterMenu.classList.toggle('show');
+            });
+            
+            // Close dropdown when clicking outside
+            document.addEventListener('click', function(e) {
+                if (!purchaseCenterTrigger.contains(e.target) && !purchaseCenterMenu.contains(e.target)) {
+                    purchaseCenterMenu.classList.remove('show');
+                }
+            });
+            
+            // Close dropdown when clicking on a menu item
+            const purchaseCenterMenuItems = purchaseCenterMenu.querySelectorAll('.nav-dropdown-item');
+            purchaseCenterMenuItems.forEach(function(item) {
+                item.addEventListener('click', function() {
+                    purchaseCenterMenu.classList.remove('show');
                 });
             });
         }
