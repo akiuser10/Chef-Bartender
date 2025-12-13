@@ -10,7 +10,7 @@
 {% if current_user.user_role == 'Manager' and purchase_request.status == 'Pending Manager Approval' %}
 <div style="background: #fff3cd; border: 1px solid #ffc107; border-radius: 4px; padding: 15px; margin-bottom: 20px;">
     <strong>⚠️ Manager Approval Required</strong>
-    <p style="margin: 10px 0 0 0;">Review this order and modify quantities or remove items as needed. Click "Approve Order" to forward it to the Purchase Manager.</p>
+    <p style="margin: 10px 0 0 0;">Review this order and modify quantities as needed. Set quantity to 0 to remove an item. Click "Approve Order" to forward it to the Purchase Manager.</p>
 </div>
 {% endif %}
 
@@ -125,9 +125,6 @@
         <table class="data-table">
             <thead>
                 <tr>
-                    {% if current_user.user_role == 'Manager' and purchase_request.status == 'Pending Manager Approval' %}
-                    <th style="width: 40px;">Remove</th>
-                    {% endif %}
                     <th>Code</th>
                     <th>Description</th>
                     <th>Quantity</th>
@@ -145,11 +142,6 @@
             <tbody>
                 {% for item in supplier_items %}
                 <tr>
-                    {% if current_user.user_role == 'Manager' and purchase_request.status == 'Pending Manager Approval' %}
-                    <td style="text-align: center;">
-                        <input type="checkbox" name="remove_item" value="{{ item.id }}" form="approveForm">
-                    </td>
-                    {% endif %}
                     <td>{{ item.code or 'N/A' }}</td>
                     <td>{{ item.description }}</td>
                     <td>{{ "%.2f"|format(item.quantity) }}</td>
@@ -164,6 +156,9 @@
                                class="table-input table-input-right" 
                                style="width: 100px; text-align: right;"
                                required>
+                        <small style="display: block; color: #999; font-size: 0.75rem; margin-top: 4px;">
+                            Set to 0 to remove
+                        </small>
                         {% else %}
                         <strong>{{ "%.2f"|format(item.order_quantity) }}</strong>
                         {% endif %}
@@ -190,7 +185,7 @@
             </tbody>
             <tfoot>
                 <tr class="total-row">
-                    <td colspan="{% if current_user.user_role == 'Manager' and purchase_request.status == 'Pending Manager Approval' %}{% if supplier_status == 'Order Received' %}10{% else %}8{% endif %}{% else %}{% if supplier_status == 'Order Received' %}9{% else %}7{% endif %}{% endif %}">
+                    <td colspan="{% if supplier_status == 'Order Received' %}9{% else %}7{% endif %}">
                         {% set supplier_total_list = [] %}
                         {% for item in supplier_items %}
                             {% set item_total_cost = (item.cost_per_unit or 0) * (item.order_quantity or 0) %}

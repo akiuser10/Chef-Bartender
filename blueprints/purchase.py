@@ -259,31 +259,30 @@ def approve_purchase_request(purchase_id):
             return redirect(url_for('purchase.to_order'))
         
         # Process item modifications
-        items_to_remove = request.form.getlist('remove_item')  # List of item IDs to remove
-        items_to_update = {}  # Dictionary of item_id: new_order_quantity
-        
         # Get all items and check for updates
+        items_to_delete = []
         for item in purchase_request.items:
             item_id = str(item.id)
             new_quantity_key = f'order_quantity_{item_id}'
             
-            if item_id in items_to_remove:
-                # Mark item for deletion
-                db.session.delete(item)
-            elif new_quantity_key in request.form:
+            if new_quantity_key in request.form:
                 # Update order quantity
                 try:
                     new_quantity = float(request.form.get(new_quantity_key, 0) or 0)
                     if new_quantity > 0:
                         item.order_quantity = new_quantity
                     else:
-                        # If quantity is 0 or negative, remove the item
-                        db.session.delete(item)
+                        # If quantity is 0 or negative, mark item for deletion
+                        items_to_delete.append(item)
                 except (ValueError, TypeError):
                     pass  # Skip invalid values
         
+        # Delete items with quantity 0 or less
+        for item in items_to_delete:
+            db.session.delete(item)
+        
         # Check if any items remain
-        remaining_items = [item for item in purchase_request.items if item.id not in [int(i) for i in items_to_remove]]
+        remaining_items = [item for item in purchase_request.items if item not in items_to_delete]
         if not remaining_items:
             db.session.rollback()
             flash('Cannot approve order with no items. Please add at least one item.', 'error')
