@@ -1132,7 +1132,7 @@ main {
 
 .panel-controls label {
     margin-right: 10px;
-    color: #6B8E23;
+    color: #ffffff;
 }
 
 .panel-controls select {
@@ -1140,7 +1140,7 @@ main {
     padding: 5px;
     background: #1a1a1a;
     border: 1px solid #4a4a4a;
-    color: #6B8E23;
+    color: #ffffff;
 }
 
 .panel-controls select optgroup {
@@ -3833,7 +3833,7 @@ main .page-panel .recipe-view-container {
 
 .filter-group label {
     font-size: 0.9rem;
-    color: #6B8E23;
+    color: #ffffff;
     font-weight: 500;
     text-transform: uppercase;
     letter-spacing: 0.5px;
@@ -3844,7 +3844,7 @@ main .page-panel .recipe-view-container {
     background: #1a1a1a;
     border: 1px solid #4a4a4a;
     border-radius: 4px;
-    color: #6B8E23;
+    color: #ffffff;
     font-size: 0.9rem;
     transition: border-color 0.3s ease;
 }
@@ -3868,7 +3868,7 @@ main .page-panel .recipe-view-container {
     background: #1a1a1a;
     border: 1px solid #4a4a4a;
     border-radius: 4px;
-    color: #6B8E23;
+    color: #ffffff;
     font-size: 0.9rem;
     text-align: left;
     cursor: pointer;
@@ -3921,6 +3921,7 @@ main .page-panel .recipe-view-container {
     cursor: pointer;
     transition: background 0.2s ease;
     border-radius: 4px;
+    color: #ffffff;
 }
 
 .supplier-checkbox-label:hover {
