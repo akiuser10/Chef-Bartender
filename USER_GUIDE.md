@@ -52,6 +52,7 @@ The system has different access levels based on your role:
 
 ### 💰 **Cost Controller**
 - View-only access to Master List
+- Access Purchase History reports
 - Cannot create or modify recipes or orders
 
 ---
@@ -238,7 +239,7 @@ Access reference materials and recipe books:
 | Recipes | Create/Edit | Create/Edit | Create/Edit | - | View |
 | Purchase Orders | Create | Create | Create | View | - |
 | Approve Orders | - | - | Yes | - | - |
-| Purchase History | - | - | Yes | Yes | - |
+| Purchase History | - | - | Yes | Yes | Yes |
 | Knowledge Hub | Yes | Yes | Yes | - | - |
 | Checklists | Kitchen | Bar | Both | - | - |
 

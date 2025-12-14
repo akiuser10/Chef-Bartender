@@ -1046,7 +1046,7 @@ def export_new_purchase_pdf(purchase_id):
 
 @purchase_bp.route('/purchase-history', methods=['GET', 'POST'])
 @login_required
-@role_required(['Manager', 'Purchase Manager'])
+@role_required(['Manager', 'Purchase Manager', 'Cost Controller'])
 def purchase_history():
     """Display purchase history report with date range and supplier filtering"""
     from sqlalchemy import and_, func

@@ -29,7 +29,7 @@
     <nav class="main-nav">
         <a href="{{ url_for('main.index') }}" class="nav-link">HOME</a>
         <a href="{{ url_for('products.ingredients_master') }}" class="nav-link">MASTER LIST</a>
-        {% if current_user.is_authenticated and (current_user.user_role in ['Chef', 'Bartender', 'Manager', 'Purchase Manager']) %}
+        {% if current_user.is_authenticated and (current_user.user_role in ['Chef', 'Bartender', 'Manager', 'Purchase Manager', 'Cost Controller']) %}
         <div class="nav-dropdown-container">
             <span class="nav-link purchase-center-dropdown-trigger" id="purchaseCenterDropdownTrigger">PURCHASE CENTER</span>
             <div class="nav-dropdown-menu" id="purchaseCenterDropdownMenu">
@@ -40,7 +40,7 @@
                 {% if current_user.user_role in ['Purchase Manager', 'Manager'] %}
                 <a href="{{ url_for('purchase.to_order') }}" class="nav-dropdown-item">To Order</a>
                 {% endif %}
-                {% if current_user.user_role in ['Purchase Manager', 'Manager'] %}
+                {% if current_user.user_role in ['Purchase Manager', 'Manager', 'Cost Controller'] %}
                 <a href="{{ url_for('purchase.purchase_history') }}" class="nav-dropdown-item">Purchase History</a>
                 {% endif %}
             </div>
