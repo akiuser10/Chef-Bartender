@@ -223,8 +223,14 @@ def add_book():
         # Commit to database - this ensures the book is permanently saved
         try:
             db.session.commit()
-            current_app.logger.info(f'Book "{title}" (ID: {book.id}) successfully saved to database for organization: {organisation}')
-            flash('Book added successfully!', 'success')
+            # Verify the book was actually saved by refreshing and checking
+            db.session.refresh(book)
+            if book.is_persisted():
+                current_app.logger.info(f'Book "{title}" (ID: {book.id}) successfully saved to database for organization: {organisation}')
+                flash('Book added successfully!', 'success')
+            else:
+                current_app.logger.error(f'Book "{title}" was not properly persisted after commit')
+                flash('Warning: Book may not have been saved correctly. Please verify.', 'warning')
         except Exception as commit_error:
             db.session.rollback()
             current_app.logger.error(f'Database commit failed for book "{title}": {str(commit_error)}', exc_info=True)
