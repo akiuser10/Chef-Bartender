@@ -15,6 +15,7 @@ body {
     padding: 0;
     line-height: 1.6;
     min-height: 100vh;
+    height: 100%;
     display: flex;
     flex-direction: column;
 }
@@ -1231,7 +1232,7 @@ table {
     background: #bebebe;
     border: 1px dashed #808080;
     border-radius: 6px;
-    overflow: hidden;
+    overflow: visible;
     animation: fadeIn 0.8s ease-out;
 }
 
@@ -1257,7 +1258,7 @@ table thead {
     color: #ffffff;
     position: sticky;
     top: 0;
-    z-index: 10;
+    z-index: 100;
 }
 
 table th {
@@ -1271,7 +1272,7 @@ table th {
     color: #ffffff;
     position: sticky;
     top: 0;
-    z-index: 10;
+    z-index: 100;
     box-shadow: 0 2px 2px -1px rgba(0, 0, 0, 0.1);
     font-size: 0.85rem;
 }
@@ -3996,7 +3997,9 @@ main .page-panel .recipe-view-container {
     margin-bottom: 30px;
     padding-bottom: 10px;
     overflow-y: auto;
+    overflow-x: auto;
     max-height: calc(100vh - 350px);
+    position: relative;
 }
 
 .results-header {
