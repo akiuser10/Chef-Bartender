@@ -471,3 +471,62 @@ def delete_book(book_id):
         flash(f'Error deleting book: {str(e)}', 'error')
         return redirect(url_for('knowledge.bartender_library'))
 
+
+@knowledge_bp.route('/book/<int:book_id>/regenerate-cover', methods=['POST'])
+@login_required
+@role_required('Manager')
+def regenerate_cover(book_id):
+    """Regenerate cover image from PDF for a book"""
+    from utils.db_helpers import ensure_schema_updates
+    ensure_schema_updates()
+    
+    try:
+        org_filter = get_organization_filter(Book)
+        book = Book.query.filter(org_filter).filter_by(id=book_id).first_or_404()
+        
+        if not book.pdf_path:
+            flash('PDF file not found. Cannot regenerate cover.', 'error')
+            return redirect(url_for(f'knowledge.{book.library_type}_library'))
+        
+        # Get PDF full path
+        pdf_path_stored = book.pdf_path
+        if pdf_path_stored.startswith('uploads/'):
+            pdf_full_path = os.path.join(current_app.config['UPLOAD_FOLDER'], pdf_path_stored.replace('uploads/', '', 1))
+        else:
+            pdf_full_path = os.path.join(current_app.config['UPLOAD_FOLDER'], pdf_path_stored)
+        
+        # Try alternative paths if not found
+        if not os.path.exists(pdf_full_path):
+            alt_path = os.path.join(current_app.config['UPLOAD_FOLDER'], pdf_path_stored)
+            if os.path.exists(alt_path):
+                pdf_full_path = alt_path
+            else:
+                flash('PDF file not found. Cannot regenerate cover.', 'error')
+                return redirect(url_for(f'knowledge.{book.library_type}_library'))
+        
+        # Delete old cover if exists
+        if book.cover_image_path:
+            old_cover_path = os.path.join(current_app.config['UPLOAD_FOLDER'], book.cover_image_path.replace('uploads/', '', 1))
+            try:
+                if os.path.exists(old_cover_path):
+                    os.remove(old_cover_path)
+            except Exception as e:
+                current_app.logger.warning(f'Could not delete old cover: {str(e)}')
+        
+        # Extract new cover from PDF
+        cover_image_path = extract_pdf_first_page_as_image(pdf_full_path)
+        if cover_image_path:
+            book.cover_image_path = cover_image_path
+            db.session.commit()
+            flash('Cover image regenerated successfully!', 'success')
+        else:
+            flash('Failed to regenerate cover image from PDF.', 'error')
+        
+        return redirect(url_for(f'knowledge.{book.library_type}_library'))
+        
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(f'Error regenerating cover: {str(e)}', exc_info=True)
+        flash(f'Error regenerating cover: {str(e)}', 'error')
+        return redirect(url_for('knowledge.bartender_library'))
+
