@@ -40,7 +40,12 @@
             </a>
             {% if current_user.user_role == 'Manager' %}
             <div class="book-actions">
-                <button class="btn-edit" onclick="openEditBookModal({{ book.id }}, '{{ book.title|e }}', 'chef')" title="Edit Book">
+                <button class="btn-edit" 
+                        data-book-id="{{ book.id }}" 
+                        data-book-title="{{ book.title|e }}" 
+                        data-library-type="chef"
+                        onclick="openEditBookModal(this)" 
+                        title="Edit Book">
                     ✏️
                 </button>
                 <button class="btn-delete" onclick="confirmDeleteBook({{ book.id }}, 'chef')" title="Delete Book">
