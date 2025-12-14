@@ -11,6 +11,8 @@ body {
     padding: 0;
     line-height: 1.6;
     min-height: 100vh;
+    display: flex;
+    flex-direction: column;
 }
 
 img,
@@ -576,6 +578,7 @@ main {
     padding: 20px;
     min-height: calc(100vh - 200px);
     background: transparent;
+    flex: 1;
 }
 
 .content {
@@ -2151,7 +2154,7 @@ footer {
     color: rgba(255, 255, 255, 0.7);
     text-align: center;
     padding: 20px;
-    margin-top: 40px;
+    margin-top: auto;
     border-top: 1px solid #3a3a3a;
     animation: fadeInUp 0.8s ease-out;
 }
@@ -3977,7 +3980,7 @@ main .page-panel .recipe-view-container {
 }
 
 .purchase-history-results {
-    margin-top: 4px;
+    margin-top: 0px;
     margin-bottom: 40px;
     padding-bottom: 20px;
 }
