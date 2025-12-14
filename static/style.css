@@ -1215,13 +1215,13 @@ main {
 table {
     width: 100%;
     border-collapse: collapse;
-    background: #1a1a1a;
-    border: 1px solid #2a2a2a;
+    background: #bebebe;
+    border: 1px solid #9a9a9a;
     animation: fadeIn 0.8s ease-out;
 }
 
 table tbody {
-    background: #1a1a1a;
+    background: #bebebe;
 }
 
 table tbody tr {
@@ -1238,7 +1238,7 @@ table tbody tr:nth-child(5) { animation-delay: 0.5s; }
 table tbody tr:nth-child(n+6) { animation-delay: 0.6s; }
 
 table thead {
-    background: #595959;
+    background: #7f7f7f;
     color: #ffffff;
 }
 
@@ -1246,8 +1246,8 @@ table th {
     padding: 12px;
     text-align: center;
     font-weight: bold;
-    border: 1px solid #4a4a4a;
-    background: #595959;
+    border: 1px solid #6a6a6a;
+    background: #7f7f7f;
     color: #ffffff;
     position: sticky;
     top: 0;
@@ -1258,15 +1258,15 @@ table th {
 
 table td {
     padding: 10px 12px;
-    border: 1px solid #2a2a2a;
+    border: 1px solid #9a9a9a;
     text-align: center;
-    color: #ffffff;
+    color: #2a2a2a;
     font-size: 0.85rem;
-    background: #1a1a1a;
+    background: #bebebe;
 }
 
 table tbody tr:nth-child(even) {
-    background: #1a1a1a;
+    background: #bebebe;
 }
 
 table tbody tr {
