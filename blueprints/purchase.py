@@ -1050,7 +1050,7 @@ def export_new_purchase_pdf(purchase_id):
 def purchase_history():
     """Display purchase history report with date range and supplier filtering"""
     from sqlalchemy import and_, func
-    from utils.helpers import get_currency_info
+    from utils.currency import get_currency_info
     
     ensure_schema_updates()
     
@@ -1172,7 +1172,8 @@ def purchase_history():
         total_cost = sum(item['item'].calculate_received_cost() for item in report_items)
         
         # Get currency info
-        currency_info = get_currency_info(current_user)
+        currency_code = current_user.currency or 'AED'
+        currency_info = get_currency_info(currency_code)
         
         return render_template(
             'purchase/purchase_history.html',
