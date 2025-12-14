@@ -48,7 +48,11 @@
                         title="Edit Book">
                     ✏️
                 </button>
-                <button class="btn-delete" onclick="confirmDeleteBook({{ book.id }}, 'bartender')" title="Delete Book">
+                <button class="btn-delete" 
+                        data-book-id="{{ book.id }}" 
+                        data-library-type="bartender"
+                        onclick="confirmDeleteBook(this)" 
+                        title="Delete Book">
                     🗑️
                 </button>
             </div>
@@ -148,7 +152,9 @@ function closeEditBookModal() {
     document.getElementById('editBookForm').reset();
 }
 
-function confirmDeleteBook(bookId, libraryType) {
+function confirmDeleteBook(button) {
+    const bookId = button.getAttribute('data-book-id');
+    const libraryType = button.getAttribute('data-library-type');
     if (confirm('Are you sure you want to delete this book? This action cannot be undone.')) {
         const form = document.createElement('form');
         form.method = 'POST';
