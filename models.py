@@ -601,3 +601,10 @@ class Book(db.Model):
     created_by = db.Column(db.Integer, db.ForeignKey('user.id'))
     organisation = db.Column(db.String(200))  # Organization name for sharing
     creator = db.relationship('User', foreign_keys=[created_by], backref='created_books')
+    
+    def __repr__(self):
+        return f'<Book {self.id}: {self.title} ({self.library_type})>'
+    
+    def is_persisted(self):
+        """Check if book is properly saved in database"""
+        return self.id is not None and self.pdf_path is not None

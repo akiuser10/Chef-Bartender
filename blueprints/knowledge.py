@@ -186,6 +186,11 @@ def add_book():
                 if not cover_image_path:
                     current_app.logger.warning(f'Failed to extract cover image from PDF: {pdf_path}')
         
+        # Ensure organization is set (required for persistence and filtering)
+        organisation = current_user.organisation.strip() if current_user.organisation and current_user.organisation.strip() else None
+        if not organisation:
+            current_app.logger.warning(f'User {current_user.id} has no organisation set, using None')
+        
         # Ensure cover_image_path is set (even if None, it will be stored in DB)
         # Create book record
         book = Book(
@@ -195,7 +200,7 @@ def add_book():
             pdf_path=pdf_path,
             cover_image_path=cover_image_path,  # Can be None if extraction failed
             created_by=current_user.id,
-            organisation=current_user.organisation
+            organisation=organisation  # Ensure organization is set for proper filtering
         )
         
         db.session.add(book)
@@ -215,9 +220,17 @@ def add_book():
                 current_app.logger.warning(f'Cover image file not found at: {cover_check_path}, but continuing...')
                 # Don't fail if cover is missing, just log it
         
-        db.session.commit()
+        # Commit to database - this ensures the book is permanently saved
+        try:
+            db.session.commit()
+            current_app.logger.info(f'Book "{title}" (ID: {book.id}) successfully saved to database for organization: {organisation}')
+            flash('Book added successfully!', 'success')
+        except Exception as commit_error:
+            db.session.rollback()
+            current_app.logger.error(f'Database commit failed for book "{title}": {str(commit_error)}', exc_info=True)
+            flash('Error: Book could not be saved to database. Please try again.', 'error')
+            return redirect(url_for(f'knowledge.{library_type}_library'))
         
-        flash('Book added successfully!', 'success')
         return redirect(url_for(f'knowledge.{library_type}_library'))
         
     except Exception as e:
@@ -458,11 +471,21 @@ def delete_book(book_id):
             except Exception as e:
                 current_app.logger.warning(f'Could not delete cover image: {str(e)}')
         
-        # Delete book record
-        db.session.delete(book)
-        db.session.commit()
+        # Delete book record - only Managers can delete books
+        book_title = book.title  # Store for logging
+        book_org = book.organisation  # Store for logging
         
-        flash('Book deleted successfully!', 'success')
+        db.session.delete(book)
+        
+        try:
+            db.session.commit()
+            current_app.logger.info(f'Book "{book_title}" (ID: {book_id}) deleted by Manager {current_user.id} from organization: {book_org}')
+            flash('Book deleted successfully!', 'success')
+        except Exception as commit_error:
+            db.session.rollback()
+            current_app.logger.error(f'Database commit failed when deleting book {book_id}: {str(commit_error)}', exc_info=True)
+            flash('Error: Book could not be deleted from database. Please try again.', 'error')
+        
         return redirect(url_for(f'knowledge.{library_type}_library'))
         
     except Exception as e:
