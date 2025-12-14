@@ -24,6 +24,21 @@ def contact():
 @main_bp.route('/uploads/<path:filename>')
 def uploaded_file(filename):
     """Serve uploaded files"""
+    import os
+    from flask import abort
+    
+    # Remove 'uploads/' prefix if present (for consistency)
+    if filename.startswith('uploads/'):
+        filename = filename.replace('uploads/', '', 1)
+    
+    # Construct full path
+    file_path = os.path.join(current_app.config['UPLOAD_FOLDER'], filename)
+    
+    # Check if file exists
+    if not os.path.exists(file_path):
+        current_app.logger.warning(f'File not found: {file_path}, requested filename: {filename}')
+        abort(404)
+    
     return send_from_directory(current_app.config['UPLOAD_FOLDER'], filename)
 
 

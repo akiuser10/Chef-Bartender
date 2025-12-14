@@ -28,7 +28,7 @@
             <a href="{{ url_for('knowledge.view_book_pdf', book_id=book.id) }}" target="_blank" class="book-link">
                 {% if book.cover_image_path %}
                 {% set cover_path = book.cover_image_path.replace('uploads/', '', 1) if book.cover_image_path.startswith('uploads/') else book.cover_image_path %}
-                <img src="{{ url_for('main.uploaded_file', filename=cover_path) }}" alt="{{ book.title }}" class="book-cover">
+                <img src="{{ url_for('main.uploaded_file', filename=cover_path) }}" alt="{{ book.title }}" class="book-cover" onerror="this.onerror=null; this.parentElement.innerHTML='<div class=\'book-cover-placeholder\'><span class=\'book-icon\'>📚</span></div>';">
                 {% else %}
                 <div class="book-cover-placeholder">
                     <span class="book-icon">📚</span>

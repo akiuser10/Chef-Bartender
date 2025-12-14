@@ -262,19 +262,45 @@ def view_book_pdf(book_id):
         full_path = os.path.join(current_app.config['UPLOAD_FOLDER'], file_path)
         
         if not os.path.exists(full_path):
-            current_app.logger.error(f'PDF file not found at: {full_path}, stored path: {book.pdf_path}, UPLOAD_FOLDER: {current_app.config["UPLOAD_FOLDER"]}')
-            flash('PDF file not found on server.', 'error')
-            # Redirect to the correct library based on book type
-            library_route = f'{book.library_type}_library' if book.library_type in ['bartender', 'chef'] else 'bartender_library'
-            return redirect(url_for(f'knowledge.{library_route}'))
+            # Try alternative path formats
+            alt_paths = [
+                book.pdf_path,  # Try with uploads/ prefix
+                os.path.join(current_app.config['UPLOAD_FOLDER'], book.pdf_path),  # Full path with uploads/
+            ]
+            
+            found = False
+            for alt_path in alt_paths:
+                if os.path.exists(alt_path):
+                    # Update file_path to match found path
+                    if alt_path.startswith(current_app.config['UPLOAD_FOLDER']):
+                        file_path = alt_path.replace(current_app.config['UPLOAD_FOLDER'] + os.sep, '', 1)
+                    else:
+                        file_path = alt_path.replace('uploads/', '', 1) if alt_path.startswith('uploads/') else alt_path
+                    found = True
+                    current_app.logger.info(f'Found PDF at alternative path: {alt_path}, using file_path: {file_path}')
+                    break
+            
+            if not found:
+                current_app.logger.error(f'PDF file not found at: {full_path}, stored path: {book.pdf_path}, UPLOAD_FOLDER: {current_app.config["UPLOAD_FOLDER"]}')
+                flash('PDF file not found on server.', 'error')
+                # Redirect to the correct library based on book type
+                library_route = f'{book.library_type}_library' if book.library_type in ['bartender', 'chef'] else 'bartender_library'
+                return redirect(url_for(f'knowledge.{library_route}'))
         
         # Use send_from_directory to serve the file directly
-        return send_from_directory(
-            current_app.config['UPLOAD_FOLDER'],
-            file_path,
-            as_attachment=False,
-            mimetype='application/pdf'
-        )
+        # file_path should be relative to UPLOAD_FOLDER (e.g., 'books/pdfs/filename.pdf')
+        try:
+            return send_from_directory(
+                current_app.config['UPLOAD_FOLDER'],
+                file_path,
+                as_attachment=False,
+                mimetype='application/pdf'
+            )
+        except Exception as e:
+            current_app.logger.error(f'Error serving PDF file: {str(e)}, file_path: {file_path}, UPLOAD_FOLDER: {current_app.config["UPLOAD_FOLDER"]}')
+            flash('Error loading PDF file.', 'error')
+            library_route = f'{book.library_type}_library' if book.library_type in ['bartender', 'chef'] else 'bartender_library'
+            return redirect(url_for(f'knowledge.{library_route}'))
     except NotFound:
         raise
     except Exception as e:
