@@ -618,6 +618,11 @@ main {
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
+.page-panel:has(.purchase-history-results) {
+    padding-bottom: 40px;
+    margin-bottom: 40px;
+}
+
 .page-panel:has(.profile-form) {
     overflow-y: auto;
     overflow-x: hidden;
@@ -3973,6 +3978,13 @@ main .page-panel .recipe-view-container {
 
 .purchase-history-results {
     margin-top: 30px;
+    margin-bottom: 40px;
+    padding-bottom: 20px;
+}
+
+.purchase-history-results .table-wrapper {
+    margin-bottom: 30px;
+    padding-bottom: 10px;
 }
 
 .results-header {
