@@ -65,25 +65,27 @@
                     <textarea id="company_address" name="company_address" class="form-input" rows="3" placeholder="Enter complete company address">{{ user.company_address or '' }}</textarea>
                 </div>
 
-                <div class="form-group">
-                    <label for="country">Country:</label>
-                    <select id="country" name="country" class="form-input">
-                        <option value="">Select Country</option>
-                        {% for code, country_info in countries.items() %}
-                        <option value="{{ code }}" {% if user.country == code %}selected{% endif %}>{{ country_info.name }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
+                <div class="form-group-row">
+                    <div class="form-group form-group-half">
+                        <label for="country">Country:</label>
+                        <select id="country" name="country" class="form-input">
+                            <option value="">Select Country</option>
+                            {% for code, country_info in countries.items() %}
+                            <option value="{{ code }}" {% if user.country == code %}selected{% endif %}>{{ country_info.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
 
-                <div class="form-group">
-                    <label for="currency">Currency:</label>
-                    <select id="currency" name="currency" class="form-input">
-                        {% for code, currency_info in currencies.items() %}
-                        <option value="{{ code }}" {% if user.currency == code or (not user.currency and code == 'AED') %}selected{% endif %}>
-                            {{ currency_info.name }} ({{ currency_info.symbol }})
-                        </option>
-                        {% endfor %}
-                    </select>
+                    <div class="form-group form-group-half">
+                        <label for="currency">Currency:</label>
+                        <select id="currency" name="currency" class="form-input">
+                            {% for code, currency_info in currencies.items() %}
+                            <option value="{{ code }}" {% if user.currency == code or (not user.currency and code == 'AED') %}selected{% endif %}>
+                                {{ currency_info.name }} ({{ currency_info.symbol }})
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
                 </div>
 
                 <div class="form-group">
