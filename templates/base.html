@@ -79,8 +79,14 @@
             </div>
         </div>
         {% endif %}
-        <a href="{{ url_for('main.about') }}" class="nav-link">ABOUT</a>
-        <a href="{{ url_for('main.contact') }}" class="nav-link">CONTACT</a>
+        <div class="nav-dropdown-container">
+            <span class="nav-link about-dropdown-trigger" id="aboutDropdownTrigger">ABOUT</span>
+            <div class="nav-dropdown-menu" id="aboutDropdownMenu">
+                <a href="{{ url_for('main.about') }}" class="nav-dropdown-item">About</a>
+                <a href="{{ url_for('main.contact') }}" class="nav-dropdown-item">Contact</a>
+                <a href="{{ url_for('main.user_guide') }}" class="nav-dropdown-item">Need Help</a>
+            </div>
+        </div>
         {% if current_user.is_authenticated %}
             <div class="nav-auth">
                 <div class="user-dropdown-container">
@@ -291,6 +297,39 @@
             checklistMenu.addEventListener('mouseleave', function() {
                 hoverTimeout = setTimeout(function() {
                     checklistMenu.classList.remove('show');
+                }, 200);
+            });
+        }
+
+        // About dropdown functionality
+        const aboutTrigger = document.getElementById('aboutDropdownTrigger');
+        const aboutMenu = document.getElementById('aboutDropdownMenu');
+        
+        if (aboutTrigger && aboutMenu) {
+            let hoverTimeout;
+            
+            // Show dropdown on hover
+            aboutTrigger.addEventListener('mouseenter', function() {
+                clearTimeout(hoverTimeout);
+                aboutMenu.classList.add('show');
+            });
+            
+            // Keep dropdown open when hovering over menu
+            aboutMenu.addEventListener('mouseenter', function() {
+                clearTimeout(hoverTimeout);
+                aboutMenu.classList.add('show');
+            });
+            
+            // Hide dropdown when mouse leaves
+            aboutTrigger.addEventListener('mouseleave', function() {
+                hoverTimeout = setTimeout(function() {
+                    aboutMenu.classList.remove('show');
+                }, 200);
+            });
+            
+            aboutMenu.addEventListener('mouseleave', function() {
+                hoverTimeout = setTimeout(function() {
+                    aboutMenu.classList.remove('show');
                 }, 200);
             });
         }
