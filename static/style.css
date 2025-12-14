@@ -2168,6 +2168,7 @@ footer {
     margin-top: auto;
     border-top: 1px solid #3a3a3a;
     animation: fadeInUp 0.8s ease-out;
+    flex-shrink: 0;
 }
 
 footer p {
