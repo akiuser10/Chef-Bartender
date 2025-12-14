@@ -4033,6 +4033,7 @@ main .page-panel .recipe-view-container {
 .user-guide-content {
     line-height: 1.8;
     color: #2a2a2a;
+    text-align: right;
 }
 
 .user-guide-content h1 {
@@ -4041,6 +4042,7 @@ main .page-panel .recipe-view-container {
     margin-bottom: 1.5rem;
     border-bottom: 2px solid #d45a2a;
     padding-bottom: 0.5rem;
+    text-align: left;
 }
 
 .user-guide-content h2 {
@@ -4049,6 +4051,7 @@ main .page-panel .recipe-view-container {
     margin-top: 2rem;
     margin-bottom: 1rem;
     font-weight: 600;
+    text-align: left;
 }
 
 .user-guide-content h3 {
@@ -4057,6 +4060,7 @@ main .page-panel .recipe-view-container {
     margin-top: 1.5rem;
     margin-bottom: 0.75rem;
     font-weight: 600;
+    text-align: left;
 }
 
 .user-guide-content p {
@@ -4107,6 +4111,7 @@ main .page-panel .recipe-view-container {
     width: 100%;
     border-collapse: collapse;
     margin: 1.5rem 0;
+    text-align: left;
 }
 
 .user-guide-content table th,
