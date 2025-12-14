@@ -40,6 +40,9 @@
                 {% if current_user.user_role in ['Purchase Manager', 'Manager'] %}
                 <a href="{{ url_for('purchase.to_order') }}" class="nav-dropdown-item">To Order</a>
                 {% endif %}
+                {% if current_user.user_role in ['Purchase Manager', 'Manager'] %}
+                <a href="{{ url_for('purchase.purchase_history') }}" class="nav-dropdown-item">Purchase History</a>
+                {% endif %}
             </div>
         </div>
         {% endif %}

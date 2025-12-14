@@ -1,0 +1,171 @@
+{% extends "base.html" %}
+
+{% block page_panel %}
+<div class="panel-header">
+    <h2>Purchase History</h2>
+</div>
+
+<div class="page-panel">
+    <!-- Filter Form -->
+    <div class="purchase-history-filters">
+        <form method="POST" action="{{ url_for('purchase.purchase_history') }}" class="filter-form">
+            <div class="filter-row">
+                <div class="filter-group">
+                    <label for="date_from">From Date:</label>
+                    <input type="date" id="date_from" name="date_from" value="{{ date_from }}" class="filter-input">
+                </div>
+                <div class="filter-group">
+                    <label for="date_to">To Date:</label>
+                    <input type="date" id="date_to" name="date_to" value="{{ date_to }}" class="filter-input">
+                </div>
+            </div>
+            
+            <div class="filter-row">
+                <div class="filter-group supplier-filter-group">
+                    <label>Suppliers:</label>
+                    <div class="supplier-dropdown-container">
+                        <button type="button" class="supplier-dropdown-btn" id="supplierDropdownBtn">
+                            {% if selected_suppliers %}
+                                {{ selected_suppliers|length }} supplier(s) selected
+                            {% else %}
+                                Select Suppliers
+                            {% endif %}
+                            <span class="dropdown-arrow">▼</span>
+                        </button>
+                        <div class="supplier-dropdown-menu" id="supplierDropdownMenu">
+                            <div class="supplier-checkbox-group">
+                                {% for supplier in all_suppliers %}
+                                <label class="supplier-checkbox-label">
+                                    <input type="checkbox" name="suppliers" value="{{ supplier }}" 
+                                           {% if supplier in selected_suppliers %}checked{% endif %}
+                                           class="supplier-checkbox">
+                                    <span>{{ supplier }}</span>
+                                </label>
+                                {% endfor %}
+                            </div>
+                            <div class="supplier-dropdown-actions">
+                                <button type="button" class="btn-select-all" id="selectAllSuppliers">Select All</button>
+                                <button type="button" class="btn-deselect-all" id="deselectAllSuppliers">Deselect All</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="filter-actions">
+                <button type="submit" class="btn btn-primary">Generate Report</button>
+                <a href="{{ url_for('purchase.purchase_history') }}" class="btn btn-secondary">Clear Filters</a>
+            </div>
+        </form>
+    </div>
+    
+    <!-- Results Table -->
+    {% if report_items %}
+    <div class="purchase-history-results">
+        <div class="results-header">
+            <h3>Report Results ({{ report_items|length }} items)</h3>
+        </div>
+        <div class="table-wrapper">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Code</th>
+                        <th>Description</th>
+                        <th>Cost per Unit</th>
+                        <th>Quantity Received</th>
+                        <th>Supplier</th>
+                        <th>Total Cost</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for report_item in report_items %}
+                    <tr>
+                        <td>{{ report_item.received_date.strftime('%Y-%m-%d %H:%M:%S') if report_item.received_date else report_item.received_date_str }}</td>
+                        <td>{{ report_item.item.code or 'N/A' }}</td>
+                        <td>{{ report_item.item.description }}</td>
+                        <td>{{ currency_info.symbol }} {{ "%.2f"|format(report_item.item.cost_per_unit) }}</td>
+                        <td>{{ "%.2f"|format(report_item.item.quantity_received) }}</td>
+                        <td>{{ report_item.item.supplier or 'N/A' }}</td>
+                        <td><strong>{{ currency_info.symbol }} {{ "%.2f"|format(report_item.item.calculate_received_cost()) }}</strong></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+                <tfoot>
+                    <tr>
+                        <td colspan="6" style="text-align: right;"><strong>Total:</strong></td>
+                        <td><strong>{{ currency_info.symbol }} {{ "%.2f"|format(report_items|sum(attribute='item.calculate_received_cost')|sum) }}</strong></td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+    </div>
+    {% elif request.method == 'POST' %}
+    <div class="no-results">
+        <p>No items found matching the selected criteria.</p>
+    </div>
+    {% else %}
+    <div class="no-results">
+        <p>Select date range and suppliers to generate a report.</p>
+    </div>
+    {% endif %}
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const dropdownBtn = document.getElementById('supplierDropdownBtn');
+    const dropdownMenu = document.getElementById('supplierDropdownMenu');
+    const selectAllBtn = document.getElementById('selectAllSuppliers');
+    const deselectAllBtn = document.getElementById('deselectAllSuppliers');
+    const checkboxes = document.querySelectorAll('.supplier-checkbox');
+    
+    // Toggle dropdown
+    if (dropdownBtn && dropdownMenu) {
+        dropdownBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            dropdownMenu.style.display = dropdownMenu.style.display === 'block' ? 'none' : 'block';
+        });
+        
+        // Close dropdown when clicking outside
+        document.addEventListener('click', function(e) {
+            if (!dropdownBtn.contains(e.target) && !dropdownMenu.contains(e.target)) {
+                dropdownMenu.style.display = 'none';
+            }
+        });
+        
+        // Update button text when checkboxes change
+        checkboxes.forEach(function(checkbox) {
+            checkbox.addEventListener('change', function() {
+                const selected = Array.from(checkboxes).filter(cb => cb.checked);
+                if (selected.length === 0) {
+                    dropdownBtn.innerHTML = 'Select Suppliers <span class="dropdown-arrow">▼</span>';
+                } else {
+                    dropdownBtn.innerHTML = selected.length + ' supplier(s) selected <span class="dropdown-arrow">▼</span>';
+                }
+            });
+        });
+        
+        // Select all
+        if (selectAllBtn) {
+            selectAllBtn.addEventListener('click', function() {
+                checkboxes.forEach(function(checkbox) {
+                    checkbox.checked = true;
+                });
+                dropdownBtn.innerHTML = checkboxes.length + ' supplier(s) selected <span class="dropdown-arrow">▼</span>';
+            });
+        }
+        
+        // Deselect all
+        if (deselectAllBtn) {
+            deselectAllBtn.addEventListener('click', function() {
+                checkboxes.forEach(function(checkbox) {
+                    checkbox.checked = false;
+                });
+                dropdownBtn.innerHTML = 'Select Suppliers <span class="dropdown-arrow">▼</span>';
+            });
+        }
+    }
+});
+</script>
+{% endblock %}
+

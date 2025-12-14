@@ -1042,3 +1042,146 @@ def export_new_purchase_pdf(purchase_id):
         current_app.logger.error(f'Error generating PDF: {str(e)}', exc_info=True)
         flash(f'Error generating PDF: {str(e)}', 'error')
         return redirect(url_for('purchase.order_list'))
+
+
+@purchase_bp.route('/purchase-history', methods=['GET', 'POST'])
+@login_required
+@role_required(['Manager', 'Purchase Manager'])
+def purchase_history():
+    """Display purchase history report with date range and supplier filtering"""
+    from sqlalchemy import and_, func
+    from utils.helpers import get_currency_info
+    
+    ensure_schema_updates()
+    
+    try:
+        # Get organization filter
+        org_filter = get_organization_filter(PurchaseRequest)
+        
+        # Get all unique suppliers from received items
+        all_suppliers_query = db.session.query(PurchaseItem.supplier).join(
+            PurchaseRequest, PurchaseItem.purchase_request_id == PurchaseRequest.id
+        ).filter(
+            org_filter,
+            PurchaseItem.quantity_received.isnot(None),
+            PurchaseItem.quantity_received > 0,
+            PurchaseItem.supplier.isnot(None),
+            PurchaseItem.supplier != ''
+        ).distinct().order_by(PurchaseItem.supplier)
+        
+        all_suppliers = [row[0] for row in all_suppliers_query.all()]
+        
+        # Get filter parameters from request
+        date_from = request.form.get('date_from') or request.args.get('date_from', '')
+        date_to = request.form.get('date_to') or request.args.get('date_to', '')
+        selected_suppliers = request.form.getlist('suppliers') or request.args.getlist('suppliers')
+        
+        # Build query for received items
+        query = db.session.query(
+            PurchaseItem,
+            PurchaseRequest
+        ).join(
+            PurchaseRequest, PurchaseItem.purchase_request_id == PurchaseRequest.id
+        ).filter(
+            org_filter,
+            PurchaseItem.quantity_received.isnot(None),
+            PurchaseItem.quantity_received > 0
+        )
+        
+        # Apply date filter
+        if date_from:
+            try:
+                date_from_obj = datetime.strptime(date_from, '%Y-%m-%d')
+                # Filter by received date from supplier_received_dates or ordered_date
+                # We'll need to check supplier_received_dates JSON
+                query = query.filter(
+                    PurchaseRequest.ordered_date >= date_from_obj
+                )
+            except ValueError:
+                flash('Invalid date format for "From Date".', 'error')
+        
+        if date_to:
+            try:
+                date_to_obj = datetime.strptime(date_to, '%Y-%m-%d')
+                # Add one day to include the entire "to" date
+                from datetime import timedelta
+                date_to_obj = date_to_obj + timedelta(days=1)
+                query = query.filter(
+                    PurchaseRequest.ordered_date < date_to_obj
+                )
+            except ValueError:
+                flash('Invalid date format for "To Date".', 'error')
+        
+        # Apply supplier filter
+        if selected_suppliers:
+            query = query.filter(PurchaseItem.supplier.in_(selected_suppliers))
+        
+        # Order by date (most recent first)
+        query = query.order_by(PurchaseRequest.ordered_date.desc(), PurchaseItem.supplier)
+        
+        # Execute query
+        results = query.all()
+        
+        # Process results to include received date
+        report_items = []
+        for item, purchase_request in results:
+            # Get received date for this supplier
+            received_date = purchase_request.get_supplier_received_date(item.supplier or '')
+            if not received_date:
+                # Fallback to ordered_date if no received date
+                received_date = purchase_request.ordered_date.strftime('%Y-%m-%d %H:%M:%S') if purchase_request.ordered_date else ''
+            
+            # Parse received_date string to datetime for date filtering
+            received_date_obj = None
+            if received_date:
+                try:
+                    received_date_obj = datetime.strptime(received_date, '%Y-%m-%d %H:%M:%S')
+                except ValueError:
+                    try:
+                        received_date_obj = datetime.strptime(received_date, '%Y-%m-%d')
+                    except ValueError:
+                        received_date_obj = purchase_request.ordered_date
+            
+            # Apply date filter on received_date if available
+            if date_from and received_date_obj:
+                try:
+                    date_from_obj = datetime.strptime(date_from, '%Y-%m-%d')
+                    if received_date_obj < date_from_obj:
+                        continue
+                except ValueError:
+                    pass
+            
+            if date_to and received_date_obj:
+                try:
+                    date_to_obj = datetime.strptime(date_to, '%Y-%m-%d')
+                    from datetime import timedelta
+                    date_to_obj = date_to_obj + timedelta(days=1)
+                    if received_date_obj >= date_to_obj:
+                        continue
+                except ValueError:
+                    pass
+            
+            report_items.append({
+                'item': item,
+                'purchase_request': purchase_request,
+                'received_date': received_date_obj or purchase_request.ordered_date,
+                'received_date_str': received_date
+            })
+        
+        # Get currency info
+        currency_info = get_currency_info(current_user)
+        
+        return render_template(
+            'purchase/purchase_history.html',
+            report_items=report_items,
+            all_suppliers=all_suppliers,
+            selected_suppliers=selected_suppliers,
+            date_from=date_from,
+            date_to=date_to,
+            currency_info=currency_info
+        )
+        
+    except Exception as e:
+        current_app.logger.error(f'Error in purchase_history: {str(e)}', exc_info=True)
+        flash(f'Error loading purchase history: {str(e)}', 'error')
+        return redirect(url_for('purchase.order_list'))
