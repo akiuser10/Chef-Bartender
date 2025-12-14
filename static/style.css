@@ -1255,6 +1255,9 @@ table tbody tr:nth-child(n+6) { animation-delay: 0.6s; }
 table thead {
     background: #7f7f7f;
     color: #ffffff;
+    position: sticky;
+    top: 0;
+    z-index: 10;
 }
 
 table th {
