@@ -475,6 +475,11 @@ canvas {
     opacity: 1;
 }
 
+/* Make hero-content visible when not inside a carousel slide (for Contact/About pages) */
+.hero-image-container > .hero-content {
+    opacity: 1;
+}
+
 .image-caption {
     font-size: 0.75rem;
     letter-spacing: 3px;
@@ -499,6 +504,12 @@ canvas {
 }
 
 .hero-slide.active .hero-title {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* Make hero-title visible when not inside a carousel slide (for Contact/About pages) */
+.hero-image-container > .hero-content .hero-title {
     opacity: 1;
     transform: translateY(0);
 }
