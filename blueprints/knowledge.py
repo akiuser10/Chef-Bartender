@@ -270,37 +270,57 @@ def view_book_pdf(book_id):
             library_route = f'{book.library_type}_library' if book.library_type in ['bartender', 'chef'] else 'bartender_library'
             return redirect(url_for(f'knowledge.{library_route}'))
         
-        # book.pdf_path is stored as 'uploads/books/pdfs/filename.pdf'
-        # Remove 'uploads/' prefix to get the relative path
-        if book.pdf_path.startswith('uploads/'):
-            file_path = book.pdf_path.replace('uploads/', '', 1)
-        else:
-            file_path = book.pdf_path
+        # book.pdf_path is stored as 'uploads/books/pdfs/filename.pdf' (from save_uploaded_file)
+        # We need to remove 'uploads/' prefix to get the relative path for send_from_directory
+        stored_path = book.pdf_path
         
-        # Construct full path to check if file exists
+        # Normalize the path - remove 'uploads/' prefix if present
+        if stored_path.startswith('uploads/'):
+            file_path = stored_path.replace('uploads/', '', 1)
+        else:
+            file_path = stored_path
+        
+        # Construct full path to verify file exists
         full_path = os.path.join(current_app.config['UPLOAD_FOLDER'], file_path)
         
+        # Check if file exists at the expected location
         if not os.path.exists(full_path):
             # Try alternative path formats
             alt_paths = [
-                book.pdf_path,  # Try with uploads/ prefix
-                os.path.join(current_app.config['UPLOAD_FOLDER'], book.pdf_path),  # Full path with uploads/
+                # Try with uploads/ prefix as absolute path
+                os.path.join(current_app.config['UPLOAD_FOLDER'], stored_path),
+                # Try the stored path as-is (if it's already absolute)
+                stored_path,
+                # Try without uploads/ prefix
+                os.path.join(current_app.config['UPLOAD_FOLDER'], file_path),
             ]
             
             found = False
             for alt_path in alt_paths:
                 if os.path.exists(alt_path):
-                    # Update file_path to match found path
+                    # Determine the correct file_path for send_from_directory
                     if alt_path.startswith(current_app.config['UPLOAD_FOLDER']):
-                        file_path = alt_path.replace(current_app.config['UPLOAD_FOLDER'] + os.sep, '', 1)
+                        # Extract relative path from UPLOAD_FOLDER
+                        file_path = os.path.relpath(alt_path, current_app.config['UPLOAD_FOLDER'])
+                    elif alt_path.startswith('uploads/'):
+                        # Remove uploads/ prefix
+                        file_path = alt_path.replace('uploads/', '', 1)
                     else:
-                        file_path = alt_path.replace('uploads/', '', 1) if alt_path.startswith('uploads/') else alt_path
+                        # Use as-is
+                        file_path = alt_path
                     found = True
                     current_app.logger.info(f'Found PDF at alternative path: {alt_path}, using file_path: {file_path}')
                     break
             
             if not found:
-                current_app.logger.error(f'PDF file not found at: {full_path}, stored path: {book.pdf_path}, UPLOAD_FOLDER: {current_app.config["UPLOAD_FOLDER"]}')
+                # Log detailed error information
+                current_app.logger.error(
+                    f'PDF file not found for book {book_id}. '
+                    f'Stored path: {stored_path}, '
+                    f'Expected full path: {full_path}, '
+                    f'UPLOAD_FOLDER: {current_app.config["UPLOAD_FOLDER"]}, '
+                    f'File exists check: {os.path.exists(full_path)}'
+                )
                 flash('PDF file not found on server.', 'error')
                 # Redirect to the correct library based on book type
                 library_route = f'{book.library_type}_library' if book.library_type in ['bartender', 'chef'] else 'bartender_library'
@@ -309,6 +329,7 @@ def view_book_pdf(book_id):
         # Use send_from_directory to serve the file directly
         # file_path should be relative to UPLOAD_FOLDER (e.g., 'books/pdfs/filename.pdf')
         try:
+            current_app.logger.info(f'Serving PDF for book {book_id}: {file_path} from {current_app.config["UPLOAD_FOLDER"]}')
             return send_from_directory(
                 current_app.config['UPLOAD_FOLDER'],
                 file_path,
