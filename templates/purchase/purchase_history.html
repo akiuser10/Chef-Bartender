@@ -94,7 +94,7 @@
                 <tfoot>
                     <tr>
                         <td colspan="6" style="text-align: right;"><strong>Total:</strong></td>
-                        <td><strong>{{ currency_info.symbol }} {{ "%.2f"|format(report_items|sum(attribute='item.calculate_received_cost')|sum) }}</strong></td>
+                        <td><strong>{{ currency_info.symbol }} {{ "%.2f"|format(total_cost) }}</strong></td>
                     </tr>
                 </tfoot>
             </table>

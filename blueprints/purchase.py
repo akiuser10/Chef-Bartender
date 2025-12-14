@@ -1168,6 +1168,9 @@ def purchase_history():
                 'received_date_str': received_date
             })
         
+        # Calculate total cost
+        total_cost = sum(item['item'].calculate_received_cost() for item in report_items)
+        
         # Get currency info
         currency_info = get_currency_info(current_user)
         
@@ -1178,7 +1181,8 @@ def purchase_history():
             selected_suppliers=selected_suppliers,
             date_from=date_from,
             date_to=date_to,
-            currency_info=currency_info
+            currency_info=currency_info,
+            total_cost=total_cost
         )
         
     except Exception as e:
