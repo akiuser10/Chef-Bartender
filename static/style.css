@@ -890,13 +890,13 @@ main {
 }
 
 .contact-link {
-    color: #d45a2a;
+    color: #4a9d2f;
     text-decoration: none;
     transition: color 0.3s ease;
 }
 
 .contact-link:hover {
-    color: #ff6b3a;
+    color: #3d7d25;
     text-decoration: underline;
 }
 
@@ -1101,7 +1101,7 @@ main {
 .bulk-upload p {
     max-width: 90%;
     width: 90%;
-    color: #BFBFBF;
+    color: #666666;
     margin: 10px 0;
 }
 
@@ -1119,13 +1119,15 @@ main {
 }
 
 .btn-primary {
-    background: #0066cc;
-    border-color: #0066cc;
+    background: #4a9d2f;
+    border-color: #4a9d2f;
+    color: #ffffff;
 }
 
 .btn-primary:hover {
-    background: #0052a3;
-    border-color: #0052a3;
+    background: #3d7d25;
+    border-color: #3d7d25;
+    color: #ffffff;
 }
 
 .recipe-category-buttons {
@@ -1139,47 +1141,62 @@ main {
 .btn-category {
     padding: 12px 24px;
     font-size: 1.1rem;
-    font-weight: bold;
+    font-weight: 600;
     text-decoration: none;
-    border-radius: 4px;
+    border-radius: 8px;
     transition: all 0.3s ease;
+    background: #4a9d2f;
+    color: white;
+    border: 1px solid #4a9d2f;
 }
 
 .btn-category:hover {
     -webkit-transform: translateY(-2px);
     transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 4px 12px rgba(74, 157, 47, 0.3);
+    background: #3d7d25;
+    border-color: #3d7d25;
 }
 
 .panel-controls {
     margin-bottom: 20px;
-    padding: 15px;
-    background: #53797A;
-    border: 1px solid #4a6a6b;
+    padding: 20px;
+    background: #f8f9fa;
+    border: 1px solid #e8e8e8;
+    border-radius: 8px;
     flex-shrink: 0;
 }
 
 .panel-controls label {
     margin-right: 10px;
-    color: #2a2a2a;
+    color: #333333;
+    font-weight: 500;
 }
 
 .panel-controls select {
     margin-right: 20px;
-    padding: 5px;
-    background: #ADCDCD;
-    border: 1px solid #9acdcd;
-    color: #2a2a2a;
+    padding: 8px 12px;
+    background: #ffffff;
+    border: 1px solid #e8e8e8;
+    border-radius: 6px;
+    color: #333333;
+    transition: all 0.3s ease;
+}
+
+.panel-controls select:focus {
+    outline: none;
+    border-color: #4a9d2f;
+    box-shadow: 0 0 0 3px rgba(74, 157, 47, 0.1);
 }
 
 .panel-controls select optgroup {
     font-weight: bold;
-    color: #d45a2a;
+    color: #4a9d2f;
 }
 
 .panel-controls select option {
-    background: #2a2a2a;
-    color: white;
+    background: #ffffff;
+    color: #333333;
 }
 
 .panel-controls select option[hidden],
@@ -1194,20 +1211,21 @@ main {
 }
 
 .search-container input[type="text"] {
-    padding: 10px 15px;
+    padding: 12px 18px;
     font-size: 1rem;
     width: 400px;
     max-width: 90%;
-    border: 1px solid #3a3a3a;
-    border-radius: 4px;
-    background: #1a1a1a;
-    color: white;
+    border: 1px solid #e8e8e8;
+    border-radius: 8px;
+    background: #ffffff;
+    color: #333333;
+    transition: all 0.3s ease;
 }
 
 .search-container input[type="text"]:focus {
     outline: none;
-    border-color: #d45a2a;
-    box-shadow: 0 0 0 2px rgba(212, 90, 42, 0.2);
+    border-color: #4a9d2f;
+    box-shadow: 0 0 0 3px rgba(74, 157, 47, 0.1);
 }
 
 /* Tables */
@@ -1890,20 +1908,29 @@ form textarea {
 /* Buttons */
 .btn {
     display: inline-block;
-    padding: 10px 20px;
-    background: #d45a2a;
+    padding: 12px 24px;
+    background: #4a9d2f;
     color: white;
     text-decoration: none;
-    border: 1px solid #d45a2a;
+    border: 1px solid #4a9d2f;
     cursor: pointer;
     font-size: 1rem;
+    font-weight: 500;
     margin-right: 0; /* Removed - use gap in flex containers instead */
     transition: all 0.3s ease;
     position: relative;
     overflow: hidden;
-    border-radius: 4px;
+    border-radius: 8px;
     vertical-align: middle;
     white-space: nowrap;
+}
+
+.btn:hover {
+    background: #3d7d25;
+    border-color: #3d7d25;
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(74, 157, 47, 0.3);
 }
 
 .btn::before {
@@ -2075,11 +2102,13 @@ button.btn {
 
 /* Flash Messages */
 .flash {
-    background: #2a4a2a;
-    color: #90ee90;
-    padding: 15px;
+    background: #e8f5e9;
+    color: #2d5016;
+    padding: 15px 20px;
     margin-bottom: 20px;
-    border: 1px solid #3a6a3a;
+    border: 1px solid #4a9d2f;
+    border-radius: 8px;
+    border-left: 4px solid #4a9d2f;
 }
 
 .flash p {
@@ -2088,11 +2117,13 @@ button.btn {
 
 .empty-state-message {
     margin-top: 20px;
-    padding: 20px;
-    background: #2a2a2a;
+    padding: 30px;
+    background: #f8f9fa;
     border-radius: 8px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
-    color: white;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    color: #666666;
+    text-align: center;
+    border: 1px solid #e8e8e8;
 }
 
 /* Booking Form */
