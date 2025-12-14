@@ -1125,8 +1125,8 @@ main {
 .panel-controls {
     margin-bottom: 20px;
     padding: 15px;
-    background: #5A9A9A;
-    border: 1px solid #4a9a9a;
+    background: #ADCDCD;
+    border: 1px solid #9acdcd;
     flex-shrink: 0;
 }
 
@@ -3805,8 +3805,8 @@ main .page-panel .recipe-view-container {
 
 /* Purchase History Styles */
 .purchase-history-filters {
-    background: #5A9A9A;
-    border: 1px solid #4a9a9a;
+    background: #ADCDCD;
+    border: 1px solid #9acdcd;
     border-radius: 8px;
     padding: 20px;
     margin-bottom: 30px;
