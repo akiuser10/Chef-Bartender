@@ -3355,6 +3355,12 @@ main .page-panel .recipe-view-container {
     min-width: 100%;
     box-sizing: border-box;
     table-layout: auto;
+    border-collapse: separate;
+    border-spacing: 0;
+    background: #bebebe;
+    border: 1px dashed #808080;
+    border-radius: 6px;
+    overflow: hidden;
 }
 
 /* Ensure table cells can expand to fill available space */
@@ -3362,6 +3368,51 @@ main .page-panel .recipe-view-container {
 .purchase-details .data-table td {
     white-space: nowrap;
     padding: 10px 15px;
+    border: 0.5px dashed #808080;
+    border-right: 0.5px dashed #808080;
+    border-bottom: 0.5px dashed #808080;
+}
+
+.purchase-details .data-table thead {
+    background: #7f7f7f;
+    color: #ffffff;
+}
+
+.purchase-details .data-table th {
+    background: #7f7f7f;
+    color: #ffffff;
+    border: 0.5px dashed #808080;
+    border-right: 0.5px dashed #808080;
+    border-bottom: 0.5px dashed #808080;
+}
+
+.purchase-details .data-table th:first-child {
+    border-left: 0.5px dashed #808080;
+}
+
+.purchase-details .data-table th:last-child {
+    border-right: 0.5px dashed #808080;
+}
+
+.purchase-details .data-table td {
+    background: #bebebe;
+    color: #2a2a2a;
+}
+
+.purchase-details .data-table td:first-child {
+    border-left: 0.5px dashed #808080;
+}
+
+.purchase-details .data-table td:last-child {
+    border-right: 0.5px dashed #808080;
+}
+
+.purchase-details .data-table tr:last-child td {
+    border-bottom: 0.5px dashed #808080;
+}
+
+.purchase-details .data-table tbody tr:nth-child(even) {
+    background: #bebebe;
 }
 
 /* Allow description column to wrap if needed */
