@@ -898,6 +898,14 @@ main {
     text-decoration: underline;
 }
 
+.contact-section-content p.help-link-container {
+    margin-top: 20px;
+}
+
+.contact-link.help-link {
+    font-weight: 600;
+}
+
 @keyframes fadeIn {
     from {
         opacity: 0;
