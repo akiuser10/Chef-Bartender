@@ -21,6 +21,31 @@ def contact():
     return render_template('contact.html')
 
 
+@main_bp.route('/user-guide')
+def user_guide():
+    """Display the user guide from USER_GUIDE.md"""
+    import os
+    import markdown
+    from flask import Markup
+    
+    try:
+        # Get the path to USER_GUIDE.md
+        base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        guide_path = os.path.join(base_dir, 'USER_GUIDE.md')
+        
+        # Read the markdown file
+        with open(guide_path, 'r', encoding='utf-8') as f:
+            markdown_content = f.read()
+        
+        # Convert markdown to HTML
+        html_content = markdown.markdown(markdown_content, extensions=['extra', 'codehilite'])
+        
+        return render_template('user_guide.html', guide_content=Markup(html_content))
+    except Exception as e:
+        current_app.logger.error(f'Error loading user guide: {str(e)}', exc_info=True)
+        return render_template('error.html', error='Unable to load user guide'), 500
+
+
 @main_bp.route('/uploads/<path:filename>')
 def uploaded_file(filename):
     """Serve uploaded files"""
