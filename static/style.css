@@ -1216,7 +1216,9 @@ table {
     width: 100%;
     border-collapse: collapse;
     background: #bebebe;
-    border: 1px solid #9a9a9a;
+    border: 1px solid #3f3f3f;
+    border-radius: 6px;
+    overflow: hidden;
     animation: fadeIn 0.8s ease-out;
 }
 
@@ -1246,7 +1248,7 @@ table th {
     padding: 12px;
     text-align: center;
     font-weight: bold;
-    border: 1px solid #6a6a6a;
+    border: 1px solid #3f3f3f;
     background: #7f7f7f;
     color: #ffffff;
     position: sticky;
@@ -1258,7 +1260,7 @@ table th {
 
 table td {
     padding: 10px 12px;
-    border: 1px solid #9a9a9a;
+    border: 1px solid #3f3f3f;
     text-align: center;
     color: #2a2a2a;
     font-size: 0.85rem;
@@ -2231,7 +2233,9 @@ main .page-panel .recipe-view-container {
     width: 100%;
     min-width: 100%;
     border-collapse: collapse;
-    border: 1px solid #3a3a3a;
+    border: 1px solid #3f3f3f;
+    border-radius: 6px;
+    overflow: hidden;
     table-layout: fixed;
     background: #2a2a2a;
 }
@@ -2241,7 +2245,7 @@ main .page-panel .recipe-view-container {
     color: white;
     padding: 14px 12px;
     text-align: left;
-    border: 1px solid #3a3a3a;
+    border: 1px solid #3f3f3f;
     font-size: 0.95rem;
     font-weight: bold;
 }
@@ -2261,7 +2265,7 @@ main .page-panel .recipe-view-container {
 
 .recipe-cost-table tbody td {
     padding: 12px;
-    border: 1px solid #3a3a3a;
+    border: 1px solid #3f3f3f;
     font-size: 1rem;
     color: white;
 }
@@ -2273,7 +2277,7 @@ main .page-panel .recipe-view-container {
 }
 
 .recipe-cost-table .total-row td {
-    border: 1px solid #3a3a3a;
+    border: 1px solid #3f3f3f;
 }
 
 .recipe-cost-table tbody tr:nth-child(even) {
