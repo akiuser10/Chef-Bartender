@@ -26,7 +26,7 @@ def user_guide():
     """Display the user guide from USER_GUIDE.md"""
     import os
     import markdown
-    from flask import Markup
+    from markupsafe import Markup
     
     try:
         # Get the path to USER_GUIDE.md
