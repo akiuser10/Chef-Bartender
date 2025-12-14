@@ -1,112 +1,292 @@
 {% extends "base.html" %}
 {% block page_panel %}
-<div class="hero-section">
-    <div class="hero-image-container">
-        <!-- Carousel Slides -->
-        <div class="hero-slide active" data-slide="0">
-            <div class="hero-image slide-0"></div>
-            <div class="hero-overlay"></div>
-            <div class="hero-content">
-                <h1 class="hero-title">Less is more.</h1>
+<!-- Hero Section with Slider -->
+<div class="hero-section-foodility">
+    <div class="hero-slider-container">
+        <!-- Slide 1: Healthy Smoothie -->
+        <div class="hero-slide-foodility active" data-slide="0">
+            <div class="hero-bg-purple">
+                <div class="watercolor-effect"></div>
             </div>
-        </div>
-        <div class="hero-slide" data-slide="1">
-            <div class="hero-image slide-1"></div>
-            <div class="hero-overlay"></div>
-            <div class="hero-content">
-                <h1 class="hero-title">Clarity takes courage.</h1>
-            </div>
-        </div>
-        <div class="hero-slide" data-slide="2">
-            <div class="hero-image slide-2"></div>
-            <div class="hero-overlay"></div>
-            <div class="hero-content">
-                <h1 class="hero-title">Complexity hides; simplicity reveals.</h1>
-            </div>
-        </div>
-        <div class="hero-slide" data-slide="3">
-            <div class="hero-image slide-3"></div>
-            <div class="hero-overlay"></div>
-            <div class="hero-content">
-                <h1 class="hero-title">Minimal is intentional.</h1>
-            </div>
-        </div>
-        <div class="hero-slide" data-slide="4">
-            <div class="hero-image slide-4"></div>
-            <div class="hero-overlay"></div>
-            <div class="hero-content">
-                <h1 class="hero-title">Order creates freedom.</h1>
-            </div>
-        </div>
-        <div class="hero-slide" data-slide="5">
-            <div class="hero-image slide-5"></div>
-            <div class="hero-overlay"></div>
-            <div class="hero-content">
-                <h1 class="hero-title">Focus is a form of power.</h1>
+            <div class="hero-content-foodility">
+                <div class="hero-text-container">
+                    <h1 class="hero-title-script">Healthy Smoothie</h1>
+                    <p class="hero-subtitle">Fresh ingredients, natural flavors, perfect blend</p>
+                    <button class="btn-try-now">Try Now</button>
+                </div>
+                <div class="hero-image-side">
+                    <div class="hero-fruit-decoration"></div>
+                </div>
             </div>
         </div>
         
-        <!-- Carousel Navigation -->
-        <button class="carousel-nav carousel-prev" aria-label="Previous" id="heroPrevBtn">‹</button>
-        <button class="carousel-nav carousel-next" aria-label="Next" id="heroNextBtn">›</button>
+        <!-- Slide 2: Fresh Fruit Juices -->
+        <div class="hero-slide-foodility" data-slide="1">
+            <div class="hero-bg-purple">
+                <div class="watercolor-effect"></div>
+            </div>
+            <div class="hero-content-foodility">
+                <div class="hero-text-container">
+                    <h1 class="hero-title-script">Fresh Fruit Juices</h1>
+                    <p class="hero-subtitle">100% natural, no preservatives, pure refreshment</p>
+                    <button class="btn-buy-now">Buy Now</button>
+                </div>
+                <div class="hero-image-side">
+                    <div class="hero-juice-decoration"></div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Navigation Arrows -->
+        <button class="carousel-nav-foodility carousel-prev-foodility" aria-label="Previous" id="heroPrevBtnFoodility">‹</button>
+        <button class="carousel-nav-foodility carousel-next-foodility" aria-label="Next" id="heroNextBtnFoodility">›</button>
+    </div>
+    
+    <!-- Static Product Showcase Below Hero -->
+    <div class="hero-products-showcase">
+        <div class="product-bottle red-juice"></div>
+        <div class="product-bottle orange-juice"></div>
+        <div class="product-bottle beige-juice"></div>
+        <div class="product-fruits-decoration"></div>
     </div>
 </div>
 
+<!-- Our Beverage Section -->
+<section class="beverage-section">
+    <div class="section-container">
+        <h2 class="section-title">Our Beverage</h2>
+        <div class="beverage-grid">
+            <div class="beverage-card">
+                <div class="beverage-image milkshake"></div>
+                <h3 class="beverage-name">Milkshake</h3>
+                <p class="beverage-price">$5.99</p>
+            </div>
+            <div class="beverage-card">
+                <div class="beverage-image frappe"></div>
+                <h3 class="beverage-name">Frappe</h3>
+                <p class="beverage-price">$4.99</p>
+            </div>
+            <div class="beverage-card">
+                <div class="beverage-image boba"></div>
+                <h3 class="beverage-name">Boba Drink</h3>
+                <p class="beverage-price">$6.99</p>
+            </div>
+            <div class="beverage-card">
+                <div class="beverage-image mojito"></div>
+                <h3 class="beverage-name">Mojito</h3>
+                <p class="beverage-price">$5.49</p>
+            </div>
+            <div class="beverage-card">
+                <div class="beverage-image watermelon-juice"></div>
+                <h3 class="beverage-name">Watermelon Juice</h3>
+                <p class="beverage-price">$4.49</p>
+            </div>
+            <div class="beverage-card">
+                <div class="beverage-image hot-chocolate"></div>
+                <h3 class="beverage-name">Hot Chocolate</h3>
+                <p class="beverage-price">$3.99</p>
+            </div>
+            <div class="beverage-card">
+                <div class="beverage-image smoothie"></div>
+                <h3 class="beverage-name">Smoothie</h3>
+                <p class="beverage-price">$5.49</p>
+            </div>
+            <div class="beverage-card">
+                <div class="beverage-image coffee"></div>
+                <h3 class="beverage-name">Coffee</h3>
+                <p class="beverage-price">$4.99</p>
+            </div>
+        </div>
+        <button class="carousel-nav-foodility beverage-prev">‹</button>
+        <button class="carousel-nav-foodility beverage-next">›</button>
+    </div>
+</section>
+
+<!-- Big Deals Section -->
+<section class="big-deals-section">
+    <div class="section-container">
+        <div class="big-deals-circle">
+            <div class="deals-bg-pattern"></div>
+            <h2 class="deals-title">Big Deals of the Week</h2>
+            <p class="deals-subtitle">Special offers on your favorite beverages</p>
+            <button class="btn-view-deals">View All Our Deals</button>
+        </div>
+    </div>
+</section>
+
+<!-- Detox Smoothie Recipe Section -->
+<section class="recipe-section">
+    <div class="section-container">
+        <h2 class="section-title">Detox Smoothie Recipe</h2>
+        <div class="recipe-content">
+            <div class="recipe-ingredients">
+                <div class="ingredient-item">
+                    <div class="ingredient-icon cucumber"></div>
+                    <div class="ingredient-text">
+                        <h4>Cucumber</h4>
+                        <p>Fresh and hydrating</p>
+                    </div>
+                </div>
+                <div class="ingredient-item">
+                    <div class="ingredient-icon apple"></div>
+                    <div class="ingredient-text">
+                        <h4>Apple</h4>
+                        <p>Natural sweetness</p>
+                    </div>
+                </div>
+                <div class="ingredient-item">
+                    <div class="ingredient-icon lemon"></div>
+                    <div class="ingredient-text">
+                        <h4>Lemon</h4>
+                        <p>Vitamin C boost</p>
+                    </div>
+                </div>
+                <div class="ingredient-item">
+                    <div class="ingredient-icon water"></div>
+                    <div class="ingredient-text">
+                        <h4>Fresh Water</h4>
+                        <p>Pure hydration</p>
+                    </div>
+                </div>
+            </div>
+            <div class="recipe-bottle">
+                <div class="bottle-image"></div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Upcoming Beverage Section -->
+<section class="upcoming-section">
+    <div class="section-container">
+        <h2 class="section-title">Upcoming Our Beverage</h2>
+        <div class="upcoming-content">
+            <div class="upcoming-text">
+                <p>Discover our latest creations and seasonal specials. We're constantly innovating to bring you the freshest, most delicious beverages.</p>
+                <p>Stay tuned for exciting new flavors and limited-time offers that celebrate the best of each season.</p>
+            </div>
+            <div class="upcoming-image">
+                <div class="outdoor-drinks-image"></div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Testimonials Section -->
+<section class="testimonials-section">
+    <div class="section-container">
+        <h2 class="section-title">What People Say</h2>
+        <div class="testimonial-slider">
+            <div class="testimonial-card active">
+                <div class="testimonial-avatar"></div>
+                <p class="testimonial-quote">"Amazing flavors and fresh ingredients. This is my go-to place for healthy beverages!"</p>
+                <h4 class="testimonial-name">John Doe</h4>
+                <p class="testimonial-role">Customer</p>
+            </div>
+            <button class="carousel-nav-foodility testimonial-prev">‹</button>
+            <button class="carousel-nav-foodility testimonial-next">›</button>
+        </div>
+    </div>
+</section>
+
+<!-- Blog Section -->
+<section class="blog-section">
+    <div class="section-container">
+        <h2 class="section-title">Our Fruitsome Blog</h2>
+        <div class="blog-grid">
+            <div class="blog-card">
+                <div class="blog-image blog-1"></div>
+                <span class="blog-tag">New Post</span>
+                <h3 class="blog-title">Broad bean and goats cheese bruschetta</h3>
+                <div class="blog-meta">
+                    <span class="blog-date">Dec 15, 2023</span>
+                    <span class="blog-comments">5 Comments</span>
+                    <span class="blog-share">Share</span>
+                </div>
+            </div>
+            <div class="blog-card">
+                <div class="blog-image blog-2"></div>
+                <span class="blog-tag">New Post</span>
+                <h3 class="blog-title">Fresh summer smoothie recipes</h3>
+                <div class="blog-meta">
+                    <span class="blog-date">Dec 12, 2023</span>
+                    <span class="blog-comments">8 Comments</span>
+                    <span class="blog-share">Share</span>
+                </div>
+            </div>
+            <div class="blog-card">
+                <div class="blog-image blog-3"></div>
+                <span class="blog-tag">New Post</span>
+                <h3 class="blog-title">Healthy breakfast juice combinations</h3>
+                <div class="blog-meta">
+                    <span class="blog-date">Dec 10, 2023</span>
+                    <span class="blog-comments">12 Comments</span>
+                    <span class="blog-share">Share</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Gallery Section -->
+<section class="gallery-section">
+    <div class="section-container">
+        <div class="gallery-carousel">
+            <div class="gallery-item gallery-1"></div>
+            <div class="gallery-item gallery-2"></div>
+            <div class="gallery-item gallery-3"></div>
+            <div class="gallery-item gallery-4"></div>
+            <div class="gallery-item gallery-5"></div>
+            <div class="gallery-item gallery-6"></div>
+        </div>
+        <button class="carousel-nav-foodility gallery-prev">‹</button>
+        <button class="carousel-nav-foodility gallery-next">›</button>
+    </div>
+</section>
+
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    const slides = document.querySelectorAll('.hero-slide');
-    const prevBtn = document.getElementById('heroPrevBtn');
-    const nextBtn = document.getElementById('heroNextBtn');
-    let currentSlide = 0;
-    let autoSlideInterval;
+    // Hero Slider
+    const heroSlides = document.querySelectorAll('.hero-slide-foodility');
+    const heroPrevBtn = document.getElementById('heroPrevBtnFoodility');
+    const heroNextBtn = document.getElementById('heroNextBtnFoodility');
+    let currentHeroSlide = 0;
+    let heroAutoSlideInterval;
     
-    function showSlide(index) {
-        // Remove active class from all slides
-        slides.forEach(slide => slide.classList.remove('active'));
-        
-        // Add active class to current slide
-        if (slides[index]) {
-            slides[index].classList.add('active');
+    function showHeroSlide(index) {
+        heroSlides.forEach(slide => slide.classList.remove('active'));
+        if (heroSlides[index]) {
+            heroSlides[index].classList.add('active');
         }
     }
     
-    function nextSlide() {
-        currentSlide = (currentSlide + 1) % slides.length;
-        showSlide(currentSlide);
-        resetAutoSlide();
+    function nextHeroSlide() {
+        currentHeroSlide = (currentHeroSlide + 1) % heroSlides.length;
+        showHeroSlide(currentHeroSlide);
+        resetHeroAutoSlide();
     }
     
-    function prevSlide() {
-        currentSlide = (currentSlide - 1 + slides.length) % slides.length;
-        showSlide(currentSlide);
-        resetAutoSlide();
+    function prevHeroSlide() {
+        currentHeroSlide = (currentHeroSlide - 1 + heroSlides.length) % heroSlides.length;
+        showHeroSlide(currentHeroSlide);
+        resetHeroAutoSlide();
     }
     
-    function startAutoSlide() {
-        // Clear any existing interval
-        if (autoSlideInterval) {
-            clearInterval(autoSlideInterval);
+    function startHeroAutoSlide() {
+        if (heroAutoSlideInterval) {
+            clearInterval(heroAutoSlideInterval);
         }
-        // Start auto-advance every 5 seconds
-        autoSlideInterval = setInterval(nextSlide, 5000);
+        heroAutoSlideInterval = setInterval(nextHeroSlide, 5000);
     }
     
-    function resetAutoSlide() {
-        // Reset the auto-slide timer when user manually navigates
-        startAutoSlide();
+    function resetHeroAutoSlide() {
+        startHeroAutoSlide();
     }
     
-    // Event listeners
-    if (nextBtn) {
-        nextBtn.addEventListener('click', nextSlide);
-    }
+    if (heroNextBtn) heroNextBtn.addEventListener('click', nextHeroSlide);
+    if (heroPrevBtn) heroPrevBtn.addEventListener('click', prevHeroSlide);
     
-    if (prevBtn) {
-        prevBtn.addEventListener('click', prevSlide);
-    }
-    
-    // Start auto-advance slides every 5 seconds
-    startAutoSlide();
+    startHeroAutoSlide();
 });
 </script>
 {% endblock %}

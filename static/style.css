@@ -2218,11 +2218,28 @@ button.btn {
 
 /* Footer */
 footer {
-    background: #2d5016;
+    background: #1a1a1a;
     color: rgba(255, 255, 255, 0.9);
     padding: 60px 40px 30px;
     margin-top: auto;
     flex-shrink: 0;
+    position: relative;
+    overflow: hidden;
+}
+
+footer::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image: 
+        radial-gradient(circle at 20% 30%, rgba(139, 195, 74, 0.05) 0%, transparent 50%),
+        radial-gradient(circle at 80% 70%, rgba(76, 175, 80, 0.05) 0%, transparent 50%),
+        radial-gradient(circle at 50% 50%, rgba(129, 178, 20, 0.03) 0%, transparent 50%);
+    pointer-events: none;
+    opacity: 0.6;
 }
 
 footer p {
@@ -4250,4 +4267,754 @@ main .page-panel .recipe-view-container {
     padding: 40px 20px;
     color: #999;
     font-size: 1rem;
+}
+
+/* ============================================
+   FOODILITY THEME STYLES
+   ============================================ */
+
+/* Hero Section - Foodility Style */
+.hero-section-foodility {
+    position: relative;
+    width: 100%;
+    min-height: 80vh;
+    overflow: hidden;
+}
+
+.hero-slider-container {
+    position: relative;
+    width: 100%;
+    height: 70vh;
+    min-height: 600px;
+}
+
+.hero-slide-foodility {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    transition: opacity 0.8s ease-in-out;
+    z-index: 0;
+}
+
+.hero-slide-foodility.active {
+    opacity: 1;
+    z-index: 1;
+}
+
+.hero-bg-purple {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, #e8d5f2 0%, #d4b8e8 50%, #c9a8e0 100%);
+}
+
+.watercolor-effect {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 40%;
+    background: 
+        radial-gradient(ellipse at 20% 50%, rgba(200, 150, 220, 0.4) 0%, transparent 50%),
+        radial-gradient(ellipse at 80% 30%, rgba(180, 130, 200, 0.3) 0%, transparent 50%),
+        radial-gradient(ellipse at 50% 80%, rgba(160, 110, 180, 0.35) 0%, transparent 50%);
+    background-size: 100% 100%;
+    opacity: 0.6;
+}
+
+.hero-content-foodility {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 100%;
+    padding: 80px 100px;
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+.hero-text-container {
+    flex: 1;
+    max-width: 500px;
+}
+
+.hero-title-script {
+    font-family: 'Dancing Script', cursive;
+    font-size: 5rem;
+    font-weight: 700;
+    color: #2d2d2d;
+    margin: 0 0 20px 0;
+    line-height: 1.2;
+}
+
+.hero-subtitle {
+    font-family: 'Poppins', sans-serif;
+    font-size: 1.2rem;
+    color: #555;
+    margin: 0 0 30px 0;
+    font-weight: 300;
+}
+
+.btn-try-now,
+.btn-buy-now {
+    background: #ff6b9d;
+    color: white;
+    border: none;
+    padding: 15px 40px;
+    font-size: 1.1rem;
+    font-weight: 500;
+    border-radius: 30px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-family: 'Poppins', sans-serif;
+}
+
+.btn-try-now:hover,
+.btn-buy-now:hover {
+    background: #ff5a8a;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(255, 107, 157, 0.4);
+}
+
+.btn-buy-now {
+    background: #9b59b6;
+}
+
+.btn-buy-now:hover {
+    background: #8e44ad;
+    box-shadow: 0 5px 15px rgba(155, 89, 182, 0.4);
+}
+
+.hero-image-side {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+}
+
+.hero-fruit-decoration,
+.hero-juice-decoration {
+    width: 300px;
+    height: 300px;
+    background: radial-gradient(circle, rgba(255, 200, 200, 0.3) 0%, transparent 70%);
+    border-radius: 50%;
+    position: relative;
+}
+
+.hero-fruit-decoration::before {
+    content: '🍓';
+    font-size: 120px;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+.hero-juice-decoration::before {
+    content: '🥤';
+    font-size: 120px;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+.carousel-nav-foodility {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background: rgba(255, 255, 255, 0.8);
+    border: none;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    font-size: 2rem;
+    cursor: pointer;
+    z-index: 10;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #333;
+}
+
+.carousel-prev-foodility {
+    left: 30px;
+}
+
+.carousel-next-foodility {
+    right: 30px;
+}
+
+.carousel-nav-foodility:hover {
+    background: white;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
+}
+
+/* Hero Products Showcase */
+.hero-products-showcase {
+    position: relative;
+    width: 100%;
+    padding: 60px 100px;
+    background: #f8f8f8;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 40px;
+    min-height: 250px;
+}
+
+.product-bottle {
+    width: 120px;
+    height: 200px;
+    border-radius: 20px;
+    position: relative;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+}
+
+.red-juice {
+    background: linear-gradient(to bottom, #ff6b6b 0%, #ee5a5a 100%);
+}
+
+.orange-juice {
+    background: linear-gradient(to bottom, #ffa500 0%, #ff8c00 100%);
+}
+
+.beige-juice {
+    background: linear-gradient(to bottom, #f4e4c1 0%, #e8d5a3 100%);
+}
+
+.product-fruits-decoration {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background-image: 
+        radial-gradient(circle at 20% 30%, rgba(255, 182, 193, 0.3) 0%, transparent 50%),
+        radial-gradient(circle at 80% 70%, rgba(255, 218, 185, 0.3) 0%, transparent 50%);
+    pointer-events: none;
+}
+
+/* Section Container */
+.section-container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 80px 40px;
+}
+
+.section-title {
+    font-family: 'Dancing Script', cursive;
+    font-size: 3.5rem;
+    font-weight: 700;
+    color: #2d2d2d;
+    text-align: center;
+    margin: 0 0 60px 0;
+}
+
+/* Beverage Section */
+.beverage-section {
+    background: white;
+    padding: 80px 0;
+}
+
+.beverage-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 40px;
+    position: relative;
+}
+
+.beverage-card {
+    background: white;
+    border-radius: 15px;
+    padding: 20px;
+    text-align: center;
+    transition: all 0.3s ease;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
+}
+
+.beverage-card:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+.beverage-image {
+    width: 100%;
+    height: 200px;
+    border-radius: 10px;
+    margin-bottom: 20px;
+    background-size: cover;
+    background-position: center;
+    background-color: #f0f0f0;
+}
+
+.milkshake { background: linear-gradient(135deg, #ffb3d9 0%, #ff99cc 100%); }
+.frappe { background: linear-gradient(135deg, #d2b48c 0%, #c19a6b 100%); }
+.boba { background: linear-gradient(135deg, #ff6b9d 0%, #ff5a8a 100%); }
+.mojito { background: linear-gradient(135deg, #90ee90 0%, #7ccd7c 100%); }
+.watermelon-juice { background: linear-gradient(135deg, #ff6b6b 0%, #ee5a5a 100%); }
+.hot-chocolate { background: linear-gradient(135deg, #8b4513 0%, #654321 100%); }
+.smoothie { background: linear-gradient(135deg, #ffb3d9 0%, #ff99cc 100%); }
+.coffee { background: linear-gradient(135deg, #6f4e37 0%, #5c4033 100%); }
+
+.beverage-name {
+    font-family: 'Poppins', sans-serif;
+    font-size: 1.3rem;
+    font-weight: 600;
+    color: #2d2d2d;
+    margin: 0 0 10px 0;
+}
+
+.beverage-price {
+    font-family: 'Poppins', sans-serif;
+    font-size: 1.1rem;
+    color: #8b7d6b;
+    font-weight: 500;
+    margin: 0;
+}
+
+.beverage-prev,
+.beverage-next {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+.beverage-prev {
+    left: -60px;
+}
+
+.beverage-next {
+    right: -60px;
+}
+
+/* Big Deals Section */
+.big-deals-section {
+    background: #f8f8f8;
+    padding: 100px 0;
+}
+
+.big-deals-circle {
+    width: 600px;
+    height: 600px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #a8c090 0%, #8fb373 100%);
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+}
+
+.deals-bg-pattern {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    background-image: 
+        radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.1) 0%, transparent 50%),
+        radial-gradient(circle at 70% 70%, rgba(255, 255, 255, 0.1) 0%, transparent 50%);
+    opacity: 0.5;
+}
+
+.deals-title {
+    font-family: 'Dancing Script', cursive;
+    font-size: 3.5rem;
+    font-weight: 700;
+    color: white;
+    margin: 0 0 20px 0;
+    z-index: 1;
+}
+
+.deals-subtitle {
+    font-family: 'Poppins', sans-serif;
+    font-size: 1.1rem;
+    color: rgba(255, 255, 255, 0.9);
+    margin: 0 0 40px 0;
+    z-index: 1;
+}
+
+.btn-view-deals {
+    background: white;
+    color: #8fb373;
+    border: none;
+    padding: 15px 40px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    border-radius: 30px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-family: 'Poppins', sans-serif;
+    z-index: 1;
+}
+
+.btn-view-deals:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
+}
+
+/* Recipe Section */
+.recipe-section {
+    background: white;
+    padding: 100px 0;
+}
+
+.recipe-content {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 60px;
+}
+
+.recipe-ingredients {
+    flex: 1;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 30px;
+}
+
+.ingredient-item {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.ingredient-icon {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background: #ffa500;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    flex-shrink: 0;
+}
+
+.cucumber::before { content: '🥒'; }
+.apple::before { content: '🍎'; }
+.lemon::before { content: '🍋'; }
+.water::before { content: '💧'; }
+
+.ingredient-text h4 {
+    font-family: 'Poppins', sans-serif;
+    font-size: 1.3rem;
+    font-weight: 600;
+    color: #2d2d2d;
+    margin: 0 0 5px 0;
+}
+
+.ingredient-text p {
+    font-family: 'Poppins', sans-serif;
+    font-size: 0.95rem;
+    color: #666;
+    margin: 0;
+}
+
+.recipe-bottle {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+}
+
+.bottle-image {
+    width: 200px;
+    height: 300px;
+    background: linear-gradient(135deg, #ffa500 0%, #ff8c00 100%);
+    border-radius: 20px 20px 5px 5px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+}
+
+/* Upcoming Section */
+.upcoming-section {
+    background: #f8f8f8;
+    padding: 100px 0;
+}
+
+.upcoming-content {
+    display: flex;
+    align-items: center;
+    gap: 60px;
+}
+
+.upcoming-text {
+    flex: 1;
+}
+
+.upcoming-text p {
+    font-family: 'Poppins', sans-serif;
+    font-size: 1.1rem;
+    color: #555;
+    line-height: 1.8;
+    margin: 0 0 20px 0;
+}
+
+.upcoming-image {
+    flex: 1;
+}
+
+.outdoor-drinks-image {
+    width: 100%;
+    height: 400px;
+    background: linear-gradient(135deg, #ff6b6b 0%, #ffa500 100%);
+    border-radius: 15px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+}
+
+/* Testimonials Section */
+.testimonials-section {
+    background: white;
+    padding: 100px 0;
+}
+
+.testimonial-slider {
+    position: relative;
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.testimonial-card {
+    text-align: center;
+    padding: 60px 40px;
+    background: #f8f8f8;
+    border-radius: 20px;
+}
+
+.testimonial-avatar {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #ffb3d9 0%, #ff99cc 100%);
+    margin: 0 auto 30px;
+}
+
+.testimonial-quote {
+    font-family: 'Poppins', sans-serif;
+    font-size: 1.2rem;
+    color: #555;
+    font-style: italic;
+    line-height: 1.8;
+    margin: 0 0 30px 0;
+}
+
+.testimonial-name {
+    font-family: 'Poppins', sans-serif;
+    font-size: 1.3rem;
+    font-weight: 600;
+    color: #2d2d2d;
+    margin: 0 0 5px 0;
+}
+
+.testimonial-role {
+    font-family: 'Poppins', sans-serif;
+    font-size: 1rem;
+    color: #888;
+    margin: 0;
+}
+
+.testimonial-prev,
+.testimonial-next {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+.testimonial-prev {
+    left: -60px;
+}
+
+.testimonial-next {
+    right: -60px;
+}
+
+/* Blog Section */
+.blog-section {
+    background: #f8f8f8;
+    padding: 100px 0;
+}
+
+.blog-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+    gap: 40px;
+}
+
+.blog-card {
+    background: white;
+    border-radius: 15px;
+    overflow: hidden;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
+    transition: all 0.3s ease;
+}
+
+.blog-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+.blog-image {
+    width: 100%;
+    height: 250px;
+    background-size: cover;
+    background-position: center;
+    position: relative;
+}
+
+.blog-1 { background: linear-gradient(135deg, #ff6b6b 0%, #ee5a5a 100%); }
+.blog-2 { background: linear-gradient(135deg, #ffa500 0%, #ff8c00 100%); }
+.blog-3 { background: linear-gradient(135deg, #ffb3d9 0%, #ff99cc 100%); }
+
+.blog-tag {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    background: #8fb373;
+    color: white;
+    padding: 5px 15px;
+    border-radius: 20px;
+    font-family: 'Poppins', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 500;
+}
+
+.blog-title {
+    font-family: 'Poppins', sans-serif;
+    font-size: 1.3rem;
+    font-weight: 600;
+    color: #2d2d2d;
+    margin: 20px 20px 15px;
+}
+
+.blog-meta {
+    display: flex;
+    gap: 20px;
+    padding: 0 20px 20px;
+    font-family: 'Poppins', sans-serif;
+    font-size: 0.9rem;
+    color: #888;
+}
+
+/* Gallery Section */
+.gallery-section {
+    background: white;
+    padding: 100px 0;
+}
+
+.gallery-carousel {
+    display: flex;
+    gap: 20px;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+}
+
+.gallery-carousel::-webkit-scrollbar {
+    display: none;
+}
+
+.gallery-item {
+    flex: 0 0 300px;
+    height: 300px;
+    border-radius: 15px;
+    scroll-snap-align: start;
+    background-size: cover;
+    background-position: center;
+}
+
+.gallery-1 { background: linear-gradient(135deg, #ff6b6b 0%, #ee5a5a 100%); }
+.gallery-2 { background: linear-gradient(135deg, #ffa500 0%, #ff8c00 100%); }
+.gallery-3 { background: linear-gradient(135deg, #ffb3d9 0%, #ff99cc 100%); }
+.gallery-4 { background: linear-gradient(135deg, #90ee90 0%, #7ccd7c 100%); }
+.gallery-5 { background: linear-gradient(135deg, #ffa500 0%, #ff8c00 100%); }
+.gallery-6 { background: linear-gradient(135deg, #ff6b9d 0%, #ff5a8a 100%); }
+
+.gallery-prev,
+.gallery-next {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+.gallery-prev {
+    left: -60px;
+}
+
+.gallery-next {
+    right: -60px;
+}
+
+/* Responsive Design */
+@media (max-width: 1200px) {
+    .hero-content-foodility {
+        padding: 60px 60px;
+    }
+    
+    .hero-title-script {
+        font-size: 4rem;
+    }
+    
+    .big-deals-circle {
+        width: 500px;
+        height: 500px;
+    }
+}
+
+@media (max-width: 768px) {
+    .hero-content-foodility {
+        flex-direction: column;
+        padding: 40px 30px;
+        text-align: center;
+    }
+    
+    .hero-title-script {
+        font-size: 3rem;
+    }
+    
+    .hero-products-showcase {
+        flex-direction: column;
+        padding: 40px 30px;
+    }
+    
+    .beverage-grid {
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 20px;
+    }
+    
+    .big-deals-circle {
+        width: 90%;
+        height: auto;
+        aspect-ratio: 1;
+        padding: 40px;
+    }
+    
+    .recipe-content {
+        flex-direction: column;
+    }
+    
+    .recipe-ingredients {
+        grid-template-columns: 1fr;
+    }
+    
+    .upcoming-content {
+        flex-direction: column;
+    }
+    
+    .blog-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .carousel-nav-foodility {
+        display: none;
+    }
 }
