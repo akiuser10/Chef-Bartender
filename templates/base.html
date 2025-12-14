@@ -131,7 +131,28 @@
     </main>
 
     <footer>
-        <p>© {{ current_year }} Chef & Bartender | Crafted by Akhil Soman 🍹</p>
+        <div class="footer-content">
+            <div class="footer-section">
+                <h3>Contact Us</h3>
+                <p>Dubai, United Arab Emirates</p>
+                <a href="mailto:soman.akhil@icloud.com">soman.akhil@icloud.com</a>
+                <a href="https://wa.me/971555341989">+971 555341989</a>
+            </div>
+            <div class="footer-section">
+                <h3>Useful Links</h3>
+                <a href="{{ url_for('main.index') }}">Home</a>
+                <a href="{{ url_for('main.about') }}">About Us</a>
+                <a href="{{ url_for('main.contact') }}">Contact</a>
+                <a href="{{ url_for('main.user_guide') }}">User Guide</a>
+            </div>
+            <div class="footer-section">
+                <h3>Follow Us</h3>
+                <p>Stay connected with us on social media</p>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>© 2025 Chef & Bartender | Crafted by Akhil Soman 🍹</p>
+        </div>
     </footer>
 
     <script>

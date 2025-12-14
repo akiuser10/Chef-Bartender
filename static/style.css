@@ -9,8 +9,8 @@ html {
 
 body {
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
-    background: #faf8f3;
-    color: #2a2a2a;
+    background: #ffffff;
+    color: #333333;
     margin: 0;
     padding: 0;
     line-height: 1.6;
@@ -30,15 +30,16 @@ canvas {
 
 /* Top Header Bar */
 .top-header {
-    background: #000000;
-    color: white;
-    padding: 12px 40px;
+    background: #ffffff;
+    color: #333333;
+    padding: 15px 40px;
     display: flex;
     align-items: center;
     justify-content: space-between;
     position: relative;
     z-index: 100;
-    animation: slideInFromTop 0.8s ease-out;
+    border-bottom: 1px solid #e8e8e8;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
 }
 
 .header-left {
@@ -106,40 +107,39 @@ canvas {
 
 .stars {
     font-size: 0.9rem;
-    color: white;
+    color: #ffa500;
     letter-spacing: 2px;
 }
 
 .dinex-text {
     font-size: 1.5rem;
     font-weight: 700;
-    color: white;
+    color: #2d5016;
     letter-spacing: 2px;
 }
 
 /* Main Navigation */
 .main-nav {
-    background: rgba(42, 42, 42, 0.95);
-    padding: 15px 40px;
+    background: #ffffff;
+    padding: 20px 40px;
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 30px;
+    gap: 40px;
     position: relative;
     z-index: 99;
-    -webkit-backdrop-filter: blur(10px);
-    backdrop-filter: blur(10px);
-    animation: fadeIn 0.8s ease-out 0.2s both;
+    border-bottom: 1px solid #e8e8e8;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03);
 }
 
 .nav-link {
-    color: white;
+    color: #333333;
     text-decoration: none;
-    font-size: 0.9rem;
-    letter-spacing: 1px;
-    text-transform: uppercase;
+    font-size: 0.95rem;
+    letter-spacing: 0.5px;
+    text-transform: capitalize;
     transition: all 0.3s ease;
-    font-weight: 400;
+    font-weight: 500;
     position: relative;
 }
 
@@ -149,9 +149,10 @@ canvas {
     bottom: -5px;
     left: 0;
     width: 0;
-    height: 2px;
-    background: #d45a2a;
+    height: 3px;
+    background: #4a9d2f;
     transition: width 0.3s ease;
+    border-radius: 2px;
 }
 
 .nav-link:hover::after {
@@ -159,7 +160,7 @@ canvas {
 }
 
 .nav-link:hover {
-    opacity: 0.7;
+    color: #4a9d2f;
 }
 
 .nav-logo-small {
@@ -183,7 +184,7 @@ canvas {
     font-size: 0.85rem;
     letter-spacing: 1px;
     text-transform: uppercase;
-    color: #d45a2a;
+    color: #4a9d2f;
     display: block;
 }
 
@@ -207,11 +208,11 @@ canvas {
 }
 
 .user-dropdown-trigger:hover {
-    color: #d45a2a;
+    color: #4a9d2f;
 }
 
 .user-dropdown-trigger:hover .nav-welcome-small {
-    color: #d45a2a;
+    color: #4a9d2f;
 }
 
 .user-dropdown-container {
@@ -225,11 +226,11 @@ canvas {
     top: 100%;
     right: 0;
     margin-top: 8px;
-    background: #2a2a2a;
-    border: 1px solid #3a3a3a;
-    border-radius: 4px;
+    background: #ffffff;
+    border: 1px solid #e8e8e8;
+    border-radius: 8px;
     min-width: 180px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
     z-index: 1000;
     overflow: hidden;
 }
@@ -241,11 +242,11 @@ canvas {
 .user-dropdown-item {
     display: block;
     padding: 12px 16px;
-    color: white;
+    color: #333333;
     text-decoration: none;
     font-size: 0.9rem;
-    transition: background 0.3s ease;
-    border-bottom: 1px solid #3a3a3a;
+    transition: all 0.3s ease;
+    border-bottom: 1px solid #e8e8e8;
 }
 
 .user-dropdown-item:last-child {
@@ -253,8 +254,8 @@ canvas {
 }
 
 .user-dropdown-item:hover {
-    background: #3a3a3a;
-    color: white;
+    background: #f5f5f5;
+    color: #4a9d2f;
 }
 
 /* Knowledge Hub Dropdown */
@@ -275,11 +276,11 @@ canvas {
     top: 100%;
     left: 0;
     margin-top: 8px;
-    background: #2a2a2a;
-    border: 1px solid #3a3a3a;
-    border-radius: 4px;
+    background: #ffffff;
+    border: 1px solid #e8e8e8;
+    border-radius: 8px;
     min-width: 200px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
     z-index: 1000;
     overflow: hidden;
 }
@@ -291,11 +292,11 @@ canvas {
 .nav-dropdown-item {
     display: block;
     padding: 12px 16px;
-    color: white;
+    color: #333333;
     text-decoration: none;
     font-size: 0.9rem;
-    transition: background 0.3s ease;
-    border-bottom: 1px solid #3a3a3a;
+    transition: all 0.3s ease;
+    border-bottom: 1px solid #e8e8e8;
     text-transform: none;
     letter-spacing: 0.5px;
 }
@@ -305,8 +306,9 @@ canvas {
 }
 
 .nav-dropdown-item:hover {
-    background: #3a3a3a;
-    color: #d45a2a;
+    background: #f5f5f5;
+    color: #4a9d2f;
+    padding-left: 20px;
 }
 
 .user-dropdown-item.nav-logout-small {
@@ -2172,18 +2174,55 @@ button.btn {
 
 /* Footer */
 footer {
-    background: #1a1a1a;
-    color: rgba(255, 255, 255, 0.7);
-    text-align: center;
-    padding: 20px;
+    background: #2d5016;
+    color: rgba(255, 255, 255, 0.9);
+    padding: 60px 40px 30px;
     margin-top: auto;
-    border-top: 1px solid #3a3a3a;
-    animation: fadeInUp 0.8s ease-out;
     flex-shrink: 0;
 }
 
 footer p {
     margin: 0;
+    text-align: center;
+    font-size: 0.9rem;
+}
+
+.footer-content {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 40px;
+    margin-bottom: 40px;
+}
+
+.footer-section h3 {
+    color: #ffffff;
+    font-size: 1.2rem;
+    font-weight: 600;
+    margin-bottom: 20px;
+    text-transform: capitalize;
+}
+
+.footer-section p,
+.footer-section a {
+    color: rgba(255, 255, 255, 0.8);
+    text-decoration: none;
+    line-height: 1.8;
+    display: block;
+    margin-bottom: 10px;
+    transition: color 0.3s ease;
+}
+
+.footer-section a:hover {
+    color: #ffa500;
+}
+
+.footer-bottom {
+    text-align: center;
+    padding-top: 30px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    color: rgba(255, 255, 255, 0.7);
 }
 
 .hero-grid {
