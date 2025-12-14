@@ -3428,6 +3428,13 @@ main .page-panel .recipe-view-container {
 }
 
 /* Add Book Card */
+.add-book-card.drag-over {
+    border-color: #d45a2a;
+    border-style: solid;
+    background: rgba(212, 90, 42, 0.1);
+    transform: scale(1.05);
+}
+
 .add-book-card {
     border: 2px dashed #555;
     background: #1a1a1a;

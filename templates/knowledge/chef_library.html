@@ -8,9 +8,16 @@
     <div class="books-grid">
         {% if current_user.user_role == 'Manager' %}
         <!-- Add Book Button -->
-        <div class="book-card add-book-card" onclick="openAddBookModal('chef')">
+        <div class="book-card add-book-card" 
+             id="addBookCard" 
+             onclick="openAddBookModal('chef')"
+             ondrop="handleDrop(event, 'chef')" 
+             ondragover="handleDragOver(event)" 
+             ondragenter="handleDragEnter(event)" 
+             ondragleave="handleDragLeave(event)">
             <div class="add-book-button">
                 <span class="plus-icon">+</span>
+                <span class="drag-drop-hint" style="display: none; font-size: 0.7rem; margin-top: 10px; color: #d45a2a;">Drop PDF here</span>
             </div>
         </div>
         {% endif %}
@@ -153,6 +160,99 @@ window.onclick = function(event) {
     if (event.target == editModal) {
         closeEditBookModal();
     }
+}
+
+// Drag and Drop functionality
+function handleDragOver(event) {
+    event.preventDefault();
+    event.stopPropagation();
+    event.dataTransfer.dropEffect = 'copy';
+}
+
+function handleDragEnter(event) {
+    event.preventDefault();
+    event.stopPropagation();
+    const card = event.currentTarget;
+    card.classList.add('drag-over');
+    const hint = card.querySelector('.drag-drop-hint');
+    if (hint) hint.style.display = 'block';
+}
+
+function handleDragLeave(event) {
+    event.preventDefault();
+    event.stopPropagation();
+    const card = event.currentTarget;
+    card.classList.remove('drag-over');
+    const hint = card.querySelector('.drag-drop-hint');
+    if (hint) hint.style.display = 'none';
+}
+
+function handleDrop(event, libraryType) {
+    event.preventDefault();
+    event.stopPropagation();
+    
+    const card = event.currentTarget;
+    card.classList.remove('drag-over');
+    const hint = card.querySelector('.drag-drop-hint');
+    if (hint) hint.style.display = 'none';
+    
+    const files = event.dataTransfer.files;
+    if (files.length === 0) return;
+    
+    const file = files[0];
+    
+    // Check if file is PDF
+    if (!file.type.includes('pdf') && !file.name.toLowerCase().endsWith('.pdf')) {
+        alert('Please drop a PDF file.');
+        return;
+    }
+    
+    // Create FormData and submit
+    const formData = new FormData();
+    formData.append('pdf_file', file);
+    formData.append('library_type', libraryType);
+    
+    // Optional: extract title from filename
+    const filename = file.name.replace(/\.pdf$/i, '');
+    const titleParts = filename.split(/[_\-\s]+/);
+    if (titleParts.length > 2 && /^\d{8}$/.test(titleParts[0]) && /^\d{6}$/.test(titleParts[1])) {
+        // Remove timestamp prefix
+        titleParts.shift();
+        titleParts.shift();
+    }
+    const title = titleParts.slice(0, 3).join(' ').trim();
+    if (title) {
+        formData.append('title', title);
+    }
+    
+    // Show loading indicator
+    const originalContent = card.innerHTML;
+    card.innerHTML = '<div style="text-align: center; padding: 20px;"><div style="color: #d45a2a;">Uploading...</div></div>';
+    card.style.pointerEvents = 'none';
+    
+    // Submit form
+    fetch('{{ url_for("knowledge.add_book") }}', {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(response => {
+        if (response.redirected) {
+            window.location.href = response.url;
+        } else {
+            return response.text().then(text => {
+                throw new Error('Upload failed');
+            });
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        card.innerHTML = originalContent;
+        card.style.pointerEvents = 'auto';
+        alert('Error uploading book. Please try again.');
+    });
 }
 </script>
 {% endblock %}
