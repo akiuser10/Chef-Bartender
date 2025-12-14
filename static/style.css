@@ -1740,7 +1740,7 @@ form {
     display: block;
     margin-bottom: 5px;
     font-weight: 500;
-    color: rgba(255, 255, 255, 0.95);
+    color: #333333;
     font-size: 0.9rem;
 }
 
