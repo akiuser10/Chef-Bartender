@@ -133,7 +133,10 @@ function closeAddBookModal() {
     document.getElementById('addBookForm').reset();
 }
 
-function openEditBookModal(bookId, title, libraryType) {
+function openEditBookModal(button) {
+    const bookId = button.getAttribute('data-book-id');
+    const title = button.getAttribute('data-book-title');
+    const libraryType = button.getAttribute('data-library-type');
     document.getElementById('editBookId').value = bookId;
     document.getElementById('edit_book_title').value = title;
     document.getElementById('editBookForm').action = '{{ url_for("knowledge.edit_book", book_id=0) }}'.replace('0', bookId);
