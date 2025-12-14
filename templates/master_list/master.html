@@ -83,7 +83,7 @@
 </div>
 
 <form class="bulk-upload" method="POST" action="{{ url_for('products.bulk_upload_products') }}" enctype="multipart/form-data">
-    <p><strong>Bulk upload:</strong> Use the Excel format with columns UNIQUE ITEM #, CODE, DESCRIPTION*, SUPPLIER*, CATEGORY*, SUB CATEGORY*, QUANTITY, COST/UNIT (AED)* (asterisk = required). Secondary ingredients are ignored during upload.</p>
+    <p><strong>Bulk upload:</strong> Use the Excel format with columns UNIQUE ITEM #, CODE, DESCRIPTION*, SUPPLIER*, CATEGORY*, SUB CATEGORY*, QUANTITY, COST/UNIT (AED)* (asterisk = required).</p>
     <div class="bulk-upload-controls">
         <label for="bulk-upload-file" class="sr-only">Excel file for bulk upload</label>
         <input type="file" id="bulk-upload-file" name="file" accept=".xlsx,.xls" title="Excel file for bulk upload" aria-label="Excel file for bulk upload">
