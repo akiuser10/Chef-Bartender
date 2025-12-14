@@ -4005,7 +4005,7 @@ main .page-panel .recipe-view-container {
     padding-bottom: 10px;
     overflow-y: auto;
     overflow-x: auto;
-    max-height: calc(100vh - 350px);
+    max-height: calc(100vh - 200px);
     position: relative;
 }
 
