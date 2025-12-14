@@ -67,8 +67,8 @@ def extract_pdf_first_page_as_image(pdf_path, output_folder='books/covers'):
         pix = None
         pdf_document.close()
         
-        # Return the relative path (as stored in database)
-        return os.path.join(output_folder, filename).replace('\\', '/')
+        # Return the relative path with 'uploads/' prefix (as stored in database, matching save_uploaded_file format)
+        return os.path.join('uploads', output_folder, filename).replace('\\', '/')
         
     except Exception as e:
         current_app.logger.error(f'Error extracting PDF first page: {str(e)}', exc_info=True)
@@ -179,22 +179,42 @@ def add_book():
         
         # If no cover image was uploaded, extract first page of PDF as cover
         if not cover_image_path:
+            # pdf_path already includes 'uploads/' prefix from save_uploaded_file
             pdf_full_path = os.path.join(current_app.config['UPLOAD_FOLDER'], pdf_path.replace('uploads/', '', 1))
             if os.path.exists(pdf_full_path):
                 cover_image_path = extract_pdf_first_page_as_image(pdf_full_path)
+                if not cover_image_path:
+                    current_app.logger.warning(f'Failed to extract cover image from PDF: {pdf_path}')
         
+        # Ensure cover_image_path is set (even if None, it will be stored in DB)
         # Create book record
         book = Book(
             title=title,
             author=None,  # Author field removed
             library_type=library_type,
             pdf_path=pdf_path,
-            cover_image_path=cover_image_path,
+            cover_image_path=cover_image_path,  # Can be None if extraction failed
             created_by=current_user.id,
             organisation=current_user.organisation
         )
         
         db.session.add(book)
+        db.session.flush()  # Flush to get book.id if needed
+        
+        # Verify files exist before committing
+        if pdf_path:
+            pdf_check_path = os.path.join(current_app.config['UPLOAD_FOLDER'], pdf_path.replace('uploads/', '', 1))
+            if not os.path.exists(pdf_check_path):
+                db.session.rollback()
+                flash('Error: PDF file was not saved correctly.', 'error')
+                return redirect(url_for(f'knowledge.{library_type}_library'))
+        
+        if cover_image_path:
+            cover_check_path = os.path.join(current_app.config['UPLOAD_FOLDER'], cover_image_path.replace('uploads/', '', 1))
+            if not os.path.exists(cover_check_path):
+                current_app.logger.warning(f'Cover image file not found at: {cover_check_path}, but continuing...')
+                # Don't fail if cover is missing, just log it
+        
         db.session.commit()
         
         flash('Book added successfully!', 'success')
@@ -352,6 +372,21 @@ def edit_book(book_id):
                 cover_image_path = extract_pdf_first_page_as_image(pdf_full_path)
                 if cover_image_path:
                     book.cover_image_path = cover_image_path
+                else:
+                    current_app.logger.warning(f'Failed to extract cover image from updated PDF: {book.pdf_path}')
+        
+        # Verify files exist before committing
+        if book.pdf_path:
+            pdf_check_path = os.path.join(current_app.config['UPLOAD_FOLDER'], book.pdf_path.replace('uploads/', '', 1))
+            if not os.path.exists(pdf_check_path):
+                db.session.rollback()
+                flash('Error: PDF file was not saved correctly.', 'error')
+                return redirect(url_for(f'knowledge.{book.library_type}_library'))
+        
+        if book.cover_image_path:
+            cover_check_path = os.path.join(current_app.config['UPLOAD_FOLDER'], book.cover_image_path.replace('uploads/', '', 1))
+            if not os.path.exists(cover_check_path):
+                current_app.logger.warning(f'Cover image file not found at: {cover_check_path}, but continuing...')
         
         db.session.commit()
         
