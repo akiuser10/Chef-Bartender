@@ -1125,8 +1125,8 @@ main {
 .panel-controls {
     margin-bottom: 20px;
     padding: 15px;
-    background: #ADCDCD;
-    border: 1px solid #9acdcd;
+    background: #808080;
+    border: 1px solid #707070;
     flex-shrink: 0;
 }
 
@@ -1138,9 +1138,9 @@ main {
 .panel-controls select {
     margin-right: 20px;
     padding: 5px;
-    background: #1a1a1a;
-    border: 1px solid #4a4a4a;
-    color: #ffffff;
+    background: #ADCDCD;
+    border: 1px solid #9acdcd;
+    color: #2a2a2a;
 }
 
 .panel-controls select optgroup {
@@ -3805,8 +3805,8 @@ main .page-panel .recipe-view-container {
 
 /* Purchase History Styles */
 .purchase-history-filters {
-    background: #ADCDCD;
-    border: 1px solid #9acdcd;
+    background: #808080;
+    border: 1px solid #707070;
     border-radius: 8px;
     padding: 20px;
     margin-bottom: 30px;
@@ -3841,12 +3841,16 @@ main .page-panel .recipe-view-container {
 
 .filter-input {
     padding: 10px 15px;
-    background: #1a1a1a;
-    border: 1px solid #4a4a4a;
+    background: #ADCDCD;
+    border: 1px solid #9acdcd;
     border-radius: 4px;
-    color: #ffffff;
+    color: #2a2a2a;
     font-size: 0.9rem;
     transition: border-color 0.3s ease;
+}
+
+.filter-input::placeholder {
+    color: #666666;
 }
 
 .filter-input:focus {
@@ -3865,10 +3869,10 @@ main .page-panel .recipe-view-container {
 .supplier-dropdown-btn {
     width: 100%;
     padding: 10px 15px;
-    background: #1a1a1a;
-    border: 1px solid #4a4a4a;
+    background: #ADCDCD;
+    border: 1px solid #9acdcd;
     border-radius: 4px;
-    color: #ffffff;
+    color: #2a2a2a;
     font-size: 0.9rem;
     text-align: left;
     cursor: pointer;
