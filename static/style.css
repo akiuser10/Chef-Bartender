@@ -1565,6 +1565,15 @@ form {
         grid-template-columns: 1fr;
         gap: 0;
     }
+    
+    .form-group-row {
+        flex-direction: column;
+        gap: 0;
+    }
+    
+    .form-group-half {
+        margin-bottom: 6px;
+    }
 }
 
 .form-group {
@@ -1750,6 +1759,11 @@ textarea.form-input {
     max-width: 100%;
     box-sizing: border-box;
     overflow: hidden;
+}
+
+.profile-form .form-actions {
+    margin-top: 5px;
+    padding-top: 8px;
 }
 
 .profile-form .form-actions .btn {
