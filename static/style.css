@@ -1214,9 +1214,10 @@ main {
 
 table {
     width: 100%;
-    border-collapse: collapse;
+    border-collapse: separate;
+    border-spacing: 0;
     background: #bebebe;
-    border: 1px solid #3f3f3f;
+    border: 2px solid #3f3f3f;
     border-radius: 6px;
     overflow: hidden;
     animation: fadeIn 0.8s ease-out;
@@ -1249,6 +1250,8 @@ table th {
     text-align: center;
     font-weight: bold;
     border: 1px solid #3f3f3f;
+    border-right: 1px solid #3f3f3f;
+    border-bottom: 1px solid #3f3f3f;
     background: #7f7f7f;
     color: #ffffff;
     position: sticky;
@@ -1258,13 +1261,35 @@ table th {
     font-size: 0.85rem;
 }
 
+table th:first-child {
+    border-left: 1px solid #3f3f3f;
+}
+
+table th:last-child {
+    border-right: 1px solid #3f3f3f;
+}
+
 table td {
     padding: 10px 12px;
     border: 1px solid #3f3f3f;
+    border-right: 1px solid #3f3f3f;
+    border-bottom: 1px solid #3f3f3f;
     text-align: center;
     color: #2a2a2a;
     font-size: 0.85rem;
     background: #bebebe;
+}
+
+table td:first-child {
+    border-left: 1px solid #3f3f3f;
+}
+
+table td:last-child {
+    border-right: 1px solid #3f3f3f;
+}
+
+table tr:last-child td {
+    border-bottom: 1px solid #3f3f3f;
 }
 
 table tbody tr:nth-child(even) {
@@ -2232,8 +2257,9 @@ main .page-panel .recipe-view-container {
 .recipe-cost-table {
     width: 100%;
     min-width: 100%;
-    border-collapse: collapse;
-    border: 1px solid #3f3f3f;
+    border-collapse: separate;
+    border-spacing: 0;
+    border: 2px solid #3f3f3f;
     border-radius: 6px;
     overflow: hidden;
     table-layout: fixed;
@@ -2246,8 +2272,18 @@ main .page-panel .recipe-view-container {
     padding: 14px 12px;
     text-align: left;
     border: 1px solid #3f3f3f;
+    border-right: 1px solid #3f3f3f;
+    border-bottom: 1px solid #3f3f3f;
     font-size: 0.95rem;
     font-weight: bold;
+}
+
+.recipe-cost-table thead th:first-child {
+    border-left: 1px solid #3f3f3f;
+}
+
+.recipe-cost-table thead th:last-child {
+    border-right: 1px solid #3f3f3f;
 }
 
 /* Header cells should match data cell alignment */
@@ -2266,8 +2302,18 @@ main .page-panel .recipe-view-container {
 .recipe-cost-table tbody td {
     padding: 12px;
     border: 1px solid #3f3f3f;
+    border-right: 1px solid #3f3f3f;
+    border-bottom: 1px solid #3f3f3f;
     font-size: 1rem;
     color: white;
+}
+
+.recipe-cost-table tbody td:first-child {
+    border-left: 1px solid #3f3f3f;
+}
+
+.recipe-cost-table tbody td:last-child {
+    border-right: 1px solid #3f3f3f;
 }
 
 .recipe-cost-table .total-row {
@@ -2278,6 +2324,20 @@ main .page-panel .recipe-view-container {
 
 .recipe-cost-table .total-row td {
     border: 1px solid #3f3f3f;
+    border-right: 1px solid #3f3f3f;
+    border-bottom: 1px solid #3f3f3f;
+}
+
+.recipe-cost-table .total-row td:first-child {
+    border-left: 1px solid #3f3f3f;
+}
+
+.recipe-cost-table .total-row td:last-child {
+    border-right: 1px solid #3f3f3f;
+}
+
+.recipe-cost-table tr:last-child td {
+    border-bottom: 1px solid #3f3f3f;
 }
 
 .recipe-cost-table tbody tr:nth-child(even) {
