@@ -1125,21 +1125,22 @@ main {
 .panel-controls {
     margin-bottom: 20px;
     padding: 15px;
-    background: #1a1a1a;
-    border: 1px solid #3a3a3a;
+    background: #333333;
+    border: 1px solid #4a4a4a;
     flex-shrink: 0;
 }
 
 .panel-controls label {
     margin-right: 10px;
+    color: #6B8E23;
 }
 
 .panel-controls select {
     margin-right: 20px;
     padding: 5px;
     background: #1a1a1a;
-    border: 1px solid #3a3a3a;
-    color: white;
+    border: 1px solid #4a4a4a;
+    color: #6B8E23;
 }
 
 .panel-controls select optgroup {
@@ -3689,8 +3690,8 @@ main .page-panel .recipe-view-container {
 
 /* Purchase History Styles */
 .purchase-history-filters {
-    background: #2a2a2a;
-    border: 1px solid #3a3a3a;
+    background: #333333;
+    border: 1px solid #4a4a4a;
     border-radius: 8px;
     padding: 20px;
     margin-bottom: 30px;
@@ -3717,7 +3718,7 @@ main .page-panel .recipe-view-container {
 
 .filter-group label {
     font-size: 0.9rem;
-    color: #ffffff;
+    color: #6B8E23;
     font-weight: 500;
     text-transform: uppercase;
     letter-spacing: 0.5px;
@@ -3726,9 +3727,9 @@ main .page-panel .recipe-view-container {
 .filter-input {
     padding: 10px 15px;
     background: #1a1a1a;
-    border: 1px solid #3a3a3a;
+    border: 1px solid #4a4a4a;
     border-radius: 4px;
-    color: #ffffff;
+    color: #6B8E23;
     font-size: 0.9rem;
     transition: border-color 0.3s ease;
 }
@@ -3750,9 +3751,9 @@ main .page-panel .recipe-view-container {
     width: 100%;
     padding: 10px 15px;
     background: #1a1a1a;
-    border: 1px solid #3a3a3a;
+    border: 1px solid #4a4a4a;
     border-radius: 4px;
-    color: #ffffff;
+    color: #6B8E23;
     font-size: 0.9rem;
     text-align: left;
     cursor: pointer;
