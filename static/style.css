@@ -581,9 +581,8 @@ canvas {
 /* Main Content */
 main {
     padding: 20px;
-    min-height: calc(100vh - 200px);
     background: transparent;
-    flex: 1;
+    flex: 1 0 auto;
     display: flex;
     flex-direction: column;
 }
@@ -591,6 +590,10 @@ main {
 .content {
     max-width: 1400px;
     margin: 0 auto;
+    width: 100%;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
 }
 
 /* Content should be full width when it contains recipe-view-container */
@@ -622,11 +625,11 @@ main {
     border-radius: 4px;
     animation: fadeInUp 0.8s ease-out;
     margin-bottom: 20px;
-    max-height: calc(100vh - 300px);
     display: flex;
     flex-direction: column;
     box-sizing: border-box;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    flex: 1;
 }
 
 .page-panel:has(.purchase-history-results) {
