@@ -107,10 +107,12 @@ def manage_hero_slides():
     """Manage hero slides - Manager only"""
     from models import HeroSlide
     from utils.db_helpers import ensure_schema_updates
+    from utils.helpers import get_organization_filter
     ensure_schema_updates()
     
-    # Fetch all hero slides, ordered by slide_number
-    hero_slides = HeroSlide.query.order_by(HeroSlide.slide_number).all()
+    # Fetch hero slides filtered by organization, ordered by slide_number
+    org_filter = get_organization_filter(HeroSlide)
+    hero_slides = HeroSlide.query.filter(org_filter).order_by(HeroSlide.slide_number).all()
     
     # Ensure we have 5 slides (create empty ones if needed)
     while len(hero_slides) < 5:
@@ -135,17 +137,21 @@ def manage_hero_slides():
 @login_required
 @role_required('Manager')
 def edit_hero_slide(slide_id):
-    """Edit a hero slide"""
+    """Edit a hero slide - Manager only, organization filtered"""
     from models import HeroSlide
     from extensions import db
     from utils.file_upload import save_uploaded_file
     from utils.db_helpers import ensure_schema_updates
+    from utils.helpers import get_organization_filter
+    from flask import abort
     import os
     from datetime import datetime
     
     ensure_schema_updates()
     
-    slide = HeroSlide.query.get_or_404(slide_id)
+    # Fetch slide with organization filter to ensure manager can only edit their organization's slides
+    org_filter = get_organization_filter(HeroSlide)
+    slide = HeroSlide.query.filter(org_filter, HeroSlide.id == slide_id).first_or_404()
     
     if request.method == 'POST':
         slide.title = request.form.get('title', '').strip()
