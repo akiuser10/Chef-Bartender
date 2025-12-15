@@ -5230,6 +5230,23 @@ main .page-panel .recipe-view-container {
     opacity: 0.3;
 }
 
+/* Knowledge Hub themed colors (applied when no custom cover image) */
+.knowledge-hub-grid .knowledge-hub-card:nth-child(4n + 1) .knowledge-hub-image {
+    background: linear-gradient(135deg, #ffb3d9 0%, #ff99cc 100%); /* soft pink */
+}
+
+.knowledge-hub-grid .knowledge-hub-card:nth-child(4n + 2) .knowledge-hub-image {
+    background: linear-gradient(135deg, #d2b48c 0%, #c19a6b 100%); /* warm beige */
+}
+
+.knowledge-hub-grid .knowledge-hub-card:nth-child(4n + 3) .knowledge-hub-image {
+    background: linear-gradient(135deg, #90ee90 0%, #7ccd7c 100%); /* fresh green */
+}
+
+.knowledge-hub-grid .knowledge-hub-card:nth-child(4n + 4) .knowledge-hub-image {
+    background: linear-gradient(135deg, #ff6b9d 0%, #ff5a8a 100%); /* coral rose */
+}
+
 .knowledge-hub-title {
     font-family: 'Poppins', sans-serif;
     font-size: 1.3rem;
