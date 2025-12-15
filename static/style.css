@@ -5191,17 +5191,24 @@ main .page-panel .recipe-view-container {
 
 .knowledge-hub-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-    gap: 40px;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 30px;
 }
 
 .knowledge-hub-card {
-    background: white;
-    border-radius: 15px;
+    position: relative;
+    height: 420px;
+    border-radius: 60px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
     overflow: hidden;
-    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
-    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 40px 30px;
+    background: linear-gradient(135deg, #ffb3d9 0%, #ff99cc 100%);
     cursor: pointer;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
 .knowledge-hub-card:hover {
@@ -5210,11 +5217,7 @@ main .page-panel .recipe-view-container {
 }
 
 .knowledge-hub-image {
-    width: 100%;
-    height: 250px;
-    background-size: cover;
-    background-position: center;
-    position: relative;
+    display: none;
 }
 
 .knowledge-hub-placeholder {
@@ -5231,19 +5234,19 @@ main .page-panel .recipe-view-container {
 }
 
 /* Knowledge Hub themed colors (applied when no custom cover image) */
-.knowledge-hub-grid .knowledge-hub-card:nth-child(4n + 1) .knowledge-hub-image {
+.knowledge-hub-grid .knowledge-hub-card:nth-child(4n + 1) {
     background: linear-gradient(135deg, #ffb3d9 0%, #ff99cc 100%); /* soft pink */
 }
 
-.knowledge-hub-grid .knowledge-hub-card:nth-child(4n + 2) .knowledge-hub-image {
+.knowledge-hub-grid .knowledge-hub-card:nth-child(4n + 2) {
     background: linear-gradient(135deg, #d2b48c 0%, #c19a6b 100%); /* warm beige */
 }
 
-.knowledge-hub-grid .knowledge-hub-card:nth-child(4n + 3) .knowledge-hub-image {
+.knowledge-hub-grid .knowledge-hub-card:nth-child(4n + 3) {
     background: linear-gradient(135deg, #90ee90 0%, #7ccd7c 100%); /* fresh green */
 }
 
-.knowledge-hub-grid .knowledge-hub-card:nth-child(4n + 4) .knowledge-hub-image {
+.knowledge-hub-grid .knowledge-hub-card:nth-child(4n + 4) {
     background: linear-gradient(135deg, #ff6b9d 0%, #ff5a8a 100%); /* coral rose */
 }
 
@@ -5252,7 +5255,7 @@ main .page-panel .recipe-view-container {
     font-size: 1.3rem;
     font-weight: 600;
     color: #2d2d2d;
-    margin: 20px;
+    margin: 0;
     text-align: center;
 }
 
