@@ -2373,7 +2373,7 @@ button.btn {
 footer {
     /* Use textured ribbon image instead of solid black */
     background-color: #000000;
-    background-image: url('/static/images/Web%20background.png');
+    background-image: url('/static/images/Bottom%20Ribbon.png');
     background-repeat: no-repeat;
     background-position: center bottom;
     background-size: cover;
