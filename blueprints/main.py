@@ -25,9 +25,9 @@ def index():
     hero_org_filter = get_organization_filter(HeroSlide)
     hero_slides = HeroSlide.query.filter(hero_org_filter, HeroSlide.is_active == True).order_by(HeroSlide.slide_number).all()
     
-    # Fetch 3 most recently created books (for Knowledge Hub section)
+    # Fetch all books (for Knowledge Hub section), newest first
     book_org_filter = get_organization_filter(Book)
-    recent_books = Book.query.filter(book_org_filter).order_by(Book.created_at.desc()).limit(3).all()
+    recent_books = Book.query.filter(book_org_filter).order_by(Book.created_at.desc()).all()
     
     return render_template('index.html', recent_recipes=recent_recipes, hero_slides=hero_slides, recent_books=recent_books)
 
