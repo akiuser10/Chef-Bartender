@@ -140,7 +140,7 @@ def edit_hero_slide(slide_id):
     """Edit a hero slide - Manager only, organization filtered"""
     from models import HeroSlide
     from extensions import db
-    from utils.file_upload import save_uploaded_file
+    from utils.file_upload import save_hero_slide_image
     from utils.db_helpers import ensure_schema_updates
     from utils.helpers import get_organization_filter
     from flask import abort
@@ -165,15 +165,29 @@ def edit_hero_slide(slide_id):
             if file and file.filename:
                 # Delete old image if exists
                 if slide.image_path:
-                    old_path = os.path.join(current_app.config['UPLOAD_FOLDER'], slide.image_path.replace('uploads/', '', 1))
+                    # Check if old path is in static/images/hero or uploads/hero-slides
+                    if slide.image_path.startswith('images/hero/'):
+                        # Old path is in static/images/hero
+                        base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+                        old_path = os.path.join(base_dir, 'static', slide.image_path)
+                    elif slide.image_path.startswith('uploads/hero-slides/'):
+                        # Old path is in uploads (legacy)
+                        old_path = os.path.join(current_app.config['UPLOAD_FOLDER'], slide.image_path.replace('uploads/', '', 1))
+                    else:
+                        # Try both locations
+                        base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+                        old_path_static = os.path.join(base_dir, 'static', slide.image_path)
+                        old_path_uploads = os.path.join(current_app.config['UPLOAD_FOLDER'], slide.image_path.replace('uploads/', '', 1))
+                        old_path = old_path_static if os.path.exists(old_path_static) else old_path_uploads
+                    
                     if os.path.exists(old_path):
                         try:
                             os.remove(old_path)
                         except Exception as e:
                             current_app.logger.warning(f'Could not delete old image: {str(e)}')
                 
-                # Save new image
-                image_path = save_uploaded_file(file, 'hero-slides')
+                # Save new image to static/images/hero/
+                image_path = save_hero_slide_image(file)
                 if image_path:
                     slide.image_path = image_path
         
