@@ -101,23 +101,6 @@ def index():
                     'color_class': 'beige-juice'
                 })
 
-        # New or updated items (Manager & Purchase Manager)
-        if role in ['Manager', 'Purchase Manager']:
-            since = datetime.utcnow() - timedelta(days=7)
-            updated_items = Product.query.filter(
-                product_org_filter,
-                Product.last_edited_at >= since
-            ).count()
-            if updated_items:
-                tasks.append({
-                    'key': 'product_updates',
-                    'title': 'Item / Price Updates',
-                    'count': updated_items,
-                    'subtitle': 'New items or recent price changes',
-                    'url': url_for('products.ingredients_master'),
-                    'color_class': 'red-juice'
-                })
-
     return render_template(
         'index.html',
         recent_recipes=recent_recipes,
