@@ -2371,7 +2371,12 @@ button.btn {
 
 /* Footer */
 footer {
-    background: #1a1a1a;
+    /* Use textured ribbon image instead of solid black */
+    background-color: #000000;
+    background-image: url('/static/images/Web%20background.png');
+    background-repeat: no-repeat;
+    background-position: center bottom;
+    background-size: cover;
     color: rgba(255, 255, 255, 0.9);
     padding: 60px 40px 30px;
     margin-top: auto;

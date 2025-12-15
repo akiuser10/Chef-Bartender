@@ -155,15 +155,35 @@
         <div class="blog-grid knowledge-hub-grid">
             {% if recent_books %}
                 {% for book in recent_books %}
-                <div class="blog-card knowledge-hub-card">
-                    {% if book.cover_image_path %}
-                        {% set cover_path = book.cover_image_path.replace('uploads/', '', 1) if book.cover_image_path.startswith('uploads/') else book.cover_image_path %}
-                        <div class="blog-image knowledge-hub-image" data-cover-image="{{ url_for('main.uploaded_file', filename=cover_path) }}"></div>
+                {# Determine the best link for this book #}
+                {% if book.article_url %}
+                    {% set book_href = book.article_url %}
+                    {% set is_external = true %}
+                {% elif book.pdf_path %}
+                    {% set book_href = url_for('knowledge.view_book_pdf', book_id=book.id) %}
+                    {% set is_external = false %}
+                {% else %}
+                    {% if book.library_type == 'bartender' %}
+                        {% set book_href = url_for('knowledge.bartender_library') %}
                     {% else %}
-                        <div class="blog-image knowledge-hub-image knowledge-hub-placeholder"></div>
+                        {% set book_href = url_for('knowledge.chef_library') %}
                     {% endif %}
-                    <h3 class="blog-title knowledge-hub-title">{{ book.title }}</h3>
-                </div>
+                    {% set is_external = false %}
+                {% endif %}
+
+                <a href="{{ book_href }}"
+                   class="knowledge-hub-link"
+                   {% if is_external %}target="_blank" rel="noopener noreferrer"{% endif %}>
+                    <div class="blog-card knowledge-hub-card">
+                        {% if book.cover_image_path %}
+                            {% set cover_path = book.cover_image_path.replace('uploads/', '', 1) if book.cover_image_path.startswith('uploads/') else book.cover_image_path %}
+                            <div class="blog-image knowledge-hub-image" data-cover-image="{{ url_for('main.uploaded_file', filename=cover_path) }}"></div>
+                        {% else %}
+                            <div class="blog-image knowledge-hub-image knowledge-hub-placeholder"></div>
+                        {% endif %}
+                        <h3 class="blog-title knowledge-hub-title">{{ book.title }}</h3>
+                    </div>
+                </a>
                 {% endfor %}
             {% else %}
                 <!-- Placeholder cards when no books exist -->
