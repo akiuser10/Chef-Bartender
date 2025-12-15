@@ -5250,8 +5250,6 @@ main .page-panel .recipe-view-container {
     gap: 20px;
     overflow-x: auto;
     scroll-snap-type: x mandatory;
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: none;
 }
 
 .gallery-carousel::-webkit-scrollbar {
