@@ -76,13 +76,15 @@
             <div class="nav-dropdown-menu" id="knowledgeDropdownMenu">
                 <a href="{{ url_for('knowledge.bartender_library') }}" class="nav-dropdown-item">Bartender Library</a>
                 <a href="{{ url_for('knowledge.chef_library') }}" class="nav-dropdown-item">Chef Library</a>
+                {% if current_user.user_role == 'Manager' %}
+                <a href="{{ url_for('knowledge.bartender_library') }}" class="nav-dropdown-item">Manage Bartender Library</a>
+                <a href="{{ url_for('knowledge.chef_library') }}" class="nav-dropdown-item">Manage Chef Library</a>
+                {% endif %}
             </div>
         </div>
         {% endif %}
         {% if current_user.is_authenticated and current_user.user_role == 'Manager' %}
         <a href="{{ url_for('main.manage_hero_slides') }}" class="nav-link">MANAGE SLIDES</a>
-        <a href="{{ url_for('knowledge.bartender_library') }}" class="nav-link">MANAGE BARTENDER LIBRARY</a>
-        <a href="{{ url_for('knowledge.chef_library') }}" class="nav-link">MANAGE CHEF LIBRARY</a>
         {% endif %}
         <div class="nav-dropdown-container">
             <span class="nav-link about-dropdown-trigger" id="aboutDropdownTrigger">ABOUT</span>
