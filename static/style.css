@@ -10,7 +10,7 @@ html {
 body {
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
     background-color: #ffffff;
-    background-image: url('../images/Web%20background.png');
+    background-image: url('/static/images/Web%20background.png');
     background-repeat: repeat;
     background-attachment: fixed;
     background-position: top left;
