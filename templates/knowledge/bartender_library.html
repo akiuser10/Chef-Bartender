@@ -7,25 +7,26 @@
 <div class="library-container">
     <div class="books-grid">
         {% if current_user.user_role == 'Manager' %}
-        <!-- Add Book Button -->
+        <!-- Add Article Button -->
         <div class="book-card add-book-card" 
              id="addBookCard" 
-             onclick="openAddBookModal('bartender')"
-             ondrop="handleDrop(event, 'bartender')" 
-             ondragover="handleDragOver(event)" 
-             ondragenter="handleDragEnter(event)" 
-             ondragleave="handleDragLeave(event)">
+             onclick="openAddBookModal('bartender')">
             <div class="add-book-button">
                 <span class="plus-icon">+</span>
-                <span class="drag-drop-hint" style="display: none; font-size: 0.7rem; margin-top: 10px; color: #d45a2a;">Drop PDF here</span>
             </div>
         </div>
         {% endif %}
         
-        <!-- Book Cards -->
+        <!-- Article Cards -->
         {% for book in books %}
         <div class="book-card">
+            {% if book.article_url %}
+            <a href="{{ book.article_url }}" target="_blank" rel="noopener noreferrer" class="book-link">
+            {% elif book.pdf_path %}
             <a href="{{ url_for('knowledge.view_book_pdf', book_id=book.id) }}" target="_blank" class="book-link">
+            {% else %}
+            <div class="book-link">
+            {% endif %}
                 {% if book.cover_image_path %}
                 {% set cover_path = book.cover_image_path.replace('uploads/', '', 1) if book.cover_image_path.startswith('uploads/') else book.cover_image_path %}
                 <img src="{{ url_for('main.uploaded_file', filename=cover_path) }}" alt="{{ book.title }}" class="book-cover" onerror="this.onerror=null; this.parentElement.innerHTML='<div class=\'book-cover-placeholder\'><span class=\'book-icon\'>📚</span></div>';">
@@ -37,15 +38,20 @@
                 <div class="book-info">
                     <h3 class="book-title">{{ book.title }}</h3>
                 </div>
+            {% if book.article_url or book.pdf_path %}
             </a>
+            {% else %}
+            </div>
+            {% endif %}
             {% if current_user.user_role == 'Manager' %}
             <div class="book-actions">
                 <button class="btn-edit" 
                         data-book-id="{{ book.id }}" 
                         data-book-title="{{ book.title|e }}" 
+                        data-article-url="{{ book.article_url or '' }}"
                         data-library-type="bartender"
                         onclick="openEditBookModal(this)" 
-                        title="Edit Book">
+                        title="Edit Article">
                     ✏️
                 </button>
                 <button class="btn-delete" 
@@ -67,28 +73,30 @@
 <div id="addBookModal" class="modal">
     <div class="modal-content">
         <span class="close-modal" onclick="closeAddBookModal()">&times;</span>
-        <h2>Add New Book</h2>
+        <h2>Add New Article</h2>
         <form action="{{ url_for('knowledge.add_book') }}" method="POST" enctype="multipart/form-data" id="addBookForm">
             <input type="hidden" name="library_type" id="modalLibraryType" value="bartender">
             
             <div class="form-group">
-                <label for="book_title">Title (Optional - will use first 3 words of PDF filename if not provided)</label>
-                <input type="text" id="book_title" name="title">
+                <label for="book_title">Article Title *</label>
+                <input type="text" id="book_title" name="title" required placeholder="Enter article title">
+            </div>
+            
+            <div class="form-group">
+                <label for="article_url">Article URL *</label>
+                <input type="url" id="article_url" name="article_url" required placeholder="https://example.com/article" pattern="https?://.+">
+                <small class="form-text">Enter the full website URL to the article</small>
             </div>
             
             <div class="form-group">
                 <label for="cover_image">Cover Image (Optional)</label>
                 <input type="file" id="cover_image" name="cover_image" accept="image/*">
-            </div>
-            
-            <div class="form-group">
-                <label for="pdf_file">PDF File *</label>
-                <input type="file" id="pdf_file" name="pdf_file" accept=".pdf" required>
+                <small class="form-text">Upload an image to represent this article</small>
             </div>
             
             <div class="form-actions">
                 <button type="button" class="btn btn-secondary" onclick="closeAddBookModal()">Cancel</button>
-                <button type="submit" class="btn btn-primary">Add Book</button>
+                <button type="submit" class="btn btn-primary">Add Article</button>
             </div>
         </form>
     </div>
@@ -98,13 +106,19 @@
 <div id="editBookModal" class="modal">
     <div class="modal-content">
         <span class="close-modal" onclick="closeEditBookModal()">&times;</span>
-        <h2>Edit Book</h2>
+        <h2>Edit Article</h2>
         <form action="" method="POST" enctype="multipart/form-data" id="editBookForm">
             <input type="hidden" id="editBookId" name="book_id">
             
             <div class="form-group">
-                <label for="edit_book_title">Title *</label>
+                <label for="edit_book_title">Article Title *</label>
                 <input type="text" id="edit_book_title" name="title" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="edit_article_url">Article URL *</label>
+                <input type="url" id="edit_article_url" name="article_url" required pattern="https?://.+">
+                <small class="form-text">Enter the full website URL to the article</small>
             </div>
             
             <div class="form-group">
@@ -112,14 +126,9 @@
                 <input type="file" id="edit_cover_image" name="cover_image" accept="image/*">
             </div>
             
-            <div class="form-group">
-                <label for="edit_pdf_file">PDF File (Optional - leave empty to keep current)</label>
-                <input type="file" id="edit_pdf_file" name="pdf_file" accept=".pdf">
-            </div>
-            
             <div class="form-actions">
                 <button type="button" class="btn btn-secondary" onclick="closeEditBookModal()">Cancel</button>
-                <button type="submit" class="btn btn-primary">Update Book</button>
+                <button type="submit" class="btn btn-primary">Update Article</button>
             </div>
         </form>
     </div>
@@ -140,9 +149,11 @@ function closeAddBookModal() {
 function openEditBookModal(button) {
     const bookId = button.getAttribute('data-book-id');
     const title = button.getAttribute('data-book-title');
+    const articleUrl = button.getAttribute('data-article-url') || '';
     const libraryType = button.getAttribute('data-library-type');
     document.getElementById('editBookId').value = bookId;
     document.getElementById('edit_book_title').value = title;
+    document.getElementById('edit_article_url').value = articleUrl;
     document.getElementById('editBookForm').action = '{{ url_for("knowledge.edit_book", book_id=0) }}'.replace('0', bookId);
     document.getElementById('editBookModal').style.display = 'block';
 }
@@ -155,7 +166,7 @@ function closeEditBookModal() {
 function confirmDeleteBook(button) {
     const bookId = button.getAttribute('data-book-id');
     const libraryType = button.getAttribute('data-library-type');
-    if (confirm('Are you sure you want to delete this book? This action cannot be undone.')) {
+    if (confirm('Are you sure you want to delete this article? This action cannot be undone.')) {
         const form = document.createElement('form');
         form.method = 'POST';
         form.action = '{{ url_for("knowledge.delete_book", book_id=0) }}'.replace('0', bookId);
@@ -174,99 +185,6 @@ window.onclick = function(event) {
     if (event.target == editModal) {
         closeEditBookModal();
     }
-}
-
-// Drag and Drop functionality
-function handleDragOver(event) {
-    event.preventDefault();
-    event.stopPropagation();
-    event.dataTransfer.dropEffect = 'copy';
-}
-
-function handleDragEnter(event) {
-    event.preventDefault();
-    event.stopPropagation();
-    const card = event.currentTarget;
-    card.classList.add('drag-over');
-    const hint = card.querySelector('.drag-drop-hint');
-    if (hint) hint.style.display = 'block';
-}
-
-function handleDragLeave(event) {
-    event.preventDefault();
-    event.stopPropagation();
-    const card = event.currentTarget;
-    card.classList.remove('drag-over');
-    const hint = card.querySelector('.drag-drop-hint');
-    if (hint) hint.style.display = 'none';
-}
-
-function handleDrop(event, libraryType) {
-    event.preventDefault();
-    event.stopPropagation();
-    
-    const card = event.currentTarget;
-    card.classList.remove('drag-over');
-    const hint = card.querySelector('.drag-drop-hint');
-    if (hint) hint.style.display = 'none';
-    
-    const files = event.dataTransfer.files;
-    if (files.length === 0) return;
-    
-    const file = files[0];
-    
-    // Check if file is PDF
-    if (!file.type.includes('pdf') && !file.name.toLowerCase().endsWith('.pdf')) {
-        alert('Please drop a PDF file.');
-        return;
-    }
-    
-    // Create FormData and submit
-    const formData = new FormData();
-    formData.append('pdf_file', file);
-    formData.append('library_type', libraryType);
-    
-    // Optional: extract title from filename
-    const filename = file.name.replace(/\.pdf$/i, '');
-    const titleParts = filename.split(/[_\-\s]+/);
-    if (titleParts.length > 2 && /^\d{8}$/.test(titleParts[0]) && /^\d{6}$/.test(titleParts[1])) {
-        // Remove timestamp prefix
-        titleParts.shift();
-        titleParts.shift();
-    }
-    const title = titleParts.slice(0, 3).join(' ').trim();
-    if (title) {
-        formData.append('title', title);
-    }
-    
-    // Show loading indicator
-    const originalContent = card.innerHTML;
-    card.innerHTML = '<div style="text-align: center; padding: 20px;"><div style="color: #d45a2a;">Uploading...</div></div>';
-    card.style.pointerEvents = 'none';
-    
-    // Submit form
-    fetch('{{ url_for("knowledge.add_book") }}', {
-        method: 'POST',
-        body: formData,
-        headers: {
-            'X-Requested-With': 'XMLHttpRequest'
-        }
-    })
-    .then(response => {
-        if (response.redirected) {
-            window.location.href = response.url;
-        } else {
-            return response.text().then(text => {
-                throw new Error('Upload failed');
-            });
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        card.innerHTML = originalContent;
-        card.style.pointerEvents = 'auto';
-        alert('Error uploading book. Please try again.');
-    });
 }
 </script>
 {% endblock %}

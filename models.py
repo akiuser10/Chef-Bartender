@@ -595,8 +595,9 @@ class Book(db.Model):
     title = db.Column(db.String(200), nullable=False)
     author = db.Column(db.String(200))
     library_type = db.Column(db.String(20), nullable=False)  # 'bartender' or 'chef'
-    cover_image_path = db.Column(db.String(255))  # Path to cover image
-    pdf_path = db.Column(db.String(255), nullable=False)  # Path to PDF file
+    cover_image_path = db.Column(db.String(255))  # Path to cover image (optional)
+    pdf_path = db.Column(db.String(255))  # Path to PDF file (optional, for backward compatibility)
+    article_url = db.Column(db.String(500))  # URL to the article/website
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     created_by = db.Column(db.Integer, db.ForeignKey('user.id'))
     organisation = db.Column(db.String(200))  # Organization name for sharing
@@ -607,7 +608,7 @@ class Book(db.Model):
     
     def is_persisted(self):
         """Check if book is properly saved in database"""
-        return self.id is not None and self.pdf_path is not None
+        return self.id is not None and (self.article_url is not None or self.pdf_path is not None)
 
 # -------------------------
 # HERO SLIDE MODEL

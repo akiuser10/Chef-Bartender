@@ -121,12 +121,14 @@ def chef_library():
 @login_required
 @role_required('Manager')
 def add_book():
-    """Add a new book to the library"""
+    """Add a new article link to the library"""
     from utils.db_helpers import ensure_schema_updates
+    from urllib.parse import urlparse
     ensure_schema_updates()
     
     try:
         title = request.form.get('title', '').strip()
+        article_url = request.form.get('article_url', '').strip()
         library_type = request.form.get('library_type', '').strip()
         
         if not library_type:
@@ -137,38 +139,24 @@ def add_book():
             flash('Invalid library type.', 'error')
             return redirect(url_for('knowledge.bartender_library'))
         
-        # Handle PDF upload
-        pdf_file = request.files.get('pdf_file')
-        if not pdf_file or pdf_file.filename == '':
-            flash('PDF file is required.', 'error')
+        # Validate URL
+        if not article_url:
+            flash('Article URL is required.', 'error')
             return redirect(url_for(f'knowledge.{library_type}_library'))
         
-        if not allowed_file(pdf_file.filename) or not pdf_file.filename.lower().endswith('.pdf'):
-            flash('Only PDF files are allowed.', 'error')
+        # Validate URL format
+        try:
+            parsed = urlparse(article_url)
+            if not parsed.scheme or not parsed.netloc:
+                flash('Please enter a valid URL (e.g., https://example.com/article).', 'error')
+                return redirect(url_for(f'knowledge.{library_type}_library'))
+        except Exception:
+            flash('Please enter a valid URL.', 'error')
             return redirect(url_for(f'knowledge.{library_type}_library'))
         
-        # If no title provided, extract first 3 words from PDF filename
+        # If no title provided, use a default
         if not title:
-            # Get the original filename without extension
-            pdf_filename = secure_filename(pdf_file.filename)
-            filename_without_ext = os.path.splitext(pdf_filename)[0]
-            # Remove timestamp prefix if present (format: YYYYMMDD_HHMMSS_filename.pdf)
-            # Split by underscore and check if first part is a timestamp
-            parts = filename_without_ext.split('_')
-            if len(parts) > 2 and len(parts[0]) == 8 and len(parts[1]) == 6:
-                # Likely a timestamp prefix, use the rest
-                filename_without_ext = '_'.join(parts[2:])
-            # Extract first 3 words
-            words = filename_without_ext.replace('_', ' ').replace('-', ' ').split()
-            title = ' '.join(words[:3]) if words else filename_without_ext[:50]  # Fallback to first 50 chars if no words
-            if not title:
-                title = 'Untitled Book'
-        
-        # Save PDF
-        pdf_path = save_uploaded_file(pdf_file, 'books/pdfs')
-        if not pdf_path:
-            flash('Error uploading PDF file.', 'error')
-            return redirect(url_for(f'knowledge.{library_type}_library'))
+            title = 'Article Link'
         
         # Handle cover image upload (optional)
         cover_image_path = None
@@ -177,72 +165,47 @@ def add_book():
             if allowed_file(cover_file.filename):
                 cover_image_path = save_uploaded_file(cover_file, 'books/covers')
         
-        # If no cover image was uploaded, extract first page of PDF as cover
-        if not cover_image_path:
-            # pdf_path already includes 'uploads/' prefix from save_uploaded_file
-            pdf_full_path = os.path.join(current_app.config['UPLOAD_FOLDER'], pdf_path.replace('uploads/', '', 1))
-            if os.path.exists(pdf_full_path):
-                cover_image_path = extract_pdf_first_page_as_image(pdf_full_path)
-                if not cover_image_path:
-                    current_app.logger.warning(f'Failed to extract cover image from PDF: {pdf_path}')
-        
         # Ensure organization is set (required for persistence and filtering)
         organisation = current_user.organisation.strip() if current_user.organisation and current_user.organisation.strip() else None
         if not organisation:
             current_app.logger.warning(f'User {current_user.id} has no organisation set, using None')
         
-        # Ensure cover_image_path is set (even if None, it will be stored in DB)
-        # Create book record
+        # Create book record with article URL
         book = Book(
             title=title,
-            author=None,  # Author field removed
+            author=None,
             library_type=library_type,
-            pdf_path=pdf_path,
-            cover_image_path=cover_image_path,  # Can be None if extraction failed
+            article_url=article_url,
+            pdf_path=None,  # No PDF for article links
+            cover_image_path=cover_image_path,  # Optional cover image
             created_by=current_user.id,
-            organisation=organisation  # Ensure organization is set for proper filtering
+            organisation=organisation
         )
         
         db.session.add(book)
-        db.session.flush()  # Flush to get book.id if needed
         
-        # Verify files exist before committing
-        if pdf_path:
-            pdf_check_path = os.path.join(current_app.config['UPLOAD_FOLDER'], pdf_path.replace('uploads/', '', 1))
-            if not os.path.exists(pdf_check_path):
-                db.session.rollback()
-                flash('Error: PDF file was not saved correctly.', 'error')
-                return redirect(url_for(f'knowledge.{library_type}_library'))
-        
-        if cover_image_path:
-            cover_check_path = os.path.join(current_app.config['UPLOAD_FOLDER'], cover_image_path.replace('uploads/', '', 1))
-            if not os.path.exists(cover_check_path):
-                current_app.logger.warning(f'Cover image file not found at: {cover_check_path}, but continuing...')
-                # Don't fail if cover is missing, just log it
-        
-        # Commit to database - this ensures the book is permanently saved
+        # Commit to database
         try:
             db.session.commit()
-            # Verify the book was actually saved by refreshing and checking
             db.session.refresh(book)
             if book.is_persisted():
-                current_app.logger.info(f'Book "{title}" (ID: {book.id}) successfully saved to database for organization: {organisation}')
-                flash('Book added successfully!', 'success')
+                current_app.logger.info(f'Article "{title}" (ID: {book.id}) successfully saved to database for organization: {organisation}')
+                flash('Article link added successfully!', 'success')
             else:
-                current_app.logger.error(f'Book "{title}" was not properly persisted after commit')
-                flash('Warning: Book may not have been saved correctly. Please verify.', 'warning')
+                current_app.logger.error(f'Article "{title}" was not properly persisted after commit')
+                flash('Warning: Article may not have been saved correctly. Please verify.', 'warning')
         except Exception as commit_error:
             db.session.rollback()
-            current_app.logger.error(f'Database commit failed for book "{title}": {str(commit_error)}', exc_info=True)
-            flash('Error: Book could not be saved to database. Please try again.', 'error')
+            current_app.logger.error(f'Database commit failed for article "{title}": {str(commit_error)}', exc_info=True)
+            flash('Error: Article could not be saved to database. Please try again.', 'error')
             return redirect(url_for(f'knowledge.{library_type}_library'))
         
         return redirect(url_for(f'knowledge.{library_type}_library'))
         
     except Exception as e:
         db.session.rollback()
-        current_app.logger.error(f'Error adding book: {str(e)}', exc_info=True)
-        flash(f'Error adding book: {str(e)}', 'error')
+        current_app.logger.error(f'Error adding article: {str(e)}', exc_info=True)
+        flash(f'Error adding article: {str(e)}', 'error')
         return redirect(url_for('knowledge.bartender_library'))
 
 
@@ -363,8 +326,9 @@ def view_book_pdf(book_id):
 @login_required
 @role_required('Manager')
 def edit_book(book_id):
-    """Edit an existing book"""
+    """Edit an article link"""
     from utils.db_helpers import ensure_schema_updates
+    from urllib.parse import urlparse
     ensure_schema_updates()
     
     try:
@@ -372,37 +336,29 @@ def edit_book(book_id):
         book = Book.query.filter(org_filter).filter_by(id=book_id).first_or_404()
         
         title = request.form.get('title', '').strip()
+        article_url = request.form.get('article_url', '').strip()
         
         if not title:
             flash('Title is required.', 'error')
             return redirect(url_for(f'knowledge.{book.library_type}_library'))
         
+        if not article_url:
+            flash('Article URL is required.', 'error')
+            return redirect(url_for(f'knowledge.{book.library_type}_library'))
+        
+        # Validate URL format
+        try:
+            parsed = urlparse(article_url)
+            if not parsed.scheme or not parsed.netloc:
+                flash('Please enter a valid URL (e.g., https://example.com/article).', 'error')
+                return redirect(url_for(f'knowledge.{book.library_type}_library'))
+        except Exception:
+            flash('Please enter a valid URL.', 'error')
+            return redirect(url_for(f'knowledge.{book.library_type}_library'))
+        
         # Update book details
         book.title = title
-        book.author = None  # Author field removed
-        
-        # Handle PDF upload (optional - only if new file is provided)
-        pdf_file = request.files.get('pdf_file')
-        pdf_updated = False
-        if pdf_file and pdf_file.filename != '':
-            if not allowed_file(pdf_file.filename) or not pdf_file.filename.lower().endswith('.pdf'):
-                flash('Only PDF files are allowed.', 'error')
-                return redirect(url_for(f'knowledge.{book.library_type}_library'))
-            
-            # Delete old PDF file
-            if book.pdf_path:
-                old_pdf_path = os.path.join(current_app.config['UPLOAD_FOLDER'], book.pdf_path.replace('uploads/', '', 1))
-                try:
-                    if os.path.exists(old_pdf_path):
-                        os.remove(old_pdf_path)
-                except Exception as e:
-                    current_app.logger.warning(f'Could not delete old PDF: {str(e)}')
-            
-            # Save new PDF
-            pdf_path = save_uploaded_file(pdf_file, 'books/pdfs')
-            if pdf_path:
-                book.pdf_path = pdf_path
-                pdf_updated = True
+        book.article_url = article_url
         
         # Handle cover image upload (optional)
         cover_file = request.files.get('cover_image')
@@ -421,48 +377,16 @@ def edit_book(book_id):
                 cover_image_path = save_uploaded_file(cover_file, 'books/covers')
                 if cover_image_path:
                     book.cover_image_path = cover_image_path
-        elif pdf_updated:
-            # If PDF was updated but no new cover image provided, extract first page from new PDF
-            pdf_full_path = os.path.join(current_app.config['UPLOAD_FOLDER'], book.pdf_path.replace('uploads/', '', 1))
-            if os.path.exists(pdf_full_path):
-                # Delete old cover if it was auto-generated from PDF
-                if book.cover_image_path:
-                    old_cover_path = os.path.join(current_app.config['UPLOAD_FOLDER'], book.cover_image_path.replace('uploads/', '', 1))
-                    try:
-                        if os.path.exists(old_cover_path):
-                            os.remove(old_cover_path)
-                    except Exception as e:
-                        current_app.logger.warning(f'Could not delete old cover: {str(e)}')
-                
-                # Extract first page from new PDF
-                cover_image_path = extract_pdf_first_page_as_image(pdf_full_path)
-                if cover_image_path:
-                    book.cover_image_path = cover_image_path
-                else:
-                    current_app.logger.warning(f'Failed to extract cover image from updated PDF: {book.pdf_path}')
-        
-        # Verify files exist before committing
-        if book.pdf_path:
-            pdf_check_path = os.path.join(current_app.config['UPLOAD_FOLDER'], book.pdf_path.replace('uploads/', '', 1))
-            if not os.path.exists(pdf_check_path):
-                db.session.rollback()
-                flash('Error: PDF file was not saved correctly.', 'error')
-                return redirect(url_for(f'knowledge.{book.library_type}_library'))
-        
-        if book.cover_image_path:
-            cover_check_path = os.path.join(current_app.config['UPLOAD_FOLDER'], book.cover_image_path.replace('uploads/', '', 1))
-            if not os.path.exists(cover_check_path):
-                current_app.logger.warning(f'Cover image file not found at: {cover_check_path}, but continuing...')
         
         db.session.commit()
         
-        flash('Book updated successfully!', 'success')
+        flash('Article link updated successfully!', 'success')
         return redirect(url_for(f'knowledge.{book.library_type}_library'))
         
     except Exception as e:
         db.session.rollback()
-        current_app.logger.error(f'Error editing book: {str(e)}', exc_info=True)
-        flash(f'Error editing book: {str(e)}', 'error')
+        current_app.logger.error(f'Error editing article: {str(e)}', exc_info=True)
+        flash(f'Error editing article: {str(e)}', 'error')
         return redirect(url_for('knowledge.bartender_library'))
 
 

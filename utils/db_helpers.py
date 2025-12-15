@@ -296,6 +296,29 @@ def ensure_schema_updates():
                 except Exception as e:
                     current_app.logger.warning(f"Could not backfill organization data: {str(e)}")
                     pass  # Continue even if backfill fails
+                
+                # Book table updates
+                if table_exists(conn, 'book'):
+                    book_columns = get_table_columns(conn, 'book')
+                    if 'article_url' not in book_columns:
+                        conn.execute(db.text("ALTER TABLE book ADD COLUMN article_url VARCHAR(500)"))
+                    # Make pdf_path nullable if it's not already
+                    # Note: SQLite doesn't support ALTER COLUMN, so this is mainly for PostgreSQL
+                    try:
+                        db_url = str(db.engine.url)
+                        is_postgres = 'postgresql' in db_url.lower() or 'postgres' in db_url.lower()
+                        if is_postgres and 'pdf_path' in book_columns:
+                            # Check if pdf_path is currently NOT NULL
+                            result = conn.execute(db.text("""
+                                SELECT is_nullable 
+                                FROM information_schema.columns 
+                                WHERE table_name = 'book' AND column_name = 'pdf_path'
+                            """))
+                            is_nullable = result.scalar()
+                            if is_nullable == 'NO':
+                                conn.execute(db.text("ALTER TABLE book ALTER COLUMN pdf_path DROP NOT NULL"))
+                    except Exception as e:
+                        current_app.logger.warning(f"Could not update pdf_path column: {str(e)}")
                     
     except Exception as e:
         current_app.logger.error(f"Error in ensure_schema_updates: {str(e)}", exc_info=True)
