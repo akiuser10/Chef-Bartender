@@ -60,7 +60,7 @@
                 {% for recipe in recent_recipes %}
                 <div class="beverage-card recipe-card">
                     {% if recipe.image_path %}
-                        <div class="beverage-image recipe-image" style="background-image: url('{{ url_for('main.uploaded_file', filename=recipe.image_path) }}'); background-size: cover; background-position: center;"></div>
+                        <div class="beverage-image recipe-image recipe-image-with-url" data-image-url="{{ url_for('main.uploaded_file', filename=recipe.image_path) }}"></div>
                     {% else %}
                         {% set color_index = loop.index0 % 8 %}
                         <div class="beverage-image recipe-image recipe-color-{{ color_index }}"></div>

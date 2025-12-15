@@ -4563,6 +4563,11 @@ main .page-panel .recipe-view-container {
     border-radius: 15px 15px 0 0;
 }
 
+.recipe-image-with-url {
+    background-size: cover !important;
+    background-position: center !important;
+}
+
 /* Recipe color placeholders when no image */
 .recipe-color-0 { background: linear-gradient(135deg, #ffb3d9 0%, #ff99cc 100%); }
 .recipe-color-1 { background: linear-gradient(135deg, #d2b48c 0%, #c19a6b 100%); }
