@@ -41,23 +41,27 @@
         <button class="carousel-nav-foodility carousel-next-foodility" aria-label="Next" id="heroNextBtnFoodility">›</button>
     </div>
     
-    <!-- Static Product Showcase Below Hero -->
+    <!-- Tasks Showcase Below Hero -->
     <div class="hero-products-showcase">
-        <a href="{{ url_for('products.ingredients_master') }}" class="product-bottle-link">
-            <div class="product-bottle red-juice">
-                <span class="product-bottle-label">Master List</span>
-            </div>
-        </a>
-        <a href="{% if current_user.is_authenticated and current_user.user_role in ['Manager', 'Bartender'] %}{{ url_for('checklist.bar_checklist') }}{% elif current_user.is_authenticated and current_user.user_role in ['Chef', 'Manager'] %}{{ url_for('checklist.kitchen_checklist') }}{% else %}{{ url_for('checklist.bar_checklist') }}{% endif %}" class="product-bottle-link">
-            <div class="product-bottle orange-juice">
-                <span class="product-bottle-label">Checklist</span>
-            </div>
-        </a>
-        <a href="{% if current_user.is_authenticated and current_user.user_role in ['Chef', 'Bartender', 'Manager'] %}{{ url_for('knowledge.bartender_library') }}{% else %}#{% endif %}" class="product-bottle-link">
+        {% if tasks %}
+            {% for task in tasks %}
+            <a href="{{ task.url }}" class="product-bottle-link">
+                <div class="product-bottle {{ task.color_class }}">
+                    <span class="product-bottle-label">
+                        {{ task.title }}
+                        {% if task.count is not none %}
+                            <br>
+                            <span class="task-count">{{ task.count }}</span>
+                        {% endif %}
+                    </span>
+                </div>
+            </a>
+            {% endfor %}
+        {% else %}
             <div class="product-bottle beige-juice">
-                <span class="product-bottle-label">Knowledge Hub</span>
+                <span class="product-bottle-label">No Tasks Pending</span>
             </div>
-        </a>
+        {% endif %}
         <div class="product-fruits-decoration"></div>
     </div>
 </div>

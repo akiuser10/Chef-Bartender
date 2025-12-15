@@ -11,7 +11,8 @@ main_bp = Blueprint('main', __name__)
 @main_bp.route('/')
 def index():
     """Homepage with recent recipes and hero slides"""
-    from models import Recipe, HeroSlide, Book
+    from datetime import datetime, timedelta
+    from models import Recipe, HeroSlide, Book, PurchaseRequest, Product
     from utils.helpers import get_organization_filter
     from sqlalchemy.orm import joinedload
     
@@ -28,8 +29,102 @@ def index():
     # Fetch all books (for Knowledge Hub section), newest first
     book_org_filter = get_organization_filter(Book)
     recent_books = Book.query.filter(book_org_filter).order_by(Book.created_at.desc()).all()
-    
-    return render_template('index.html', recent_recipes=recent_recipes, hero_slides=hero_slides, recent_books=recent_books)
+
+    # Build tasks for top hero cards based on user role and data
+    tasks = []
+    if current_user.is_authenticated:
+        role = current_user.user_role or ''
+
+        # Shared org filters
+        purchase_org_filter = get_organization_filter(PurchaseRequest)
+        product_org_filter = get_organization_filter(Product)
+
+        # Recipe cost review tasks (for Chef, Bartender, Manager)
+        if role in ['Chef', 'Bartender', 'Manager']:
+            recipe_org_filter = get_organization_filter(Recipe)
+            recipe_q = Recipe.query.filter(recipe_org_filter).options(joinedload(Recipe.ingredients))
+            pending_cost = sum(1 for r in recipe_q if r.has_missing_cost())
+            if pending_cost:
+                tasks.append({
+                    'key': 'recipe_review',
+                    'title': 'Recipes to Review',
+                    'count': pending_cost,
+                    'subtitle': 'Recipes need cost or data updates',
+                    'url': url_for('recipes.recipes_list'),
+                    'color_class': 'red-juice'
+                })
+
+        # Manager-specific purchase approvals
+        if role == 'Manager':
+            manager_pending = PurchaseRequest.query.filter(
+                purchase_org_filter,
+                PurchaseRequest.status == 'Pending Manager Approval'
+            ).count()
+            if manager_pending:
+                tasks.append({
+                    'key': 'manager_approvals',
+                    'title': 'Orders to Approve',
+                    'count': manager_pending,
+                    'subtitle': 'Purchase requests awaiting your approval',
+                    'url': url_for('purchase.order_list'),
+                    'color_class': 'orange-juice'
+                })
+
+        # Purchase Manager tasks
+        if role == 'Purchase Manager':
+            to_order = PurchaseRequest.query.filter(
+                purchase_org_filter,
+                PurchaseRequest.status == 'Pending'
+            ).count()
+            if to_order:
+                tasks.append({
+                    'key': 'to_order',
+                    'title': 'Orders to Place',
+                    'count': to_order,
+                    'subtitle': 'Approved orders waiting to be placed',
+                    'url': url_for('purchase.to_order'),
+                    'color_class': 'orange-juice'
+                })
+
+            # Orders placed but not fully received
+            awaiting = [
+                pr for pr in PurchaseRequest.query.filter(purchase_org_filter).all()
+                if pr.get_overall_status() in ['Order Placed', 'Partially Ordered']
+            ]
+            if awaiting:
+                tasks.append({
+                    'key': 'awaiting_delivery',
+                    'title': 'Awaiting Delivery',
+                    'count': len(awaiting),
+                    'subtitle': 'Orders in progress with suppliers',
+                    'url': url_for('purchase.purchase_history'),
+                    'color_class': 'beige-juice'
+                })
+
+        # New or updated items (Manager & Purchase Manager)
+        if role in ['Manager', 'Purchase Manager']:
+            since = datetime.utcnow() - timedelta(days=7)
+            updated_items = Product.query.filter(
+                product_org_filter,
+                Product.last_edited_at >= since
+            ).count()
+            if updated_items:
+                tasks.append({
+                    'key': 'product_updates',
+                    'title': 'Item / Price Updates',
+                    'count': updated_items,
+                    'subtitle': 'New items or recent price changes',
+                    'url': url_for('products.ingredients_master'),
+                    'color_class': 'red-juice'
+                })
+
+    return render_template(
+        'index.html',
+        recent_recipes=recent_recipes,
+        hero_slides=hero_slides,
+        recent_books=recent_books,
+        tasks=tasks
+    )
 
 
 @main_bp.route('/about')
