@@ -785,10 +785,13 @@ main {
     line-height: 1.8;
     padding-left: 36px; /* Match icon width (24px) + gap (12px) = 36px to align content with title text */
     margin-top: 0;
+    text-align: left;
 }
 
 .contact-section-content p {
     margin: 0 0 15px 0;
+    padding-left: 0;
+    text-align: left;
 }
 
 .contact-section-content p:last-child {
