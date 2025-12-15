@@ -14,19 +14,20 @@
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Inter:wght@300;400;500;600&family=Dancing+Script:wght@400;500;600;700&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
-    <!-- Top Header Bar -->
-    <div class="top-header">
-        <div class="header-left">
-            <img src="{{ url_for('static', filename='C&B.png') }}" alt="Chef & Bartender" class="logo-ex">
+    <!-- Sticky Site Header (Top Ribbon + Navigation) -->
+    <header class="site-header">
+        <div class="top-header">
+            <div class="header-left">
+                <img src="{{ url_for('static', filename='C&B.png') }}" alt="Chef & Bartender" class="logo-ex">
+            </div>
+            <div class="header-right">
+                <div class="stars">★★★★★</div>
+                <div class="dinex-text">CHEF & BARTENDER</div>
+            </div>
         </div>
-        <div class="header-right">
-            <div class="stars">★★★★★</div>
-            <div class="dinex-text">CHEF & BARTENDER</div>
-        </div>
-    </div>
 
-    <!-- Navigation Bar -->
-    <nav class="main-nav">
+        <!-- Navigation Bar -->
+        <nav class="main-nav">
         <a href="{{ url_for('main.index') }}" class="nav-link">HOME</a>
         <a href="{{ url_for('products.ingredients_master') }}" class="nav-link">MASTER LIST</a>
         {% if current_user.is_authenticated and (current_user.user_role in ['Chef', 'Bartender', 'Manager', 'Purchase Manager', 'Cost Controller']) %}
@@ -116,6 +117,7 @@
             </div>
         {% endif %}
     </nav>
+    </header>
 
     <main class="content">
         {% with messages = get_flashed_messages() %}
@@ -295,6 +297,28 @@
                 }, 200);
             });
         }
+
+        // Simple parallax effect: move background faster than foreground
+        const body = document.body;
+        let lastScrollY = window.pageYOffset || document.documentElement.scrollTop || 0;
+        let ticking = false;
+
+        function updateParallax(scrollY) {
+            // Background moves at 2x scroll speed
+            const offset = scrollY * 2;
+            body.style.backgroundPosition = `center ${offset * -1}px`;
+            ticking = false;
+        }
+
+        window.addEventListener('scroll', function () {
+            lastScrollY = window.pageYOffset || document.documentElement.scrollTop || 0;
+            if (!ticking) {
+                window.requestAnimationFrame(function () {
+                    updateParallax(lastScrollY);
+                });
+                ticking = true;
+            }
+        });
 
         // Checklist dropdown functionality
         const checklistTrigger = document.getElementById('checklistDropdownTrigger');
