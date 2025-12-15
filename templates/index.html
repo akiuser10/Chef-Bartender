@@ -39,9 +39,21 @@
     
     <!-- Static Product Showcase Below Hero -->
     <div class="hero-products-showcase">
-        <div class="product-bottle red-juice"></div>
-        <div class="product-bottle orange-juice"></div>
-        <div class="product-bottle beige-juice"></div>
+        <a href="{{ url_for('products.ingredients_master') }}" class="product-bottle-link">
+            <div class="product-bottle red-juice">
+                <span class="product-bottle-label">Master List</span>
+            </div>
+        </a>
+        <a href="{% if current_user.is_authenticated and current_user.user_role in ['Manager', 'Bartender'] %}{{ url_for('checklist.bar_checklist') }}{% elif current_user.is_authenticated and current_user.user_role in ['Chef', 'Manager'] %}{{ url_for('checklist.kitchen_checklist') }}{% else %}{{ url_for('checklist.bar_checklist') }}{% endif %}" class="product-bottle-link">
+            <div class="product-bottle orange-juice">
+                <span class="product-bottle-label">Checklist</span>
+            </div>
+        </a>
+        <a href="{% if current_user.is_authenticated and current_user.user_role in ['Chef', 'Bartender', 'Manager'] %}{{ url_for('knowledge.bartender_library') }}{% else %}#{% endif %}" class="product-bottle-link">
+            <div class="product-bottle beige-juice">
+                <span class="product-bottle-label">Knowledge Hub</span>
+            </div>
+        </a>
         <div class="product-fruits-decoration"></div>
     </div>
 </div>
