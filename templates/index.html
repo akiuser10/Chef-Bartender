@@ -296,6 +296,14 @@ document.addEventListener('DOMContentLoaded', function() {
             img.style.backgroundImage = 'url(' + imageUrl + ')';
         }
     });
+    
+    // Set background images for hero slides
+    document.querySelectorAll('.hero-slide-bg').forEach(function(bg) {
+        const imageUrl = bg.getAttribute('data-bg-image');
+        if (imageUrl) {
+            bg.style.backgroundImage = 'url(' + imageUrl + ')';
+        }
+    });
 });
 </script>
 {% endblock %}
