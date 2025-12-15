@@ -13,7 +13,7 @@ body {
     background-image: url('/static/images/Web%20background.png');
     background-repeat: repeat;
     background-attachment: scroll;
-    background-position: top left;
+    background-position: center;
     color: #333333;
     margin: 0;
     padding: 0;
