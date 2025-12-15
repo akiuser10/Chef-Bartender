@@ -11,7 +11,7 @@ main_bp = Blueprint('main', __name__)
 @main_bp.route('/')
 def index():
     """Homepage with recent recipes and hero slides"""
-    from models import Recipe, HeroSlide
+    from models import Recipe, HeroSlide, Book
     from utils.helpers import get_organization_filter
     from sqlalchemy.orm import joinedload
     
@@ -24,7 +24,11 @@ def index():
     # Fetch hero slides from database, ordered by slide_number
     hero_slides = HeroSlide.query.filter_by(is_active=True).order_by(HeroSlide.slide_number).all()
     
-    return render_template('index.html', recent_recipes=recent_recipes, hero_slides=hero_slides)
+    # Fetch 3 most recently created books (for Knowledge Hub section)
+    book_org_filter = get_organization_filter(Book)
+    recent_books = Book.query.filter(book_org_filter).order_by(Book.created_at.desc()).limit(3).all()
+    
+    return render_template('index.html', recent_recipes=recent_recipes, hero_slides=hero_slides, recent_books=recent_books)
 
 
 @main_bp.route('/about')

@@ -147,41 +147,32 @@
     </div>
 </section>
 
-<!-- Blog Section -->
-<section class="blog-section">
+<!-- Knowledge Hub Section -->
+<section class="blog-section knowledge-hub-section">
     <div class="section-container">
-        <h2 class="section-title">Our Fruitsome Blog</h2>
-        <div class="blog-grid">
-            <div class="blog-card">
-                <div class="blog-image blog-1"></div>
-                <span class="blog-tag">New Post</span>
-                <h3 class="blog-title">Broad bean and goats cheese bruschetta</h3>
-                <div class="blog-meta">
-                    <span class="blog-date">Dec 15, 2023</span>
-                    <span class="blog-comments">5 Comments</span>
-                    <span class="blog-share">Share</span>
+        <h2 class="section-title">Knowledge Hub</h2>
+        <div class="blog-grid knowledge-hub-grid">
+            {% if recent_books %}
+                {% for book in recent_books %}
+                <div class="blog-card knowledge-hub-card">
+                    {% if book.cover_image_path %}
+                        {% set cover_path = book.cover_image_path.replace('uploads/', '', 1) if book.cover_image_path.startswith('uploads/') else book.cover_image_path %}
+                        <div class="blog-image knowledge-hub-image" data-cover-image="{{ url_for('main.uploaded_file', filename=cover_path) }}"></div>
+                    {% else %}
+                        <div class="blog-image knowledge-hub-image knowledge-hub-placeholder"></div>
+                    {% endif %}
+                    <h3 class="blog-title knowledge-hub-title">{{ book.title }}</h3>
                 </div>
-            </div>
-            <div class="blog-card">
-                <div class="blog-image blog-2"></div>
-                <span class="blog-tag">New Post</span>
-                <h3 class="blog-title">Fresh summer smoothie recipes</h3>
-                <div class="blog-meta">
-                    <span class="blog-date">Dec 12, 2023</span>
-                    <span class="blog-comments">8 Comments</span>
-                    <span class="blog-share">Share</span>
+                {% endfor %}
+            {% else %}
+                <!-- Placeholder cards when no books exist -->
+                {% for i in range(3) %}
+                <div class="blog-card knowledge-hub-card">
+                    <div class="blog-image knowledge-hub-image knowledge-hub-placeholder"></div>
+                    <h3 class="blog-title knowledge-hub-title">No Books Yet</h3>
                 </div>
-            </div>
-            <div class="blog-card">
-                <div class="blog-image blog-3"></div>
-                <span class="blog-tag">New Post</span>
-                <h3 class="blog-title">Healthy breakfast juice combinations</h3>
-                <div class="blog-meta">
-                    <span class="blog-date">Dec 10, 2023</span>
-                    <span class="blog-comments">12 Comments</span>
-                    <span class="blog-share">Share</span>
-                </div>
-            </div>
+                {% endfor %}
+            {% endif %}
         </div>
     </div>
 </section>
