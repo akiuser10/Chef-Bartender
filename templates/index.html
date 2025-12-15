@@ -53,7 +53,7 @@
         <div class="beverage-grid">
             {% if recent_recipes %}
                 {% for recipe in recent_recipes %}
-                <div class="beverage-card recipe-card">
+                <a href="{% if recipe.recipe_code %}{{ url_for('recipes.view_recipe_by_code', code=recipe.recipe_code) }}{% else %}{{ url_for('recipes.view_recipe', id=recipe.id) }}{% endif %}" class="beverage-card recipe-card recipe-card-link">
                     {% if recipe.image_path %}
                         <div class="beverage-image recipe-image recipe-image-with-url" data-image-url="{{ url_for('main.uploaded_file', filename=recipe.image_path) }}"></div>
                     {% else %}
@@ -61,7 +61,7 @@
                         <div class="beverage-image recipe-image recipe-color-{{ color_index }}"></div>
                     {% endif %}
                     <h3 class="beverage-name">{{ recipe.title }}</h3>
-                </div>
+                </a>
                 {% endfor %}
             {% else %}
                 <!-- Placeholder cards when no recipes exist -->

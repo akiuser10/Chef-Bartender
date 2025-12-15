@@ -4724,6 +4724,27 @@ main .page-panel .recipe-view-container {
     box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
 }
 
+/* Recipe card as link */
+.recipe-card-link {
+    text-decoration: none;
+    color: inherit;
+    cursor: pointer;
+}
+
+.recipe-card-link:hover {
+    text-decoration: none;
+    color: inherit;
+}
+
+.recipe-card-link .beverage-name {
+    color: #2d2d2d;
+    transition: color 0.3s ease;
+}
+
+.recipe-card-link:hover .beverage-name {
+    color: #4a9d2f;
+}
+
 .beverage-image {
     width: 100%;
     height: 0;
