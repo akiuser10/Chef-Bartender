@@ -252,6 +252,16 @@ document.addEventListener('DOMContentLoaded', function() {
             bg.style.backgroundImage = 'url(' + imageUrl + ')';
         }
     });
+    
+    // Set background images for knowledge hub book covers
+    document.querySelectorAll('.knowledge-hub-image[data-cover-image]').forEach(function(img) {
+        const imageUrl = img.getAttribute('data-cover-image');
+        if (imageUrl) {
+            img.style.backgroundImage = 'url(' + imageUrl + ')';
+            img.style.backgroundSize = 'cover';
+            img.style.backgroundPosition = 'center';
+        }
+    });
 });
 </script>
 {% endblock %}
