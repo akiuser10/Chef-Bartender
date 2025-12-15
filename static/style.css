@@ -753,6 +753,19 @@ main {
     text-align: right;
 }
 
+/* Ensure contact-info column content is always left-aligned */
+.contact-column.contact-info .contact-section-content {
+    padding-left: 36px !important;
+    padding-right: 0 !important;
+    text-align: left !important;
+}
+
+.contact-column.contact-info .contact-section-content p {
+    padding-left: 0 !important;
+    text-align: left !important;
+    margin-left: 0 !important;
+}
+
 .contact-section-header {
     display: flex;
     align-items: center;
