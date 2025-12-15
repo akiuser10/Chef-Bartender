@@ -608,3 +608,22 @@ class Book(db.Model):
     def is_persisted(self):
         """Check if book is properly saved in database"""
         return self.id is not None and self.pdf_path is not None
+
+# -------------------------
+# HERO SLIDE MODEL
+# -------------------------
+class HeroSlide(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    slide_number = db.Column(db.Integer, nullable=False, unique=True)  # 0-4 for 5 slides
+    title = db.Column(db.String(200), nullable=False)
+    subtitle = db.Column(db.String(300))
+    image_path = db.Column(db.String(255), nullable=False)  # Path to hero slide image
+    is_active = db.Column(db.Boolean, default=True)  # Whether slide is active
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_by = db.Column(db.Integer, db.ForeignKey('user.id'))
+    organisation = db.Column(db.String(200))  # Organization name for sharing
+    creator = db.relationship('User', foreign_keys=[created_by], backref='created_hero_slides')
+    
+    def __repr__(self):
+        return f'<HeroSlide {self.id}: {self.title} (Slide {self.slide_number})>'

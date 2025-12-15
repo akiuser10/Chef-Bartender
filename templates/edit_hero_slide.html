@@ -1,0 +1,155 @@
+{% extends "base.html" %}
+
+{% block page_panel %}
+<div class="page-panel">
+    <div class="panel-header">
+        <h1>Edit Hero Slide {{ slide.slide_number + 1 }}</h1>
+        <a href="{{ url_for('main.manage_hero_slides') }}" class="btn btn-secondary">← Back to Slides</a>
+    </div>
+    
+    <div class="panel-body">
+        <form method="POST" enctype="multipart/form-data" class="hero-slide-form">
+            <div class="form-group">
+                <label for="title">Title *</label>
+                <input type="text" id="title" name="title" value="{{ slide.title }}" required class="form-control">
+            </div>
+            
+            <div class="form-group">
+                <label for="subtitle">Subtitle</label>
+                <input type="text" id="subtitle" name="subtitle" value="{{ slide.subtitle or '' }}" class="form-control">
+            </div>
+            
+            <div class="form-group">
+                <label for="image">Hero Image *</label>
+                {% if slide.image_path %}
+                <div class="current-image">
+                    <img src="{{ url_for('main.uploaded_file', filename=slide.image_path.replace('uploads/', '', 1)) }}" alt="Current image" style="max-width: 400px; max-height: 300px; border-radius: 8px; margin-bottom: 15px;">
+                    <p class="image-info">Current image. Upload a new image to replace it.</p>
+                </div>
+                {% endif %}
+                <input type="file" id="image" name="image" accept="image/*" class="form-control">
+                <small class="form-text">Recommended size: 1920x1080px or larger. Formats: JPG, PNG, WebP</small>
+            </div>
+            
+            <div class="form-group">
+                <label class="checkbox-label">
+                    <input type="checkbox" name="is_active" {% if slide.is_active %}checked{% endif %}>
+                    <span>Active (show this slide on homepage)</span>
+                </label>
+            </div>
+            
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">Save Changes</button>
+                <a href="{{ url_for('main.manage_hero_slides') }}" class="btn btn-secondary">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<style>
+.hero-slide-form {
+    max-width: 800px;
+    background: white;
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+.form-group {
+    margin-bottom: 25px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    color: #333;
+    font-weight: 500;
+    font-size: 0.95rem;
+}
+
+.form-control {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    font-size: 1rem;
+    transition: border-color 0.3s ease;
+}
+
+.form-control:focus {
+    outline: none;
+    border-color: #4a9d2f;
+    box-shadow: 0 0 0 3px rgba(74, 157, 47, 0.1);
+}
+
+.form-text {
+    display: block;
+    margin-top: 5px;
+    color: #666;
+    font-size: 0.85rem;
+}
+
+.current-image {
+    margin-bottom: 15px;
+}
+
+.image-info {
+    color: #666;
+    font-size: 0.9rem;
+    margin-top: 10px;
+}
+
+.checkbox-label {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    font-weight: normal;
+}
+
+.checkbox-label input[type="checkbox"] {
+    margin-right: 10px;
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+}
+
+.form-actions {
+    display: flex;
+    gap: 15px;
+    margin-top: 30px;
+    padding-top: 20px;
+    border-top: 1px solid #eee;
+}
+
+.btn {
+    display: inline-block;
+    padding: 12px 24px;
+    border-radius: 6px;
+    text-decoration: none;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    border: none;
+    cursor: pointer;
+    font-size: 1rem;
+}
+
+.btn-primary {
+    background: #4a9d2f;
+    color: white;
+}
+
+.btn-primary:hover {
+    background: #3d7d26;
+}
+
+.btn-secondary {
+    background: #6c757d;
+    color: white;
+}
+
+.btn-secondary:hover {
+    background: #5a6268;
+}
+</style>
+{% endblock %}
+

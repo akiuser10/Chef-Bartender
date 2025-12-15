@@ -1,0 +1,165 @@
+{% extends "base.html" %}
+
+{% block page_panel %}
+<div class="page-panel">
+    <div class="panel-header">
+        <h1>Manage Hero Slides</h1>
+        <p>Upload and manage hero slider images for the homepage</p>
+    </div>
+    
+    <div class="panel-body">
+        <div class="hero-slides-grid">
+            {% for slide in hero_slides %}
+            <div class="hero-slide-card">
+                <div class="slide-preview">
+                    {% if slide.image_path %}
+                        <img src="{{ url_for('main.uploaded_file', filename=slide.image_path.replace('uploads/', '', 1)) }}" alt="{{ slide.title }}" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'400\' height=\'300\'%3E%3Crect fill=\'%23ddd\' width=\'400\' height=\'300\'/%3E%3Ctext fill=\'%23999\' x=\'50%25\' y=\'50%25\' text-anchor=\'middle\' dy=\'.3em\'%3ENo Image%3C/text%3E%3C/svg%3E';">
+                    {% else %}
+                        <div class="no-image-placeholder">
+                            <span>No Image</span>
+                        </div>
+                    {% endif %}
+                    <div class="slide-number-badge">Slide {{ slide.slide_number + 1 }}</div>
+                    {% if slide.is_active %}
+                    <div class="active-badge">Active</div>
+                    {% else %}
+                    <div class="inactive-badge">Inactive</div>
+                    {% endif %}
+                </div>
+                <div class="slide-info">
+                    <h3>{{ slide.title }}</h3>
+                    <p>{{ slide.subtitle or 'No subtitle' }}</p>
+                </div>
+                <div class="slide-actions">
+                    <a href="{{ url_for('main.edit_hero_slide', slide_id=slide.id) }}" class="btn btn-primary">Edit</a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<style>
+.hero-slides-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 30px;
+    margin-top: 30px;
+}
+
+.hero-slide-card {
+    background: white;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.hero-slide-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 5px 20px rgba(0,0,0,0.15);
+}
+
+.slide-preview {
+    position: relative;
+    width: 100%;
+    height: 200px;
+    overflow: hidden;
+    background: #f5f5f5;
+}
+
+.slide-preview img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.no-image-placeholder {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #e0e0e0;
+    color: #999;
+    font-size: 1.1rem;
+}
+
+.slide-number-badge {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    background: rgba(0,0,0,0.7);
+    color: white;
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+.active-badge {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: #4a9d2f;
+    color: white;
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+.inactive-badge {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: #999;
+    color: white;
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+.slide-info {
+    padding: 20px;
+}
+
+.slide-info h3 {
+    margin: 0 0 10px 0;
+    color: #333;
+    font-size: 1.2rem;
+}
+
+.slide-info p {
+    margin: 0;
+    color: #666;
+    font-size: 0.9rem;
+}
+
+.slide-actions {
+    padding: 0 20px 20px 20px;
+}
+
+.btn {
+    display: inline-block;
+    padding: 10px 20px;
+    border-radius: 6px;
+    text-decoration: none;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    border: none;
+    cursor: pointer;
+}
+
+.btn-primary {
+    background: #4a9d2f;
+    color: white;
+}
+
+.btn-primary:hover {
+    background: #3d7d26;
+}
+</style>
+{% endblock %}
+

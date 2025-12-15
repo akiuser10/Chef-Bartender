@@ -1,15 +1,17 @@
 """
 Main blueprint - handles index, errors, and file uploads
 """
-from flask import Blueprint, render_template, send_from_directory, current_app
+from flask import Blueprint, render_template, send_from_directory, current_app, request, redirect, url_for, flash
+from flask_login import login_required, current_user
+from utils.permissions import role_required
 
 main_bp = Blueprint('main', __name__)
 
 
 @main_bp.route('/')
 def index():
-    """Homepage with recent recipes"""
-    from models import Recipe
+    """Homepage with recent recipes and hero slides"""
+    from models import Recipe, HeroSlide
     from utils.helpers import get_organization_filter
     from sqlalchemy.orm import joinedload
     
@@ -19,7 +21,10 @@ def index():
         joinedload(Recipe.ingredients)
     ).order_by(Recipe.created_at.desc()).limit(8).all()
     
-    return render_template('index.html', recent_recipes=recent_recipes)
+    # Fetch hero slides from database, ordered by slide_number
+    hero_slides = HeroSlide.query.filter_by(is_active=True).order_by(HeroSlide.slide_number).all()
+    
+    return render_template('index.html', recent_recipes=recent_recipes, hero_slides=hero_slides)
 
 
 @main_bp.route('/about')
@@ -89,4 +94,82 @@ def internal_error(error):
     db.session.rollback()
     current_app.logger.error(f'Internal Server Error: {str(error)}', exc_info=True)
     return render_template('error.html', error=str(error)), 500
+
+
+@main_bp.route('/manage-hero-slides')
+@login_required
+@role_required('Manager')
+def manage_hero_slides():
+    """Manage hero slides - Manager only"""
+    from models import HeroSlide
+    from utils.db_helpers import ensure_schema_updates
+    ensure_schema_updates()
+    
+    # Fetch all hero slides, ordered by slide_number
+    hero_slides = HeroSlide.query.order_by(HeroSlide.slide_number).all()
+    
+    # Ensure we have 5 slides (create empty ones if needed)
+    while len(hero_slides) < 5:
+        new_slide = HeroSlide(
+            slide_number=len(hero_slides),
+            title=f'Slide {len(hero_slides) + 1}',
+            subtitle='',
+            image_path='',
+            is_active=False,
+            created_by=current_user.id,
+            organisation=current_user.organisation if current_user.organisation else ''
+        )
+        from extensions import db
+        db.session.add(new_slide)
+        db.session.commit()
+        hero_slides.append(new_slide)
+    
+    return render_template('manage_hero_slides.html', hero_slides=hero_slides)
+
+
+@main_bp.route('/edit-hero-slide/<int:slide_id>', methods=['GET', 'POST'])
+@login_required
+@role_required('Manager')
+def edit_hero_slide(slide_id):
+    """Edit a hero slide"""
+    from models import HeroSlide
+    from extensions import db
+    from utils.file_upload import save_uploaded_file
+    from utils.db_helpers import ensure_schema_updates
+    import os
+    from datetime import datetime
+    
+    ensure_schema_updates()
+    
+    slide = HeroSlide.query.get_or_404(slide_id)
+    
+    if request.method == 'POST':
+        slide.title = request.form.get('title', '').strip()
+        slide.subtitle = request.form.get('subtitle', '').strip()
+        slide.is_active = request.form.get('is_active') == 'on'
+        slide.updated_at = datetime.utcnow()
+        
+        # Handle image upload
+        if 'image' in request.files:
+            file = request.files['image']
+            if file and file.filename:
+                # Delete old image if exists
+                if slide.image_path:
+                    old_path = os.path.join(current_app.config['UPLOAD_FOLDER'], slide.image_path.replace('uploads/', '', 1))
+                    if os.path.exists(old_path):
+                        try:
+                            os.remove(old_path)
+                        except Exception as e:
+                            current_app.logger.warning(f'Could not delete old image: {str(e)}')
+                
+                # Save new image
+                image_path = save_uploaded_file(file, 'hero-slides')
+                if image_path:
+                    slide.image_path = image_path
+        
+        db.session.commit()
+        flash('Hero slide updated successfully!', 'success')
+        return redirect(url_for('main.manage_hero_slides'))
+    
+    return render_template('edit_hero_slide.html', slide=slide)
 
