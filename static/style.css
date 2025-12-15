@@ -5191,15 +5191,15 @@ main .page-panel .recipe-view-container {
 
 .knowledge-hub-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    grid-template-columns: repeat(7, minmax(0, 1fr));
     gap: 30px;
 }
 
 .knowledge-hub-card {
     position: relative;
-    height: 420px;
-    border-radius: 60px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+    height: 260px;
+    border-radius: 40px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
     overflow: hidden;
     display: flex;
     align-items: center;
@@ -5252,11 +5252,30 @@ main .page-panel .recipe-view-container {
 
 .knowledge-hub-title {
     font-family: 'Poppins', sans-serif;
-    font-size: 1.3rem;
+    font-size: 1.1rem;
     font-weight: 600;
     color: #2d2d2d;
     margin: 0;
     text-align: center;
+}
+
+/* Responsive columns for Knowledge Hub cards */
+@media (max-width: 1400px) {
+    .knowledge-hub-grid {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 900px) {
+    .knowledge-hub-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 600px) {
+    .knowledge-hub-grid {
+        grid-template-columns: repeat(1, minmax(0, 1fr));
+    }
 }
 
 /* Gallery Section */
