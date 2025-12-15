@@ -4714,6 +4714,16 @@ main .page-panel .recipe-view-container {
     margin-top: 6px;
 }
 
+.task-empty-message {
+    font-family: 'Poppins', sans-serif;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #333333;
+    text-align: center;
+    padding: 20px 40px;
+    margin: 0 auto;
+}
+
 .red-juice {
     background: linear-gradient(to bottom, #ff6b6b 0%, #ee5a5a 100%);
 }

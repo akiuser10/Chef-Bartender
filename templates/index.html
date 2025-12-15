@@ -42,28 +42,28 @@
     </div>
     
     <!-- Tasks Showcase Below Hero -->
+    {% if tasks %}
     <div class="hero-products-showcase">
-        {% if tasks %}
-            {% for task in tasks %}
-            <a href="{{ task.url }}" class="product-bottle-link">
-                <div class="product-bottle {{ task.color_class }}">
-                    <span class="product-bottle-label">
-                        {{ task.title }}
-                        {% if task.count is not none %}
-                            <br>
-                            <span class="task-count">{{ task.count }}</span>
-                        {% endif %}
-                    </span>
-                </div>
-            </a>
-            {% endfor %}
-        {% else %}
-            <div class="product-bottle beige-juice">
-                <span class="product-bottle-label">No Tasks Pending</span>
+        {% for task in tasks %}
+        <a href="{{ task.url }}" class="product-bottle-link">
+            <div class="product-bottle {{ task.color_class }}">
+                <span class="product-bottle-label">
+                    {{ task.title }}
+                    {% if task.count is not none %}
+                        <br>
+                        <span class="task-count">{{ task.count }}</span>
+                    {% endif %}
+                </span>
             </div>
-        {% endif %}
+        </a>
+        {% endfor %}
         <div class="product-fruits-decoration"></div>
     </div>
+    {% else %}
+    <div class="task-empty-message" id="task-empty-message">
+        Well done, all your tasks have been completed
+    </div>
+    {% endif %}
 </div>
 
 <!-- Recipe Section -->
@@ -280,25 +280,25 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Task cards below hero: hide on click and show "Well done" when none left
     const taskContainer = document.querySelector('.hero-products-showcase');
-    if (taskContainer) {
-        const updateTaskEmptyState = () => {
-            const remainingTasks = taskContainer.querySelectorAll('.product-bottle-link');
-            const noTaskCard = taskContainer.querySelector('.no-tasks-card');
-            if (remainingTasks.length === 0) {
-                if (!noTaskCard) {
-                    const card = document.createElement('div');
-                    card.className = 'product-bottle beige-juice no-tasks-card';
-                    const span = document.createElement('span');
-                    span.className = 'product-bottle-label';
-                    span.textContent = 'Well done, all your tasks have been completed';
-                    card.appendChild(span);
-                    taskContainer.appendChild(card);
-                }
-            } else if (noTaskCard) {
-                noTaskCard.remove();
-            }
-        };
+    const emptyMessage = document.getElementById('task-empty-message');
 
+    const updateTaskEmptyState = () => {
+        if (!taskContainer) {
+            // No grid on page – just ensure message is visible if it exists
+            if (emptyMessage) emptyMessage.style.display = 'flex';
+            return;
+        }
+        const remainingTasks = taskContainer.querySelectorAll('.product-bottle-link');
+        if (remainingTasks.length === 0) {
+            taskContainer.style.display = 'none';
+            if (emptyMessage) emptyMessage.style.display = 'flex';
+        } else {
+            taskContainer.style.display = 'flex';
+            if (emptyMessage) emptyMessage.style.display = 'none';
+        }
+    };
+
+    if (taskContainer) {
         taskContainer.querySelectorAll('.product-bottle-link').forEach(function(link) {
             link.addEventListener('click', function() {
                 // Hide this task card immediately; navigation continues normally
@@ -306,10 +306,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 updateTaskEmptyState();
             });
         });
-
-        // Initialize empty state in case there were no tasks rendered
-        updateTaskEmptyState();
     }
+
+    // Initialize empty state visibility correctly on page load
+    updateTaskEmptyState();
 });
 </script>
 {% endblock %}
