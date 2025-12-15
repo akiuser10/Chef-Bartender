@@ -5179,7 +5179,7 @@ main .page-panel .recipe-view-container {
 
 /* Knowledge Hub Section Styles */
 .knowledge-hub-section {
-    background: #f8f8f8;
+    background: transparent;
 }
 
 .knowledge-hub-grid {
