@@ -51,51 +51,32 @@
     </div>
 </div>
 
-<!-- Our Beverage Section -->
+<!-- Recipe Section -->
 <section class="beverage-section">
     <div class="section-container">
-        <h2 class="section-title">Our Beverage</h2>
+        <h2 class="section-title">Recipe</h2>
         <div class="beverage-grid">
-            <div class="beverage-card">
-                <div class="beverage-image milkshake"></div>
-                <h3 class="beverage-name">Milkshake</h3>
-                <p class="beverage-price">$5.99</p>
-            </div>
-            <div class="beverage-card">
-                <div class="beverage-image frappe"></div>
-                <h3 class="beverage-name">Frappe</h3>
-                <p class="beverage-price">$4.99</p>
-            </div>
-            <div class="beverage-card">
-                <div class="beverage-image boba"></div>
-                <h3 class="beverage-name">Boba Drink</h3>
-                <p class="beverage-price">$6.99</p>
-            </div>
-            <div class="beverage-card">
-                <div class="beverage-image mojito"></div>
-                <h3 class="beverage-name">Mojito</h3>
-                <p class="beverage-price">$5.49</p>
-            </div>
-            <div class="beverage-card">
-                <div class="beverage-image watermelon-juice"></div>
-                <h3 class="beverage-name">Watermelon Juice</h3>
-                <p class="beverage-price">$4.49</p>
-            </div>
-            <div class="beverage-card">
-                <div class="beverage-image hot-chocolate"></div>
-                <h3 class="beverage-name">Hot Chocolate</h3>
-                <p class="beverage-price">$3.99</p>
-            </div>
-            <div class="beverage-card">
-                <div class="beverage-image smoothie"></div>
-                <h3 class="beverage-name">Smoothie</h3>
-                <p class="beverage-price">$5.49</p>
-            </div>
-            <div class="beverage-card">
-                <div class="beverage-image coffee"></div>
-                <h3 class="beverage-name">Coffee</h3>
-                <p class="beverage-price">$4.99</p>
-            </div>
+            {% if recent_recipes %}
+                {% for recipe in recent_recipes %}
+                <div class="beverage-card recipe-card">
+                    {% if recipe.image_path %}
+                        <div class="beverage-image recipe-image" style="background-image: url('{{ url_for('main.uploaded_file', filename=recipe.image_path) }}'); background-size: cover; background-position: center;"></div>
+                    {% else %}
+                        {% set color_index = loop.index0 % 8 %}
+                        <div class="beverage-image recipe-image recipe-color-{{ color_index }}"></div>
+                    {% endif %}
+                    <h3 class="beverage-name">{{ recipe.title }}</h3>
+                </div>
+                {% endfor %}
+            {% else %}
+                <!-- Placeholder cards when no recipes exist -->
+                {% for i in range(8) %}
+                <div class="beverage-card recipe-card">
+                    <div class="beverage-image recipe-image recipe-color-{{ i }}"></div>
+                    <h3 class="beverage-name">No Recipes Yet</h3>
+                </div>
+                {% endfor %}
+            {% endif %}
         </div>
         <button class="carousel-nav-foodility beverage-prev">‹</button>
         <button class="carousel-nav-foodility beverage-next">›</button>

@@ -8,7 +8,18 @@ main_bp = Blueprint('main', __name__)
 
 @main_bp.route('/')
 def index():
-    return render_template('index.html')
+    """Homepage with recent recipes"""
+    from models import Recipe
+    from utils.helpers import get_organization_filter
+    from sqlalchemy.orm import joinedload
+    
+    # Fetch 8 most recently created recipes
+    org_filter = get_organization_filter(Recipe)
+    recent_recipes = Recipe.query.filter(org_filter).options(
+        joinedload(Recipe.ingredients)
+    ).order_by(Recipe.created_at.desc()).limit(8).all()
+    
+    return render_template('index.html', recent_recipes=recent_recipes)
 
 
 @main_bp.route('/about')

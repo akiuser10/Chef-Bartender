@@ -4533,10 +4533,13 @@ main .page-panel .recipe-view-container {
 .beverage-card {
     background: white;
     border-radius: 15px;
-    padding: 20px;
+    padding: 0;
     text-align: center;
     transition: all 0.3s ease;
     box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
 }
 
 .beverage-card:hover {
@@ -4546,13 +4549,29 @@ main .page-panel .recipe-view-container {
 
 .beverage-image {
     width: 100%;
-    height: 200px;
-    border-radius: 10px;
-    margin-bottom: 20px;
+    height: 0;
+    padding-bottom: 70%;
+    border-radius: 15px 15px 0 0;
+    margin-bottom: 0;
     background-size: cover;
     background-position: center;
     background-color: #f0f0f0;
+    flex-shrink: 0;
 }
+
+.recipe-image {
+    border-radius: 15px 15px 0 0;
+}
+
+/* Recipe color placeholders when no image */
+.recipe-color-0 { background: linear-gradient(135deg, #ffb3d9 0%, #ff99cc 100%); }
+.recipe-color-1 { background: linear-gradient(135deg, #d2b48c 0%, #c19a6b 100%); }
+.recipe-color-2 { background: linear-gradient(135deg, #ff6b9d 0%, #ff5a8a 100%); }
+.recipe-color-3 { background: linear-gradient(135deg, #90ee90 0%, #7ccd7c 100%); }
+.recipe-color-4 { background: linear-gradient(135deg, #ff6b6b 0%, #ee5a5a 100%); }
+.recipe-color-5 { background: linear-gradient(135deg, #8b4513 0%, #654321 100%); }
+.recipe-color-6 { background: linear-gradient(135deg, #ffb3d9 0%, #ff99cc 100%); }
+.recipe-color-7 { background: linear-gradient(135deg, #6f4e37 0%, #5c4033 100%); }
 
 .milkshake { background: linear-gradient(135deg, #ffb3d9 0%, #ff99cc 100%); }
 .frappe { background: linear-gradient(135deg, #d2b48c 0%, #c19a6b 100%); }
@@ -4568,15 +4587,22 @@ main .page-panel .recipe-view-container {
     font-size: 1.3rem;
     font-weight: 600;
     color: #2d2d2d;
-    margin: 0 0 10px 0;
+    margin: 0;
+    padding: 20px;
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.recipe-card .beverage-name {
+    font-size: 1.2rem;
+    font-weight: 600;
+    padding: 25px 20px;
 }
 
 .beverage-price {
-    font-family: 'Poppins', sans-serif;
-    font-size: 1.1rem;
-    color: #8b7d6b;
-    font-weight: 500;
-    margin: 0;
+    display: none;
 }
 
 .beverage-prev,
