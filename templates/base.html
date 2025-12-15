@@ -77,10 +77,6 @@
             <div class="nav-dropdown-menu" id="knowledgeDropdownMenu">
                 <a href="{{ url_for('knowledge.bartender_library') }}" class="nav-dropdown-item">Bartender Library</a>
                 <a href="{{ url_for('knowledge.chef_library') }}" class="nav-dropdown-item">Chef Library</a>
-                {% if current_user.user_role == 'Manager' %}
-                <a href="{{ url_for('knowledge.bartender_library') }}" class="nav-dropdown-item">Manage Bartender Library</a>
-                <a href="{{ url_for('knowledge.chef_library') }}" class="nav-dropdown-item">Manage Chef Library</a>
-                {% endif %}
             </div>
         </div>
         {% endif %}

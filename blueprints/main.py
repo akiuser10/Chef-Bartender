@@ -21,8 +21,9 @@ def index():
         joinedload(Recipe.ingredients)
     ).order_by(Recipe.created_at.desc()).limit(8).all()
     
-    # Fetch hero slides from database, ordered by slide_number
-    hero_slides = HeroSlide.query.filter_by(is_active=True).order_by(HeroSlide.slide_number).all()
+    # Fetch hero slides from database, filtered by organization and ordered by slide_number
+    hero_org_filter = get_organization_filter(HeroSlide)
+    hero_slides = HeroSlide.query.filter(hero_org_filter, HeroSlide.is_active == True).order_by(HeroSlide.slide_number).all()
     
     # Fetch 3 most recently created books (for Knowledge Hub section)
     book_org_filter = get_organization_filter(Book)

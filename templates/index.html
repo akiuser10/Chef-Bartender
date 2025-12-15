@@ -5,9 +5,13 @@
     <div class="hero-slider-container">
         {% if hero_slides %}
             {% for slide in hero_slides %}
-                {% if slide.is_active and slide.image_path %}
+                {% if slide.is_active %}
                 <div class="hero-slide-foodility {% if loop.first %}active{% endif %}" data-slide="{{ slide.slide_number }}">
+                    {% if slide.image_path %}
                     <div class="hero-slide-bg" data-bg-image="{{ url_for('static', filename=slide.image_path) if slide.image_path.startswith('images/') else url_for('main.uploaded_file', filename=slide.image_path.replace('uploads/', '', 1)) }}"></div>
+                    {% else %}
+                    <div class="hero-slide-bg" data-bg-image="{{ url_for('static', filename='images/hero/green-smoothie.jpg') }}"></div>
+                    {% endif %}
                     <div class="hero-content-foodility">
                         <div class="hero-text-container">
                             <h1 class="hero-title-script">{{ slide.title }}</h1>
@@ -61,7 +65,7 @@
 <!-- Recipe Section -->
 <section class="beverage-section">
     <div class="section-container">
-        <h2 class="section-title">Recipe</h2>
+        <h2 class="section-title">Recent Recipes</h2>
         <div class="beverage-grid">
             {% if recent_recipes %}
                 {% for recipe in recent_recipes %}
