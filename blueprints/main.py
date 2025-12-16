@@ -1,6 +1,7 @@
 """
 Main blueprint - handles index, errors, and file uploads
 """
+# pyright: reportMissingImports=false
 from flask import Blueprint, render_template, send_from_directory, current_app, request, redirect, url_for, flash
 from flask_login import login_required, current_user
 from utils.permissions import role_required
@@ -124,7 +125,7 @@ def contact():
 def user_guide():
     """Display the user guide from USER_GUIDE.md"""
     import os
-    import markdown
+    import markdown  # type: ignore[import]
     from markupsafe import Markup
     
     try:
