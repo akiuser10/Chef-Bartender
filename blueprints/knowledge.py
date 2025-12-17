@@ -10,128 +10,8 @@ from utils.helpers import get_organization_filter
 from utils.file_upload import save_uploaded_file, allowed_file
 import os
 from werkzeug.utils import secure_filename
-import requests
-from urllib.parse import urljoin, urlparse
-from PIL import Image
-import uuid
-from io import BytesIO
 
 knowledge_bp = Blueprint('knowledge', __name__, url_prefix='/knowledge')
-
-
-def fetch_cover_image_from_url(article_url):
-    """
-    Fetch cover image from a website URL using Open Graph tags or meta tags.
-    Returns the path to the saved image, or None if extraction fails.
-    """
-    try:
-        # Set a reasonable timeout and user agent
-        headers = {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
-        }
-        
-        # Fetch the webpage
-        response = requests.get(article_url, headers=headers, timeout=10, allow_redirects=True)
-        response.raise_for_status()
-        
-        # Parse HTML to find image
-        try:
-            from bs4 import BeautifulSoup
-        except ImportError:
-            current_app.logger.error('beautifulsoup4 is not installed. Please install it: pip install beautifulsoup4')
-            return None
-        
-        soup = BeautifulSoup(response.content, 'html.parser')
-        
-        # Try to find Open Graph image first (most common)
-        og_image = soup.find('meta', property='og:image')
-        if og_image and og_image.get('content'):
-            image_url = og_image.get('content')
-        else:
-            # Try Twitter card image
-            twitter_image = soup.find('meta', attrs={'name': 'twitter:image'})
-            if twitter_image and twitter_image.get('content'):
-                image_url = twitter_image.get('content')
-            else:
-                # Try to find a large image in the page
-                # Look for images with common cover/article image classes
-                img_tags = soup.find_all('img', class_=lambda x: x and any(
-                    keyword in str(x).lower() for keyword in ['cover', 'hero', 'feature', 'article', 'main']
-                ))
-                if img_tags:
-                    image_url = img_tags[0].get('src') or img_tags[0].get('data-src')
-                else:
-                    # Fallback: find the largest image on the page
-                    all_images = soup.find_all('img')
-                    if all_images:
-                        # Get the first image that looks like a cover (has width/height attributes)
-                        for img in all_images:
-                            src = img.get('src') or img.get('data-src')
-                            if src and (img.get('width') or img.get('height')):
-                                image_url = src
-                                break
-                        else:
-                            # Just use the first image
-                            image_url = all_images[0].get('src') or all_images[0].get('data-src')
-                    else:
-                        return None
-        
-        if not image_url:
-            return None
-        
-        # Make absolute URL if relative
-        if image_url.startswith('//'):
-            image_url = 'https:' + image_url
-        elif image_url.startswith('/'):
-            parsed_url = urlparse(article_url)
-            image_url = f"{parsed_url.scheme}://{parsed_url.netloc}{image_url}"
-        elif not image_url.startswith('http'):
-            image_url = urljoin(article_url, image_url)
-        
-        # Download the image
-        img_response = requests.get(image_url, headers=headers, timeout=10, stream=True)
-        img_response.raise_for_status()
-        
-        # Load image with PIL
-        img_data = BytesIO(img_response.content)
-        img = Image.open(img_data)
-        
-        # Convert to RGB if necessary (handles PNG with transparency, etc.)
-        if img.mode in ('RGBA', 'LA', 'P'):
-            # Create a white background
-            background = Image.new('RGB', img.size, (255, 255, 255))
-            if img.mode == 'P':
-                img = img.convert('RGBA')
-            background.paste(img, mask=img.split()[-1] if img.mode in ('RGBA', 'LA') else None)
-            img = background
-        elif img.mode != 'RGB':
-            img = img.convert('RGB')
-        
-        # Resize to a reasonable cover size (maintain aspect ratio)
-        max_width = 600
-        max_height = 800
-        
-        if img.width > max_width or img.height > max_height:
-            img.thumbnail((max_width, max_height), Image.Resampling.LANCZOS)
-        
-        # Generate a unique filename
-        filename = f"{uuid.uuid4().hex}.jpg"
-        
-        # Ensure output directory exists
-        upload_folder = current_app.config['UPLOAD_FOLDER']
-        output_dir = os.path.join(upload_folder, 'books', 'covers')
-        os.makedirs(output_dir, exist_ok=True)
-        
-        # Save the image
-        output_path = os.path.join(output_dir, filename)
-        img.save(output_path, 'JPEG', quality=85)
-        
-        # Return the relative path with 'uploads/' prefix (matching save_uploaded_file format)
-        return os.path.join('uploads', 'books', 'covers', filename).replace('\\', '/')
-        
-    except Exception as e:
-        current_app.logger.error(f'Error fetching cover image from URL {article_url}: {str(e)}', exc_info=True)
-        return None
 
 
 def extract_pdf_first_page_as_image(pdf_path, output_folder='books/covers'):
@@ -284,15 +164,6 @@ def add_book():
         if cover_file and cover_file.filename != '':
             if allowed_file(cover_file.filename):
                 cover_image_path = save_uploaded_file(cover_file, 'books/covers')
-        else:
-            # Automatically fetch cover image from article URL if no cover was uploaded
-            try:
-                cover_image_path = fetch_cover_image_from_url(article_url)
-                if cover_image_path:
-                    current_app.logger.info(f'Successfully fetched cover image from URL: {article_url}')
-            except Exception as e:
-                current_app.logger.warning(f'Could not fetch cover image from URL {article_url}: {str(e)}')
-                # Continue without cover image - it's optional
         
         # Ensure organization is set (required for persistence and filtering)
         organisation = current_user.organisation.strip() if current_user.organisation and current_user.organisation.strip() else None
@@ -493,7 +364,6 @@ def edit_book(book_id):
         
         # Update book details
         book.title = title
-        article_url_changed = book.article_url != article_url
         book.article_url = article_url
         
         # Handle cover image upload (optional)
@@ -513,25 +383,6 @@ def edit_book(book_id):
                 cover_image_path = save_uploaded_file(cover_file, 'books/covers')
                 if cover_image_path:
                     book.cover_image_path = cover_image_path
-        elif article_url_changed:
-            # If URL changed and no new cover uploaded, try to fetch cover from new URL
-            try:
-                cover_image_path = fetch_cover_image_from_url(article_url)
-                if cover_image_path:
-                    # Delete old cover image if exists
-                    if book.cover_image_path:
-                        old_cover_path = os.path.join(current_app.config['UPLOAD_FOLDER'], book.cover_image_path.replace('uploads/', '', 1))
-                        try:
-                            if os.path.exists(old_cover_path):
-                                os.remove(old_cover_path)
-                        except Exception as e:
-                            current_app.logger.warning(f'Could not delete old cover: {str(e)}')
-                    
-                    book.cover_image_path = cover_image_path
-                    current_app.logger.info(f'Successfully fetched cover image from new URL: {article_url}')
-            except Exception as e:
-                current_app.logger.warning(f'Could not fetch cover image from URL {article_url}: {str(e)}')
-                # Continue without updating cover image
         
         db.session.commit()
         
