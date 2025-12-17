@@ -93,9 +93,9 @@ def role_required(*roles):
 
 @knowledge_bp.route('/bartender-library')
 @login_required
-@role_required('Chef', 'Bartender', 'Manager')
+@role_required('Bartender', 'Manager')
 def bartender_library():
-    """Display Bartender Library page"""
+    """Display Bartender Library page - Only visible to Manager and Bartender"""
     from utils.db_helpers import ensure_schema_updates
     ensure_schema_updates()
     
@@ -106,9 +106,9 @@ def bartender_library():
 
 @knowledge_bp.route('/chef-library')
 @login_required
-@role_required('Chef', 'Bartender', 'Manager')
+@role_required('Chef', 'Manager')
 def chef_library():
-    """Display Chef Library page"""
+    """Display Chef Library page - Only visible to Manager and Chef"""
     from utils.db_helpers import ensure_schema_updates
     ensure_schema_updates()
     
@@ -211,11 +211,11 @@ def add_book():
 
 @knowledge_bp.route('/book/<int:book_id>/pdf')
 @login_required
-@role_required('Chef', 'Bartender', 'Manager')
 def view_book_pdf(book_id):
-    """Serve PDF file for a book"""
+    """Serve PDF file for a book - Access restricted by library type and user role"""
     from utils.db_helpers import ensure_schema_updates
     from werkzeug.exceptions import NotFound
+    from flask import abort
     ensure_schema_updates()
     
     try:
@@ -225,6 +225,12 @@ def view_book_pdf(book_id):
         if not book:
             current_app.logger.error(f'Book with id {book_id} not found for user {current_user.id}')
             raise NotFound(description=f'Book with id {book_id} not found')
+        
+        # Check if user has access to this library type
+        if book.library_type == 'bartender' and current_user.user_role not in ['Bartender', 'Manager']:
+            abort(403)
+        elif book.library_type == 'chef' and current_user.user_role not in ['Chef', 'Manager']:
+            abort(403)
         
         if not book.pdf_path:
             current_app.logger.error(f'Book {book_id} has no pdf_path')

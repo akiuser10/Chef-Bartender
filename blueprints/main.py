@@ -27,9 +27,30 @@ def index():
     hero_org_filter = get_organization_filter(HeroSlide)
     hero_slides = HeroSlide.query.filter(hero_org_filter, HeroSlide.is_active == True).order_by(HeroSlide.slide_number).all()
     
-    # Fetch all books (for Knowledge Hub section), newest first
+    # Fetch books (for Knowledge Hub section) filtered by user role, newest first
     book_org_filter = get_organization_filter(Book)
-    recent_books = Book.query.filter(book_org_filter).order_by(Book.created_at.desc()).all()
+    recent_books_query = Book.query.filter(book_org_filter)
+    
+    # Filter books based on user role
+    if current_user.is_authenticated:
+        user_role = current_user.user_role or ''
+        if user_role == 'Bartender':
+            # Bartenders can only see bartender library books
+            recent_books_query = recent_books_query.filter_by(library_type='bartender')
+        elif user_role == 'Chef':
+            # Chefs can only see chef library books
+            recent_books_query = recent_books_query.filter_by(library_type='chef')
+        elif user_role == 'Manager':
+            # Managers can see all books
+            pass
+        else:
+            # Other roles see no books
+            recent_books_query = recent_books_query.filter_by(id=None)  # Empty result
+    else:
+        # Non-authenticated users see no books
+        recent_books_query = recent_books_query.filter_by(id=None)  # Empty result
+    
+    recent_books = recent_books_query.order_by(Book.created_at.desc()).all()
 
     # Build tasks for top hero cards based on user role and data
     tasks = []
