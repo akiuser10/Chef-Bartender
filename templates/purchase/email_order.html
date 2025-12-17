@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+{% block page_panel %}
+<div class="page-panel">
+    <div class="panel-header">
+        <h2>Opening Email Client</h2>
+    </div>
+    
+    <div id="statusMessage" style="padding: 20px; text-align: center;">
+        <p style="font-size: 1.1em; margin-bottom: 20px;">
+            Your purchase order PDF is being downloaded. Your email client will open shortly.
+        </p>
+        <p style="color: #666; margin-bottom: 30px;">
+            Please attach the downloaded PDF to your email.
+        </p>
+        
+        <div style="margin-top: 30px;">
+            <a href="{{ url_for('purchase.order_list') }}" class="btn">Back to Order List</a>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const statusMessage = document.getElementById('statusMessage');
+    const pdfUrl = '{{ pdf_url }}';
+    const emailSubject = encodeURIComponent('{{ email_subject }}');
+    const orderNumber = '{{ purchase_request.order_number }}';
+    
+    // Function to trigger PDF download
+    function downloadPDF() {
+        try {
+            // Create a temporary link and trigger download
+            const link = document.createElement('a');
+            link.href = pdfUrl;
+            link.download = orderNumber + '.pdf';
+            link.style.display = 'none';
+            document.body.appendChild(link);
+            link.click();
+            
+            // Clean up after a short delay
+            setTimeout(function() {
+                document.body.removeChild(link);
+            }, 100);
+            
+            return true;
+        } catch (error) {
+            console.error('Error downloading PDF:', error);
+            return false;
+        }
+    }
+    
+    // Function to open email client
+    function openEmailClient() {
+        try {
+            const mailtoLink = 'mailto:?subject=' + emailSubject;
+            window.location.href = mailtoLink;
+            return true;
+        } catch (error) {
+            console.error('Error opening email client:', error);
+            return false;
+        }
+    }
+    
+    // Trigger PDF download first
+    const pdfDownloaded = downloadPDF();
+    
+    // Wait a moment for download to start, then open email client
+    setTimeout(function() {
+        const emailOpened = openEmailClient();
+        
+        // Update status message
+        setTimeout(function() {
+            if (pdfDownloaded) {
+                statusMessage.innerHTML = 
+                    '<p style="font-size: 1.1em; margin-bottom: 20px; color: #4a9d2f;">✓ PDF downloaded successfully!</p>' +
+                    '<p style="color: #666; margin-bottom: 20px;">' +
+                    (emailOpened ? 
+                        'Your email client should have opened. Please attach the downloaded PDF to your email.' :
+                        'Your email client may not have opened. Please check your system settings or manually open your email client.') +
+                    '</p>' +
+                    '<div style="background: #f5f5f5; padding: 15px; border-radius: 5px; margin: 20px 0; text-align: left;">' +
+                    '<p style="margin: 5px 0;"><strong>Email Subject:</strong> {{ email_subject }}</p>' +
+                    '<p style="margin: 5px 0;"><strong>PDF Filename:</strong> ' + orderNumber + '.pdf</p>' +
+                    '</div>' +
+                    '<div style="margin-top: 30px;">' +
+                    '<a href="{{ url_for("purchase.order_list") }}" class="btn">Back to Order List</a> ' +
+                    '<a href="' + pdfUrl + '" class="btn secondary" download="' + orderNumber + '.pdf" style="margin-left: 10px;">Download PDF Again</a>' +
+                    '</div>';
+            } else {
+                statusMessage.innerHTML = 
+                    '<p style="font-size: 1.1em; margin-bottom: 20px; color: #d45a2a;">⚠ PDF download failed</p>' +
+                    '<p style="color: #666; margin-bottom: 20px;">Please try downloading the PDF manually.</p>' +
+                    '<div style="margin-top: 30px;">' +
+                    '<a href="' + pdfUrl + '" class="btn" download="' + orderNumber + '.pdf">Download PDF</a> ' +
+                    '<a href="{{ url_for("purchase.order_list") }}" class="btn secondary" style="margin-left: 10px;">Back to Order List</a>' +
+                    '</div>';
+            }
+        }, 1500);
+    }, 800);
+});
+</script>
+{% endblock %}
+

@@ -70,10 +70,8 @@ function validatePurchaseForm(event) {
         return false;
     }
     
-    // Ask user if they want to download PDF
-    const downloadPdf = confirm('Do you want to download a PDF version of this purchase request?');
-    document.getElementById('downloadPdfFlag').value = downloadPdf ? '1' : '0';
-    
+    // Form is valid, proceed to create purchase request
+    // Email client will open automatically after creation
     return true;
 }
 </script>

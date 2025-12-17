@@ -136,12 +136,8 @@ def create_purchase_request():
         db.session.commit()
         flash(f'Purchase request {order_number} created successfully!', 'success')
         
-        # Check if user wants to download PDF
-        download_pdf = request.form.get('download_pdf', '0') == '1'
-        if download_pdf:
-            return redirect(url_for('purchase.export_new_purchase_pdf', purchase_id=purchase_request.id))
-        
-        return redirect(url_for('purchase.order_list'))
+        # Always redirect to email with PDF route
+        return redirect(url_for('purchase.email_purchase_order', purchase_id=purchase_request.id))
     
     except Exception as e:
         db.session.rollback()
@@ -855,6 +851,37 @@ def export_purchase_pdf(purchase_id):
             return redirect(url_for('purchase.view_purchase_request', purchase_id=purchase_id))
         else:
             return redirect(url_for('purchase.view_order', purchase_id=purchase_id))
+
+
+@purchase_bp.route('/purchase/<int:purchase_id>/email-order')
+@login_required
+@role_required(['Chef', 'Bartender', 'Manager'])
+def email_purchase_order(purchase_id):
+    """Generate PDF and open email client with purchase order"""
+    try:
+        ensure_schema_updates()
+        org_filter = get_organization_filter(PurchaseRequest)
+        
+        # User can only view their own orders
+        purchase_request = PurchaseRequest.query.filter(org_filter).filter_by(id=purchase_id, created_by=current_user.id).first_or_404()
+        
+        # Get current date for email subject
+        current_date = datetime.now().strftime('%B %d, %Y')  # e.g., "December 18, 2025"
+        email_subject = f"Attached Order for {current_date}"
+        
+        # Generate PDF URL
+        pdf_url = url_for('purchase.export_new_purchase_pdf', purchase_id=purchase_id)
+        
+        # Render template that will trigger PDF download and open email
+        return render_template('purchase/email_order.html', 
+                             purchase_request=purchase_request,
+                             pdf_url=pdf_url,
+                             email_subject=email_subject)
+        
+    except Exception as e:
+        current_app.logger.error(f'Error in email_purchase_order: {str(e)}', exc_info=True)
+        flash(f'Error opening email: {str(e)}', 'error')
+        return redirect(url_for('purchase.order_list'))
 
 
 @purchase_bp.route('/purchase/<int:purchase_id>/export-new-pdf')
