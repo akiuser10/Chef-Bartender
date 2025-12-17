@@ -3,6 +3,12 @@
     box-sizing: border-box;
 }
 
+/* Global Placeholder Styles - Brighter for better readability */
+input::placeholder,
+textarea::placeholder {
+    opacity: 1;
+}
+
 html {
     height: 100%;
 }
@@ -324,17 +330,20 @@ canvas {
 }
 
 .user-dropdown-item.nav-logout-small {
-    background: transparent;
-    border: none;
+    background: #d45a2a;
+    border: 1px solid #d45a2a;
     padding: 12px 16px;
     text-align: left;
     width: 100%;
-    border-radius: 0;
+    border-radius: 4px;
+    color: white;
+    margin-top: 8px;
 }
 
 .user-dropdown-item.nav-logout-small:hover {
-    background: #3a3a3a;
-    border-color: transparent;
+    background: #b84a20;
+    border-color: #b84a20;
+    color: white;
 }
 
 .nav-logout-small {
@@ -1391,6 +1400,11 @@ main {
     box-shadow: 0 0 0 3px rgba(74, 157, 47, 0.1);
 }
 
+.search-container input[type="text"]::placeholder {
+    color: rgba(51, 51, 51, 0.75);
+    opacity: 1;
+}
+
 /* Tables */
 .table-wrapper {
     overflow-x: auto;
@@ -1649,6 +1663,12 @@ table tbody tr:hover {
     outline: none;
     border-color: #d45a2a;
     box-shadow: 0 0 0 2px rgba(212, 90, 42, 0.2);
+}
+
+.form-table input[type="text"]::placeholder,
+.form-table input[type="number"]::placeholder {
+    color: rgba(255, 255, 255, 0.75);
+    opacity: 1;
 }
 
 .form-table input[type="file"] {
@@ -1977,7 +1997,8 @@ form {
 }
 
 .form-input::placeholder {
-    color: rgba(51, 51, 51, 0.5);
+    color: rgba(51, 51, 51, 0.75);
+    opacity: 1;
 }
 
 .form-input:focus {
@@ -2070,7 +2091,8 @@ form textarea:focus {
 
 form input::placeholder,
 form textarea::placeholder {
-    color: rgba(51, 51, 51, 0.5);
+    color: rgba(51, 51, 51, 0.75);
+    opacity: 1;
 }
 
 form textarea {
@@ -2134,13 +2156,14 @@ form textarea {
 }
 
 .btn.secondary {
-    background: transparent;
+    background: #d45a2a;
     color: white;
-    border: 1px solid #3a3a3a;
+    border: 1px solid #d45a2a;
 }
 
 .btn.secondary:hover {
-    background: #3a3a3a;
+    background: #b84a20;
+    border-color: #b84a20;
 }
 
 button.btn {
@@ -2343,7 +2366,8 @@ button.btn {
 }
 
 .booking-input::placeholder {
-    color: rgba(255, 255, 255, 0.5);
+    color: rgba(255, 255, 255, 0.75);
+    opacity: 1;
 }
 
 .booking-icon {
@@ -2710,6 +2734,11 @@ main .page-panel .recipe-view-container {
 .recipe-title-input:focus {
     outline: none;
     border-bottom-color: #d45a2a;
+}
+
+.recipe-title-input::placeholder {
+    color: rgba(51, 51, 51, 0.75);
+    opacity: 1;
 }
 
 .method-section,
@@ -4034,6 +4063,11 @@ main .page-panel .recipe-view-container {
     cursor: pointer;
 }
 
+.form-group input[type="text"]::placeholder {
+    color: rgba(255, 255, 255, 0.75);
+    opacity: 1;
+}
+
 .form-actions {
     display: flex;
     gap: 10px;
@@ -4042,9 +4076,9 @@ main .page-panel .recipe-view-container {
 }
 
 .btn-secondary {
-    background: #3a3a3a;
+    background: #d45a2a;
     color: #fff;
-    border: none;
+    border: 1px solid #d45a2a;
     padding: 10px 20px;
     border-radius: 4px;
     cursor: pointer;
@@ -4053,7 +4087,21 @@ main .page-panel .recipe-view-container {
 }
 
 .btn-secondary:hover {
-    background: #4a4a4a;
+    background: #b84a20;
+    border-color: #b84a20;
+}
+
+/* Cancel Order buttons - override inline styles */
+button.btn-action[style*="background-color: #dc3545"],
+button.btn-action[style*="background-color:#dc3545"] {
+    background-color: #d45a2a !important;
+    border-color: #d45a2a !important;
+}
+
+button.btn-action[style*="background-color: #dc3545"]:hover,
+button.btn-action[style*="background-color:#dc3545"]:hover {
+    background-color: #b84a20 !important;
+    border-color: #b84a20 !important;
 }
 
 /* Book Actions (Edit/Delete buttons) */
@@ -4148,7 +4196,8 @@ main .page-panel .recipe-view-container {
 }
 
 .filter-input::placeholder {
-    color: #666666;
+    color: #888888;
+    opacity: 1;
 }
 
 .filter-input:focus {
