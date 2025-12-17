@@ -14,6 +14,8 @@ class User(db.Model, UserMixin):
     email = db.Column(db.String(120), unique=True, nullable=False)
     password = db.Column(db.String(200), nullable=False)
     is_admin = db.Column(db.Boolean, default=False)
+    email_verified = db.Column(db.Boolean, default=False)  # Email verification status
+    email_verification_token = db.Column(db.String(100), unique=True)  # Token for email verification
     first_name = db.Column(db.String(80))
     last_name = db.Column(db.String(80))
     user_role = db.Column(db.String(50))
