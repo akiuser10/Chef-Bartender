@@ -30,9 +30,12 @@ def recipes_list():
         
         recipe_type_filter = request.args.get('type', '')
         category_filter = (request.args.get('category', '') or '').lower()
+        missing_cost_filter = request.args.get('missing_cost', '').lower() == 'true'
         
         if recipe_type_filter:
             recipes = [r for r in recipes if r.recipe_type == recipe_type_filter]
+        if missing_cost_filter:
+            recipes = [r for r in recipes if r.has_missing_cost()]
         if category_filter:
             # Check if it's a subcategory filter (food:Category or beverage:Category)
             if ':' in category_filter:

@@ -72,7 +72,7 @@ def index():
                     'title': 'Recipes to Review',
                     'count': pending_cost,
                     'subtitle': 'Recipes need cost or data updates',
-                    'url': url_for('recipes.recipes_list'),
+                    'url': url_for('recipes.recipes_list', missing_cost='true'),  # Filter to show only recipes with missing costs
                     'color_class': 'red-juice'
                 })
 
@@ -88,7 +88,7 @@ def index():
                     'title': 'Orders to Approve',
                     'count': manager_pending,
                     'subtitle': 'Purchase requests awaiting your approval',
-                    'url': url_for('purchase.order_list'),
+                    'url': url_for('purchase.to_order'),  # This route filters for pending approvals
                     'color_class': 'orange-juice'
                 })
 
