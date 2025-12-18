@@ -35,29 +35,23 @@ def save_uploaded_file(file, folder):
 
 
 def save_slide_image(file):
-    """Save slide image to static/images/hero/ and return the relative path from static folder"""
+    """Save slide image to UPLOAD_FOLDER/slides/ and return the relative path for uploaded_file route"""
     if file and allowed_file(file.filename):
-        # Get the static folder path
-        import os
-        from flask import current_app
-        
-        # Get the base directory (parent of the app directory)
-        base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-        static_dir = os.path.join(base_dir, 'static')
-        hero_dir = os.path.join(static_dir, 'images', 'hero')
+        # Use UPLOAD_FOLDER for persistent storage (works on deployment platforms)
+        upload_dir = os.path.join(current_app.config['UPLOAD_FOLDER'], 'slides')
         
         # Create directory if it doesn't exist
-        os.makedirs(hero_dir, exist_ok=True)
+        os.makedirs(upload_dir, exist_ok=True)
         
         # Generate unique filename
         filename = secure_filename(file.filename)
         timestamp = datetime.now().strftime('%Y%m%d_%H%M%S_')
         filename = timestamp + filename
         
-        filepath = os.path.join(hero_dir, filename)
+        filepath = os.path.join(upload_dir, filename)
         file.save(filepath)
         
-        # Return relative path from static folder (e.g., 'images/hero/filename.jpg')
-        return os.path.join('images', 'hero', filename)
+        # Return relative path for uploaded_file route (e.g., 'uploads/slides/filename.jpg')
+        return os.path.join('uploads', 'slides', filename)
     return None
 

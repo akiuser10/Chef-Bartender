@@ -266,16 +266,16 @@ def edit_slide(slide_id):
             if file and file.filename:
                 # Delete old image if exists
                 if slide.image_path:
-                    # Check if old path is in static/images/hero or uploads/slides
+                    # Handle both old static/images/hero/ paths and new uploads/slides/ paths
                     if slide.image_path.startswith('images/hero/'):
-                        # Old path is in static/images/hero
+                        # Old path is in static/images/hero (legacy - migrate to uploads)
                         base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
                         old_path = os.path.join(base_dir, 'static', slide.image_path)
                     elif slide.image_path.startswith('uploads/slides/'):
-                        # Old path is in uploads (legacy)
+                        # New path is in uploads/slides/
                         old_path = os.path.join(current_app.config['UPLOAD_FOLDER'], slide.image_path.replace('uploads/', '', 1))
                     else:
-                        # Try both locations
+                        # Try both locations for backward compatibility
                         base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
                         old_path_static = os.path.join(base_dir, 'static', slide.image_path)
                         old_path_uploads = os.path.join(current_app.config['UPLOAD_FOLDER'], slide.image_path.replace('uploads/', '', 1))
@@ -287,7 +287,7 @@ def edit_slide(slide_id):
                         except Exception as e:
                             current_app.logger.warning(f'Could not delete old image: {str(e)}')
                 
-                # Save new image to static/images/hero/
+                # Save new image to UPLOAD_FOLDER/slides/ for persistent storage
                 image_path = save_slide_image(file)
                 if image_path:
                     slide.image_path = image_path
