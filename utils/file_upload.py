@@ -34,8 +34,8 @@ def save_uploaded_file(file, folder):
     return None
 
 
-def save_hero_slide_image(file):
-    """Save hero slide image to static/images/hero/ and return the relative path from static folder"""
+def save_slide_image(file):
+    """Save slide image to static/images/hero/ and return the relative path from static folder"""
     if file and allowed_file(file.filename):
         # Get the static folder path
         import os

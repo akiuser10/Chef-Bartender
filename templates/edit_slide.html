@@ -3,12 +3,12 @@
 {% block page_panel %}
 <div class="page-panel">
     <div class="panel-header">
-        <h1>Edit Hero Slide {{ slide.slide_number + 1 }}</h1>
-        <a href="{{ url_for('main.manage_hero_slides') }}" class="btn btn-secondary">← Back to Slides</a>
+        <h1>Edit Slide {{ slide.slide_number + 1 }}</h1>
+        <a href="{{ url_for('main.manage_slides') }}" class="btn btn-secondary">← Back to Slides</a>
     </div>
     
     <div class="panel-body">
-        <form method="POST" enctype="multipart/form-data" class="hero-slide-form">
+        <form method="POST" enctype="multipart/form-data" class="slide-form">
             <div class="form-group">
                 <label for="title">Title *</label>
                 <input type="text" id="title" name="title" value="{{ slide.title }}" required class="form-control">
@@ -20,7 +20,7 @@
             </div>
             
             <div class="form-group">
-                <label for="image">Hero Image *</label>
+                <label for="image">Image *</label>
                 {% if slide.image_path %}
                 <div class="current-image">
                     <img src="{{ url_for('static', filename=slide.image_path) if slide.image_path.startswith('images/') else url_for('main.uploaded_file', filename=slide.image_path.replace('uploads/', '', 1)) }}" alt="Current image" style="max-width: 400px; max-height: 300px; border-radius: 8px; margin-bottom: 15px;">
@@ -40,14 +40,14 @@
             
             <div class="form-actions">
                 <button type="submit" class="btn btn-primary">Save Changes</button>
-                <a href="{{ url_for('main.manage_hero_slides') }}" class="btn btn-secondary">Cancel</a>
+                <a href="{{ url_for('main.manage_slides') }}" class="btn btn-secondary">Cancel</a>
             </div>
         </form>
     </div>
 </div>
 
 <style>
-.hero-slide-form {
+.slide-form {
     max-width: 800px;
     background: white;
     padding: 30px;

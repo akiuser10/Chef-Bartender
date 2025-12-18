@@ -81,7 +81,7 @@
         </div>
         {% endif %}
         {% if current_user.is_authenticated and current_user.user_role == 'Manager' %}
-        <a href="{{ url_for('main.manage_hero_slides') }}" class="nav-link">MANAGE SLIDES</a>
+        <a href="{{ url_for('main.manage_slides') }}" class="nav-link">MANAGE SLIDES</a>
         {% endif %}
         <div class="nav-dropdown-container">
             <span class="nav-link about-dropdown-trigger" id="aboutDropdownTrigger">ABOUT</span>

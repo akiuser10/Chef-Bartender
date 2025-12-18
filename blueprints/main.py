@@ -11,7 +11,7 @@ main_bp = Blueprint('main', __name__)
 
 @main_bp.route('/')
 def index():
-    """Homepage with recent recipes and hero slides"""
+    """Homepage with recent recipes and slides"""
     from datetime import datetime, timedelta
     from models import Recipe, HeroSlide, Book, PurchaseRequest, Product
     from utils.helpers import get_organization_filter
@@ -23,9 +23,9 @@ def index():
         joinedload(Recipe.ingredients)
     ).order_by(Recipe.created_at.desc()).limit(8).all()
     
-    # Fetch hero slides from database, filtered by organization and ordered by slide_number
-    hero_org_filter = get_organization_filter(HeroSlide)
-    hero_slides = HeroSlide.query.filter(hero_org_filter, HeroSlide.is_active == True).order_by(HeroSlide.slide_number).all()
+    # Fetch slides from database, filtered by organization and ordered by slide_number
+    slide_org_filter = get_organization_filter(HeroSlide)
+    slides = HeroSlide.query.filter(slide_org_filter, HeroSlide.is_active == True).order_by(HeroSlide.slide_number).all()
     
     # Fetch books (for Knowledge Hub section) filtered by user role, newest first
     book_org_filter = get_organization_filter(Book)
@@ -126,7 +126,7 @@ def index():
     return render_template(
         'index.html',
         recent_recipes=recent_recipes,
-        hero_slides=hero_slides,
+        slides=slides,
         recent_books=recent_books,
         tasks=tasks
     )
@@ -201,25 +201,25 @@ def internal_error(error):
     return render_template('error.html', error=str(error)), 500
 
 
-@main_bp.route('/manage-hero-slides')
+@main_bp.route('/manage-slides')
 @login_required
 @role_required('Manager')
-def manage_hero_slides():
-    """Manage hero slides - Manager only"""
+def manage_slides():
+    """Manage slides - Manager only"""
     from models import HeroSlide
     from utils.db_helpers import ensure_schema_updates
     from utils.helpers import get_organization_filter
     ensure_schema_updates()
     
-    # Fetch hero slides filtered by organization, ordered by slide_number
+    # Fetch slides filtered by organization, ordered by slide_number
     org_filter = get_organization_filter(HeroSlide)
-    hero_slides = HeroSlide.query.filter(org_filter).order_by(HeroSlide.slide_number).all()
+    slides = HeroSlide.query.filter(org_filter).order_by(HeroSlide.slide_number).all()
     
     # Ensure we have 5 slides (create empty ones if needed)
-    while len(hero_slides) < 5:
+    while len(slides) < 5:
         new_slide = HeroSlide(
-            slide_number=len(hero_slides),
-            title=f'Slide {len(hero_slides) + 1}',
+            slide_number=len(slides),
+            title=f'Slide {len(slides) + 1}',
             subtitle='',
             image_path='',
             is_active=False,
@@ -229,19 +229,19 @@ def manage_hero_slides():
         from extensions import db
         db.session.add(new_slide)
         db.session.commit()
-        hero_slides.append(new_slide)
+        slides.append(new_slide)
     
-    return render_template('manage_hero_slides.html', hero_slides=hero_slides)
+    return render_template('manage_slides.html', slides=slides)
 
 
-@main_bp.route('/edit-hero-slide/<int:slide_id>', methods=['GET', 'POST'])
+@main_bp.route('/edit-slide/<int:slide_id>', methods=['GET', 'POST'])
 @login_required
 @role_required('Manager')
-def edit_hero_slide(slide_id):
-    """Edit a hero slide - Manager only, organization filtered"""
+def edit_slide(slide_id):
+    """Edit a slide - Manager only, organization filtered"""
     from models import HeroSlide
     from extensions import db
-    from utils.file_upload import save_hero_slide_image
+    from utils.file_upload import save_slide_image
     from utils.db_helpers import ensure_schema_updates
     from utils.helpers import get_organization_filter
     from flask import abort
@@ -266,12 +266,12 @@ def edit_hero_slide(slide_id):
             if file and file.filename:
                 # Delete old image if exists
                 if slide.image_path:
-                    # Check if old path is in static/images/hero or uploads/hero-slides
+                    # Check if old path is in static/images/hero or uploads/slides
                     if slide.image_path.startswith('images/hero/'):
                         # Old path is in static/images/hero
                         base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
                         old_path = os.path.join(base_dir, 'static', slide.image_path)
-                    elif slide.image_path.startswith('uploads/hero-slides/'):
+                    elif slide.image_path.startswith('uploads/slides/'):
                         # Old path is in uploads (legacy)
                         old_path = os.path.join(current_app.config['UPLOAD_FOLDER'], slide.image_path.replace('uploads/', '', 1))
                     else:
@@ -288,13 +288,13 @@ def edit_hero_slide(slide_id):
                             current_app.logger.warning(f'Could not delete old image: {str(e)}')
                 
                 # Save new image to static/images/hero/
-                image_path = save_hero_slide_image(file)
+                image_path = save_slide_image(file)
                 if image_path:
                     slide.image_path = image_path
         
         db.session.commit()
-        flash('Hero slide updated successfully!', 'success')
-        return redirect(url_for('main.manage_hero_slides'))
+        flash('Slide updated successfully!', 'success')
+        return redirect(url_for('main.manage_slides'))
     
-    return render_template('edit_hero_slide.html', slide=slide)
+    return render_template('edit_slide.html', slide=slide)
 

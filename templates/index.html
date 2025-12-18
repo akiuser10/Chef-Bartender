@@ -3,8 +3,8 @@
 <!-- Hero Section with Slider -->
 <div class="hero-section-foodility">
     <div class="hero-slider-container">
-        {% if hero_slides %}
-            {% for slide in hero_slides %}
+        {% if slides %}
+            {% for slide in slides %}
                 {% if slide.is_active %}
                 <div class="hero-slide-foodility {% if loop.first %}active{% endif %}" data-slide="{{ slide.slide_number }}">
                     {% if slide.image_path %}
@@ -266,47 +266,47 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Hero Slider
-    const heroSlides = document.querySelectorAll('.hero-slide-foodility');
+    // Slider
+    const slides = document.querySelectorAll('.hero-slide-foodility');
     const heroPrevBtn = document.getElementById('heroPrevBtnFoodility');
     const heroNextBtn = document.getElementById('heroNextBtnFoodility');
-    let currentHeroSlide = 0;
-    let heroAutoSlideInterval;
+    let currentSlide = 0;
+    let autoSlideInterval;
     
-    function showHeroSlide(index) {
-        heroSlides.forEach(slide => slide.classList.remove('active'));
-        if (heroSlides[index]) {
-            heroSlides[index].classList.add('active');
+    function showSlide(index) {
+        slides.forEach(slide => slide.classList.remove('active'));
+        if (slides[index]) {
+            slides[index].classList.add('active');
         }
     }
     
-    function nextHeroSlide() {
-        currentHeroSlide = (currentHeroSlide + 1) % heroSlides.length;
-        showHeroSlide(currentHeroSlide);
-        resetHeroAutoSlide();
+    function nextSlide() {
+        currentSlide = (currentSlide + 1) % slides.length;
+        showSlide(currentSlide);
+        resetAutoSlide();
     }
     
-    function prevHeroSlide() {
-        currentHeroSlide = (currentHeroSlide - 1 + heroSlides.length) % heroSlides.length;
-        showHeroSlide(currentHeroSlide);
-        resetHeroAutoSlide();
+    function prevSlide() {
+        currentSlide = (currentSlide - 1 + slides.length) % slides.length;
+        showSlide(currentSlide);
+        resetAutoSlide();
     }
     
-    function startHeroAutoSlide() {
-        if (heroAutoSlideInterval) {
-            clearInterval(heroAutoSlideInterval);
+    function startAutoSlide() {
+        if (autoSlideInterval) {
+            clearInterval(autoSlideInterval);
         }
-        heroAutoSlideInterval = setInterval(nextHeroSlide, 5000);
+        autoSlideInterval = setInterval(nextSlide, 5000);
     }
     
-    function resetHeroAutoSlide() {
-        startHeroAutoSlide();
+    function resetAutoSlide() {
+        startAutoSlide();
     }
     
-    if (heroNextBtn) heroNextBtn.addEventListener('click', nextHeroSlide);
-    if (heroPrevBtn) heroPrevBtn.addEventListener('click', prevHeroSlide);
+    if (heroNextBtn) heroNextBtn.addEventListener('click', nextSlide);
+    if (heroPrevBtn) heroPrevBtn.addEventListener('click', prevSlide);
     
-    startHeroAutoSlide();
+    startAutoSlide();
     
     // Set background images for recipe cards with images
     document.querySelectorAll('.recipe-image-with-url').forEach(function(img) {

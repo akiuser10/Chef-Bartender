@@ -624,7 +624,7 @@ class HeroSlide(db.Model):
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     created_by = db.Column(db.Integer, db.ForeignKey('user.id'))
     organisation = db.Column(db.String(200))  # Organization name for sharing
-    creator = db.relationship('User', foreign_keys=[created_by], backref='created_hero_slides')
+    creator = db.relationship('User', foreign_keys=[created_by], backref='created_slides')
     
     def __repr__(self):
         return f'<HeroSlide {self.id}: {self.title} (Slide {self.slide_number})>'

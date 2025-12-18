@@ -3,14 +3,14 @@
 {% block page_panel %}
 <div class="page-panel">
     <div class="panel-header">
-        <h1>Manage Hero Slides</h1>
-        <p>Upload and manage hero slider images for the homepage</p>
+        <h1>Manage Slides</h1>
+        <p>Upload and manage slider images for the homepage</p>
     </div>
     
     <div class="panel-body">
-        <div class="hero-slides-grid">
-            {% for slide in hero_slides %}
-            <div class="hero-slide-card">
+        <div class="slides-grid">
+            {% for slide in slides %}
+            <div class="slide-card">
                 <div class="slide-preview">
                     {% if slide.image_path %}
                         <img src="{{ url_for('static', filename=slide.image_path) if slide.image_path.startswith('images/') else url_for('main.uploaded_file', filename=slide.image_path.replace('uploads/', '', 1)) }}" alt="{{ slide.title }}" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'400\' height=\'300\'%3E%3Crect fill=\'%23ddd\' width=\'400\' height=\'300\'/%3E%3Ctext fill=\'%23999\' x=\'50%25\' y=\'50%25\' text-anchor=\'middle\' dy=\'.3em\'%3ENo Image%3C/text%3E%3C/svg%3E';">
@@ -31,7 +31,7 @@
                     <p>{{ slide.subtitle or 'No subtitle' }}</p>
                 </div>
                 <div class="slide-actions">
-                    <a href="{{ url_for('main.edit_hero_slide', slide_id=slide.id) }}" class="btn btn-primary">Edit</a>
+                    <a href="{{ url_for('main.edit_slide', slide_id=slide.id) }}" class="btn btn-primary">Edit</a>
                 </div>
             </div>
             {% endfor %}
@@ -40,14 +40,14 @@
 </div>
 
 <style>
-.hero-slides-grid {
+.slides-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
     gap: 30px;
     margin-top: 30px;
 }
 
-.hero-slide-card {
+.slide-card {
     background: white;
     border-radius: 12px;
     overflow: hidden;
@@ -55,7 +55,7 @@
     transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
-.hero-slide-card:hover {
+.slide-card:hover {
     transform: translateY(-5px);
     box-shadow: 0 5px 20px rgba(0,0,0,0.15);
 }
