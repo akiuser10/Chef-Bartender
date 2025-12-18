@@ -75,8 +75,12 @@
         <div class="nav-dropdown-container">
             <span class="nav-link knowledge-dropdown-trigger" id="knowledgeDropdownTrigger">KNOWLEDGE HUB</span>
             <div class="nav-dropdown-menu" id="knowledgeDropdownMenu">
+                {% if current_user.user_role in ['Bartender', 'Manager'] %}
                 <a href="{{ url_for('knowledge.bartender_library') }}" class="nav-dropdown-item">Bartender Library</a>
+                {% endif %}
+                {% if current_user.user_role in ['Chef', 'Manager'] %}
                 <a href="{{ url_for('knowledge.chef_library') }}" class="nav-dropdown-item">Chef Library</a>
+                {% endif %}
             </div>
         </div>
         {% endif %}
