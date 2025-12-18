@@ -177,15 +177,30 @@ def uploaded_file(filename):
     if filename.startswith('uploads/'):
         filename = filename.replace('uploads/', '', 1)
     
+    # Normalize path separators (handle both / and \)
+    filename = filename.replace('\\', '/')
+    
     # Construct full path
     file_path = os.path.join(current_app.config['UPLOAD_FOLDER'], filename)
     
+    # Normalize the path (resolve any .. or . components)
+    file_path = os.path.normpath(file_path)
+    
+    # Security check: ensure the resolved path is still within UPLOAD_FOLDER
+    upload_folder = os.path.normpath(current_app.config['UPLOAD_FOLDER'])
+    if not file_path.startswith(upload_folder):
+        current_app.logger.error(f'Security violation: Attempted to access file outside UPLOAD_FOLDER: {file_path}')
+        abort(403)
+    
     # Check if file exists
     if not os.path.exists(file_path):
-        current_app.logger.warning(f'File not found: {file_path}, requested filename: {filename}')
+        current_app.logger.warning(f'File not found: {file_path}, requested filename: {filename}, UPLOAD_FOLDER: {upload_folder}')
         abort(404)
     
-    return send_from_directory(current_app.config['UPLOAD_FOLDER'], filename)
+    # Get the relative path for send_from_directory
+    relative_path = os.path.relpath(file_path, upload_folder)
+    
+    return send_from_directory(upload_folder, relative_path)
 
 
 @main_bp.errorhandler(404)

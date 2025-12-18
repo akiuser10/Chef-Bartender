@@ -8,9 +8,10 @@
                 {% if slide.is_active %}
                 <div class="hero-slide-foodility {% if loop.first %}active{% endif %}" data-slide="{{ slide.slide_number }}">
                     {% if slide.image_path %}
-                    <div class="hero-slide-bg" data-bg-image="{{ url_for('static', filename=slide.image_path) if slide.image_path.startswith('images/') else url_for('main.uploaded_file', filename=slide.image_path.replace('uploads/', '', 1)) }}"></div>
+                    {% set slide_image_url = url_for('static', filename=slide.image_path) if slide.image_path.startswith('images/') else url_for('main.uploaded_file', filename=slide.image_path.replace('uploads/', '', 1)) %}
+                    <div class="hero-slide-bg" style="background-image: url('{{ slide_image_url }}');"></div>
                     {% else %}
-                    <div class="hero-slide-bg" data-bg-image="{{ url_for('static', filename='images/hero/green-smoothie.jpg') }}"></div>
+                    <div class="hero-slide-bg" style="background-image: url('{{ url_for('static', filename='images/hero/green-smoothie.jpg') }}');"></div>
                     {% endif %}
                     <div class="hero-content-foodility">
                         <div class="hero-text-container">
@@ -26,7 +27,7 @@
         {% else %}
             <!-- Fallback slides if no database slides exist -->
             <div class="hero-slide-foodility active" data-slide="0">
-                <div class="hero-slide-bg" data-bg-image="{{ url_for('static', filename='images/hero/green-smoothie.jpg') }}"></div>
+                <div class="hero-slide-bg" style="background-image: url('{{ url_for('static', filename='images/hero/green-smoothie.jpg') }}');"></div>
                 <div class="hero-content-foodility">
                     <div class="hero-text-container">
                         <h1 class="hero-title-script">Healthy Smoothie</h1>
@@ -186,8 +187,8 @@
                            {% if is_external %}target="_blank" rel="noopener noreferrer"{% endif %}>
                             {% if book.cover_image_path %}
                                 {% set cover_path = book.cover_image_path.replace('uploads/', '', 1) if book.cover_image_path.startswith('uploads/') else book.cover_image_path %}
-                                <div class="knowledge-hub-card"
-                                     data-cover-image="{{ url_for('main.uploaded_file', filename=cover_path) }}">
+                                {% set cover_image_url = url_for('main.uploaded_file', filename=cover_path) %}
+                                <div class="knowledge-hub-card" style="background-image: url('{{ cover_image_url }}'); background-size: cover; background-position: center;">
                                 </div>
                             {% else %}
                                 <div class="knowledge-hub-card">
@@ -235,8 +236,8 @@
                            {% if is_external %}target="_blank" rel="noopener noreferrer"{% endif %}>
                             {% if book.cover_image_path %}
                                 {% set cover_path = book.cover_image_path.replace('uploads/', '', 1) if book.cover_image_path.startswith('uploads/') else book.cover_image_path %}
-                                <div class="knowledge-hub-card"
-                                     data-cover-image="{{ url_for('main.uploaded_file', filename=cover_path) }}">
+                                {% set cover_image_url = url_for('main.uploaded_file', filename=cover_path) %}
+                                <div class="knowledge-hub-card" style="background-image: url('{{ cover_image_url }}'); background-size: cover; background-position: center;">
                                 </div>
                             {% else %}
                                 <div class="knowledge-hub-card">
@@ -289,8 +290,8 @@
                    {% if is_external %}target="_blank" rel="noopener noreferrer"{% endif %}>
                     {% if book.cover_image_path %}
                         {% set cover_path = book.cover_image_path.replace('uploads/', '', 1) if book.cover_image_path.startswith('uploads/') else book.cover_image_path %}
-                        <div class="knowledge-hub-card"
-                             data-cover-image="{{ url_for('main.uploaded_file', filename=cover_path) }}">
+                        {% set cover_image_url = url_for('main.uploaded_file', filename=cover_path) %}
+                        <div class="knowledge-hub-card" style="background-image: url('{{ cover_image_url }}'); background-size: cover; background-position: center;">
                         </div>
                     {% else %}
                         <div class="knowledge-hub-card">
@@ -341,8 +342,8 @@
                    {% if is_external %}target="_blank" rel="noopener noreferrer"{% endif %}>
                     {% if book.cover_image_path %}
                         {% set cover_path = book.cover_image_path.replace('uploads/', '', 1) if book.cover_image_path.startswith('uploads/') else book.cover_image_path %}
-                        <div class="knowledge-hub-card"
-                             data-cover-image="{{ url_for('main.uploaded_file', filename=cover_path) }}">
+                        {% set cover_image_url = url_for('main.uploaded_file', filename=cover_path) %}
+                        <div class="knowledge-hub-card" style="background-image: url('{{ cover_image_url }}'); background-size: cover; background-position: center;">
                         </div>
                     {% else %}
                         <div class="knowledge-hub-card">
@@ -420,23 +421,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
     
-    // Set background images for hero slides
-    document.querySelectorAll('.hero-slide-bg').forEach(function(bg) {
-        const imageUrl = bg.getAttribute('data-bg-image');
-        if (imageUrl) {
-            bg.style.backgroundImage = 'url(' + imageUrl + ')';
-        }
-    });
-    
-    // Set background images for knowledge hub book cards (when they have covers)
-    document.querySelectorAll('.knowledge-hub-card[data-cover-image]').forEach(function(card) {
-        const imageUrl = card.getAttribute('data-cover-image');
-        if (imageUrl) {
-            card.style.backgroundImage = 'url(' + imageUrl + ')';
-            card.style.backgroundSize = 'cover';
-            card.style.backgroundPosition = 'center';
-        }
-    });
+    // Background images are now set directly via inline styles in templates
 
     // Task cards below hero: hide on click and show "Well done" when none left
     const taskContainer = document.querySelector('.hero-products-showcase');
