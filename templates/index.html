@@ -272,9 +272,8 @@
     <div class="section-container">
         <h2 class="section-title">Bartender Library</h2>
         <div class="blog-grid knowledge-hub-grid">
-            {% set bartender_books = recent_books|selectattr('library_type', 'equalto', 'bartender')|list %}
-            {% if bartender_books %}
-                {% for book in bartender_books %}
+            {% if recent_books %}
+                {% for book in recent_books %}
                 {# Determine the best link for this book #}
                 {% if book.article_url %}
                     {% set book_href = book.article_url %}
@@ -326,9 +325,8 @@
     <div class="section-container">
         <h2 class="section-title">Chef Library</h2>
         <div class="blog-grid knowledge-hub-grid">
-            {% set chef_books = recent_books|selectattr('library_type', 'equalto', 'chef')|list %}
-            {% if chef_books %}
-                {% for book in chef_books %}
+            {% if recent_books %}
+                {% for book in recent_books %}
                 {# Determine the best link for this book #}
                 {% if book.article_url %}
                     {% set book_href = book.article_url %}
