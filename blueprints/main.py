@@ -264,6 +264,25 @@ def edit_slide(slide_id):
         if 'image' in request.files:
             file = request.files['image']
             if file and file.filename:
+                # Verify upload directory exists and is writable
+                upload_dir = os.path.join(current_app.config['UPLOAD_FOLDER'], 'slides')
+                try:
+                    os.makedirs(upload_dir, exist_ok=True)
+                    # Test write permissions
+                    test_file = os.path.join(upload_dir, '.test_write')
+                    try:
+                        with open(test_file, 'w') as f:
+                            f.write('test')
+                        os.remove(test_file)
+                    except Exception as e:
+                        current_app.logger.error(f'Upload directory not writable: {upload_dir}, error: {str(e)}')
+                        flash(f'Cannot save image: Upload directory is not writable. Please check server configuration.', 'error')
+                        return redirect(url_for('main.edit_slide', slide_id=slide_id))
+                except Exception as e:
+                    current_app.logger.error(f'Cannot create upload directory: {upload_dir}, error: {str(e)}')
+                    flash(f'Cannot save image: Failed to create upload directory. Please check server configuration.', 'error')
+                    return redirect(url_for('main.edit_slide', slide_id=slide_id))
+                
                 # Delete old image if exists
                 if slide.image_path:
                     # Handle both old static/images/hero/ paths and new uploads/slides/ paths
@@ -284,13 +303,24 @@ def edit_slide(slide_id):
                     if os.path.exists(old_path):
                         try:
                             os.remove(old_path)
+                            current_app.logger.info(f'Deleted old slide image: {old_path}')
                         except Exception as e:
                             current_app.logger.warning(f'Could not delete old image: {str(e)}')
                 
                 # Save new image to UPLOAD_FOLDER/slides/ for persistent storage
                 image_path = save_slide_image(file)
                 if image_path:
-                    slide.image_path = image_path
+                    # Verify the file was actually saved
+                    full_path = os.path.join(current_app.config['UPLOAD_FOLDER'], image_path.replace('uploads/', '', 1))
+                    if os.path.exists(full_path):
+                        slide.image_path = image_path
+                        current_app.logger.info(f'Slide {slide.id} image saved successfully: {full_path}, stored path: {image_path}')
+                    else:
+                        current_app.logger.error(f'Image file not found after save: {full_path}')
+                        flash('Image was saved but file not found. Please check server logs.', 'error')
+                else:
+                    flash('Failed to save slide image. Please check file format and try again.', 'error')
+                    current_app.logger.error(f'Failed to save image for slide {slide.id}')
         
         db.session.commit()
         flash('Slide updated successfully!', 'success')

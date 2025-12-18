@@ -5299,10 +5299,11 @@ button.btn-action[style*="background-color:#dc3545"]:hover {
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
     overflow: hidden;
     display: flex;
-    align-items: center;
+    align-items: flex-end;
     justify-content: center;
     text-align: center;
-    padding: 40px 30px;
+    padding: 20px 30px;
+    padding-bottom: 20px;
     background: linear-gradient(135deg, #ffb3d9 0%, #ff99cc 100%);
     cursor: pointer;
     transition: transform 0.3s ease, box-shadow 0.3s ease;
@@ -5354,6 +5355,14 @@ button.btn-action[style*="background-color:#dc3545"]:hover {
     color: #2d2d2d;
     margin: 0;
     text-align: center;
+    position: relative;
+    z-index: 2;
+    background: rgba(255, 255, 255, 0.9);
+    padding: 8px 12px;
+    border-radius: 8px;
+    backdrop-filter: blur(5px);
+    width: calc(100% - 24px);
+    box-sizing: border-box;
 }
 
 /* Responsive columns for Knowledge Hub cards */
