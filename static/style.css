@@ -5259,6 +5259,33 @@ button.btn-action[style*="background-color:#dc3545"]:hover {
     background: transparent;
 }
 
+/* Two-column layout for Managers */
+.knowledge-hub-two-columns {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 40px;
+    align-items: start;
+}
+
+.knowledge-hub-column {
+    display: flex;
+    flex-direction: column;
+}
+
+.knowledge-hub-column-title {
+    font-family: 'Dancing Script', cursive;
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: #2d2d2d;
+    text-align: center;
+    margin: 0 0 30px 0;
+}
+
+/* Adjust grid columns within 2-column layout */
+.knowledge-hub-two-columns .knowledge-hub-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
 .knowledge-hub-grid {
     display: grid;
     grid-template-columns: repeat(7, minmax(0, 1fr));
@@ -5334,16 +5361,36 @@ button.btn-action[style*="background-color:#dc3545"]:hover {
     .knowledge-hub-grid {
         grid-template-columns: repeat(4, minmax(0, 1fr));
     }
+    
+    /* Adjust grid within 2-column layout */
+    .knowledge-hub-two-columns .knowledge-hub-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
 }
 
 @media (max-width: 900px) {
     .knowledge-hub-grid {
         grid-template-columns: repeat(2, minmax(0, 1fr));
     }
+    
+    /* Stack columns on smaller screens for Managers */
+    .knowledge-hub-two-columns {
+        grid-template-columns: 1fr;
+        gap: 30px;
+    }
+    
+    /* Full width grid when columns stack */
+    .knowledge-hub-two-columns .knowledge-hub-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
 }
 
 @media (max-width: 600px) {
     .knowledge-hub-grid {
+        grid-template-columns: repeat(1, minmax(0, 1fr));
+    }
+    
+    .knowledge-hub-two-columns .knowledge-hub-grid {
         grid-template-columns: repeat(1, minmax(0, 1fr));
     }
 }
