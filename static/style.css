@@ -5309,6 +5309,12 @@ button.btn-action[style*="background-color:#dc3545"]:hover {
     transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
+/* Cards with cover images - no padding needed since no title */
+.knowledge-hub-card[data-cover-image] {
+    padding: 0;
+    align-items: stretch;
+}
+
 .knowledge-hub-card:hover {
     transform: translateY(-5px);
     box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
