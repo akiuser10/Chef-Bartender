@@ -4707,13 +4707,13 @@ button.btn-action[style*="background-color:#dc3545"]:hover {
 .hero-products-showcase {
     position: relative;
     width: 100%;
-    padding: 60px 100px;
+    padding: 30px 50px;
     background: #f8f8f8;
     display: flex;
     justify-content: center;
     align-items: center;
     gap: 40px;
-    min-height: 250px;
+    min-height: 200px;
 }
 
 .product-bottle-link {
@@ -4799,7 +4799,7 @@ button.btn-action[style*="background-color:#dc3545"]:hover {
 .section-container {
     max-width: 1400px;
     margin: 0 auto;
-    padding: 80px 40px;
+    padding: 40px 40px;
 }
 
 .section-title {
@@ -4808,13 +4808,13 @@ button.btn-action[style*="background-color:#dc3545"]:hover {
     font-weight: 700;
     color: #2d2d2d;
     text-align: center;
-    margin: 0 0 60px 0;
+    margin: 0 0 30px 0;
 }
 
 /* Beverage Section */
 .beverage-section {
     background: white;
-    padding: 80px 0 20px 0;
+    padding: 40px 0 10px 0;
 }
 
 .beverage-grid {
@@ -5012,11 +5012,11 @@ button.btn-action[style*="background-color:#dc3545"]:hover {
 /* Recipe Section */
 .recipe-section {
     background: white;
-    padding: 20px 0 100px 0;
+    padding: 10px 0 40px 0;
 }
 
 .recipe-section .section-container {
-    padding: 20px 40px;
+    padding: 10px 40px;
 }
 
 .recipe-content {
@@ -5088,7 +5088,7 @@ button.btn-action[style*="background-color:#dc3545"]:hover {
 /* Upcoming Section */
 .upcoming-section {
     background: #f8f8f8;
-    padding: 100px 0;
+    padding: 40px 0;
 }
 
 .upcoming-content {
@@ -5190,7 +5190,7 @@ button.btn-action[style*="background-color:#dc3545"]:hover {
 /* Blog Section */
 .blog-section {
     background: #f8f8f8;
-    padding: 100px 0;
+    padding: 40px 0;
 }
 
 .blog-grid {
