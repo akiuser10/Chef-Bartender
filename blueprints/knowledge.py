@@ -10,8 +10,117 @@ from utils.helpers import get_organization_filter
 from utils.file_upload import save_uploaded_file, allowed_file
 import os
 from werkzeug.utils import secure_filename
+from urllib.parse import urlparse, urljoin
+import requests
+from bs4 import BeautifulSoup
+from PIL import Image
+import uuid
+from io import BytesIO
 
 knowledge_bp = Blueprint('knowledge', __name__, url_prefix='/knowledge')
+
+
+def fetch_cover_image_from_url(article_url):
+    """
+    Fetch cover image from a website URL using Open Graph tags or meta tags.
+    Downloads and saves the image to uploads/books/covers/ for future use.
+    Returns the path to the saved image, or None if extraction fails.
+    """
+    try:
+        # Set headers to mimic a browser
+        headers = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+        }
+        
+        # Fetch the webpage
+        response = requests.get(article_url, headers=headers, timeout=10, allow_redirects=True)
+        response.raise_for_status()
+        
+        # Parse HTML
+        soup = BeautifulSoup(response.content, 'html.parser')
+        
+        # Try to find Open Graph image first (og:image)
+        og_image = soup.find('meta', property='og:image')
+        if og_image and og_image.get('content'):
+            image_url = og_image.get('content')
+        else:
+            # Try Twitter Card image (twitter:image)
+            twitter_image = soup.find('meta', attrs={'name': 'twitter:image'})
+            if twitter_image and twitter_image.get('content'):
+                image_url = twitter_image.get('content')
+            else:
+                # Try to find the largest image on the page
+                images = soup.find_all('img')
+                if not images:
+                    return None
+                
+                # Get the largest image (by dimensions or file size)
+                largest_image = None
+                max_size = 0
+                
+                for img in images:
+                    src = img.get('src') or img.get('data-src')
+                    if not src:
+                        continue
+                    
+                    # Make absolute URL
+                    if not src.startswith('http'):
+                        src = urljoin(article_url, src)
+                    
+                    # Try to get image dimensions
+                    width = int(img.get('width', 0) or 0)
+                    height = int(img.get('height', 0) or 0)
+                    size = width * height
+                    
+                    if size > max_size:
+                        max_size = size
+                        largest_image = src
+                
+                if not largest_image:
+                    return None
+                
+                image_url = largest_image
+        
+        # Make absolute URL if relative
+        if not image_url.startswith('http'):
+            image_url = urljoin(article_url, image_url)
+        
+        # Download the image
+        img_response = requests.get(image_url, headers=headers, timeout=10, stream=True)
+        img_response.raise_for_status()
+        
+        # Open image with PIL
+        img = Image.open(BytesIO(img_response.content))
+        
+        # Convert to RGB if necessary (handles RGBA, P, etc.)
+        if img.mode != 'RGB':
+            img = img.convert('RGB')
+        
+        # Resize to reasonable cover size (maintain aspect ratio)
+        max_width = 600
+        max_height = 800
+        
+        if img.width > max_width or img.height > max_height:
+            img.thumbnail((max_width, max_height), Image.Resampling.LANCZOS)
+        
+        # Generate unique filename
+        filename = f"{uuid.uuid4().hex}.jpg"
+        
+        # Ensure output directory exists
+        upload_folder = current_app.config['UPLOAD_FOLDER']
+        output_dir = os.path.join(upload_folder, 'books', 'covers')
+        os.makedirs(output_dir, exist_ok=True)
+        
+        # Save the image
+        output_path = os.path.join(output_dir, filename)
+        img.save(output_path, 'JPEG', quality=85)
+        
+        # Return the relative path with 'uploads/' prefix
+        return os.path.join('uploads', 'books', 'covers', filename).replace('\\', '/')
+        
+    except Exception as e:
+        current_app.logger.error(f'Error fetching cover image from URL {article_url}: {str(e)}', exc_info=True)
+        return None
 
 
 def extract_pdf_first_page_as_image(pdf_path, output_folder='books/covers'):
@@ -164,6 +273,9 @@ def add_book():
         if cover_file and cover_file.filename != '':
             if allowed_file(cover_file.filename):
                 cover_image_path = save_uploaded_file(cover_file, 'books/covers')
+        else:
+            # If no manual upload, try to fetch cover image from article URL
+            cover_image_path = fetch_cover_image_from_url(article_url)
         
         # Ensure organization is set (required for persistence and filtering)
         organisation = current_user.organisation.strip() if current_user.organisation and current_user.organisation.strip() else None
@@ -177,7 +289,7 @@ def add_book():
             library_type=library_type,
             article_url=article_url,
             pdf_path=None,  # No PDF for article links
-            cover_image_path=cover_image_path,  # Optional cover image
+            cover_image_path=cover_image_path,  # Optional cover image (from upload or auto-fetch)
             created_by=current_user.id,
             organisation=organisation
         )
@@ -364,6 +476,7 @@ def edit_book(book_id):
         
         # Update book details
         book.title = title
+        old_article_url = book.article_url
         book.article_url = article_url
         
         # Handle cover image upload (optional)
@@ -383,6 +496,21 @@ def edit_book(book_id):
                 cover_image_path = save_uploaded_file(cover_file, 'books/covers')
                 if cover_image_path:
                     book.cover_image_path = cover_image_path
+        elif article_url != old_article_url:
+            # If article URL changed and no new cover uploaded, try to fetch new cover
+            # Delete old cover image if exists
+            if book.cover_image_path:
+                old_cover_path = os.path.join(current_app.config['UPLOAD_FOLDER'], book.cover_image_path.replace('uploads/', '', 1))
+                try:
+                    if os.path.exists(old_cover_path):
+                        os.remove(old_cover_path)
+                except Exception as e:
+                    current_app.logger.warning(f'Could not delete old cover: {str(e)}')
+            
+            # Fetch new cover image from updated URL
+            cover_image_path = fetch_cover_image_from_url(article_url)
+            if cover_image_path:
+                book.cover_image_path = cover_image_path
         
         db.session.commit()
         
