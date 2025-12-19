@@ -437,6 +437,37 @@ def ensure_schema_updates():
                         conn.execute(db.text("ALTER TABLE temperature_log ADD COLUMN created_at TIMESTAMP"))
                     if 'updated_at' not in temp_log_columns:
                         conn.execute(db.text("ALTER TABLE temperature_log ADD COLUMN updated_at TIMESTAMP"))
+                    # Handle time_slot column - add if missing, or update NULL values if it exists with NOT NULL constraint
+                    if 'time_slot' not in temp_log_columns:
+                        try:
+                            # Add column as nullable first
+                            conn.execute(db.text("ALTER TABLE temperature_log ADD COLUMN time_slot VARCHAR(10)"))
+                        except Exception as e:
+                            current_app.logger.warning(f"Could not add time_slot column to temperature_log: {str(e)}")
+                    else:
+                        # Column exists - check if it has NOT NULL constraint and has NULL values
+                        # If database requires NOT NULL, we need to set a default value for existing NULL rows
+                        try:
+                            db_url = str(db.engine.url)
+                            is_postgres = 'postgresql' in db_url.lower() or 'postgres' in db_url.lower()
+                            
+                            if is_postgres:
+                                # For PostgreSQL: Set a default value for NULL time_slot values
+                                # Use the first scheduled time as default
+                                conn.execute(db.text("""
+                                    UPDATE temperature_log 
+                                    SET time_slot = '10:00 AM'
+                                    WHERE time_slot IS NULL
+                                """))
+                            else:
+                                # For SQLite: Set default for NULL values
+                                conn.execute(db.text("""
+                                    UPDATE temperature_log 
+                                    SET time_slot = '10:00 AM'
+                                    WHERE time_slot IS NULL
+                                """))
+                        except Exception as e:
+                            current_app.logger.warning(f"Could not update time_slot values in temperature_log: {str(e)}")
                 
                 # Temperature Entry table updates
                 if table_exists(conn, 'temperature_entry'):
