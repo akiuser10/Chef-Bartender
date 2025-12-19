@@ -8,6 +8,7 @@ let allUnits = [];
 let currentDate = new Date();
 let currentTime = '10:00 AM';
 let scheduledTimes = ['10:00 AM', '02:00 PM', '06:00 PM', '10:00 PM'];
+let userInitials = window.userInitials || ''; // Get user initials from template
 
 // Initialize on page load
 document.addEventListener('DOMContentLoaded', function() {
@@ -385,6 +386,12 @@ function createTimeRow(unitId, time) {
     initialInput.placeholder = '—';
     initialInput.maxLength = 10;
     initialInput.readOnly = true; // Will be editable only for current time
+    
+    // Auto-populate with user initials if this is the current time
+    if (time === currentTime && userInitials) {
+        initialInput.value = userInitials.toUpperCase();
+    }
+    
     initialCell.appendChild(initialInput);
     row.appendChild(initialCell);
     
@@ -453,7 +460,14 @@ function populateUnitTable(unitId, entries) {
         // Set initial
         const initialInput = row.querySelector('.initial-input');
         if (initialInput) {
-            initialInput.value = entry?.initial ?? '';
+            // Use saved initial if exists, otherwise use user initials for current time
+            if (entry?.initial) {
+                initialInput.value = entry.initial;
+            } else if (time === currentTime && userInitials) {
+                initialInput.value = userInitials.toUpperCase();
+            } else {
+                initialInput.value = '';
+            }
         }
     });
 }
@@ -486,6 +500,11 @@ function updateEditableFields() {
                 initialInput.readOnly = !isCurrentTime;
                 initialInput.placeholder = isCurrentTime ? 'Initials' : '—';
                 initialInput.required = isCurrentTime;
+                
+                // Auto-populate with user initials if it's the current time and field is empty
+                if (isCurrentTime && !initialInput.value && userInitials) {
+                    initialInput.value = userInitials.toUpperCase();
+                }
             }
             
             // Add visual indicator for current time row

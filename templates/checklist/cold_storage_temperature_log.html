@@ -1,5 +1,13 @@
 {% extends "base.html" %}
 {% block page_panel %}
+<script>
+    // Pass user initials to JavaScript
+    window.userInitials = '{{ (current_user.first_name[0] if current_user.first_name else "") + (current_user.last_name[0] if current_user.last_name else "") if current_user.is_authenticated else "" }}';
+    // Fallback to username first letter if no name
+    if (!window.userInitials && {{ 'true' if current_user.is_authenticated else 'false' }}) {
+        window.userInitials = '{{ current_user.username[0].upper() if current_user.username else "" }}';
+    }
+</script>
 <div class="panel-header">
     <h2>Cold Storage Temperature Log – Unit Wise (HACCP)</h2>
 </div>
