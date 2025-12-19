@@ -97,6 +97,18 @@ def create_app(config_object='config.Config'):
         secondary_id = click.prompt('Secondary ingredient ID', type=int)
         show_secondary_ingredient_details(secondary_id)
     
+    @app.cli.command('cleanup-temperature-logs')
+    def cleanup_temperature_logs():
+        """Clean up temperature logs older than 12 weeks"""
+        from utils.db_helpers import cleanup_old_temperature_logs
+        
+        with app.app_context():
+            deleted_count = cleanup_old_temperature_logs()
+            if deleted_count > 0:
+                click.echo(f'✓ Cleaned up {deleted_count} old temperature log(s)')
+            else:
+                click.echo('✓ No old temperature logs to clean up')
+    
     # Template filter for currency formatting
     @app.template_filter('currency')
     def currency_filter(amount, decimals=2):
@@ -199,6 +211,15 @@ def create_app(config_object='config.Config'):
                 # Run schema updates (adds any missing columns for migrations)
                 ensure_schema_updates()
                 app.logger.info("Database schema updates completed")
+                
+                # Clean up old temperature logs (keep only last 12 weeks for audit)
+                from utils.db_helpers import cleanup_old_temperature_logs
+                try:
+                    deleted_count = cleanup_old_temperature_logs()
+                    if deleted_count > 0:
+                        app.logger.info(f"Cleaned up {deleted_count} old temperature log(s) (12 weeks retention)")
+                except Exception as e:
+                    app.logger.warning(f"Could not clean up old temperature logs: {str(e)}")
                 
                 app._db_initialized = True
             except Exception as e:

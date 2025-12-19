@@ -358,3 +358,54 @@ def ensure_schema_updates():
         current_app.logger.error(f"Error in ensure_schema_updates: {str(e)}", exc_info=True)
         # Don't raise - allow app to continue even if schema updates fail
         pass
+
+
+def cleanup_old_temperature_logs():
+    """
+    Clean up temperature logs older than 12 weeks for audit purposes.
+    Keeps only the last 12 weeks of data.
+    """
+    try:
+        from models import TemperatureLog, TemperatureEntry
+        from datetime import date, timedelta
+        
+        with current_app.app_context():
+            # Calculate cutoff date (12 weeks ago)
+            cutoff_date = date.today() - timedelta(weeks=12)
+            
+            # Find all logs older than 12 weeks
+            old_logs = TemperatureLog.query.filter(
+                TemperatureLog.log_date < cutoff_date
+            ).all()
+            
+            if not old_logs:
+                current_app.logger.info("No old temperature logs to clean up")
+                return 0
+            
+            deleted_count = 0
+            deleted_entries_count = 0
+            
+            for log in old_logs:
+                # Count entries before deletion (for logging)
+                entry_count = log.entries.count()
+                deleted_entries_count += entry_count
+                
+                # Delete the log (entries will be cascade deleted)
+                db.session.delete(log)
+                deleted_count += 1
+            
+            # Commit the deletions
+            db.session.commit()
+            
+            current_app.logger.info(
+                f"Cleaned up {deleted_count} temperature log(s) and {deleted_entries_count} entry/entries "
+                f"older than {cutoff_date} (12 weeks retention)"
+            )
+            
+            return deleted_count
+            
+    except Exception as e:
+        current_app.logger.error(f"Error cleaning up old temperature logs: {str(e)}", exc_info=True)
+        db.session.rollback()
+        # Don't raise - allow app to continue even if cleanup fails
+        return 0
