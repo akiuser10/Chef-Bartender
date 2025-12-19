@@ -5,94 +5,26 @@
 </div>
 
 <div class="cold-storage-container">
-    <!-- Unit Selection and Management -->
-    <div class="unit-selection-section">
-        <div class="unit-controls">
-            <div class="unit-select-wrapper">
-                <label for="unit-select">Select Unit:</label>
-                <select id="unit-select" class="unit-select">
-                    <option value="">-- Select a Unit --</option>
-                    {% for unit in units %}
-                    <option value="{{ unit.id }}" data-unit-number="{{ unit.unit_number }}" 
-                            data-location="{{ unit.location }}" data-unit-type="{{ unit.unit_type }}"
-                            data-min-temp="{{ unit.min_temp }}" data-max-temp="{{ unit.max_temp }}">
-                        {{ unit.unit_number }} - {{ unit.location }} ({{ unit.unit_type }})
-                    </option>
-                    {% endfor %}
-                </select>
-            </div>
+    <!-- Unit Grid at Top -->
+    <div class="units-grid-section">
+        <div class="units-grid-header">
+            <h3>Units</h3>
             <button id="manage-units-btn" class="btn-secondary">Manage Units</button>
-            <button id="generate-pdf-btn" class="btn-primary hidden">Generate PDF</button>
+            <button id="generate-pdf-btn" class="btn-primary">Generate PDF</button>
+        </div>
+        <div id="units-grid" class="units-grid">
+            <!-- Units will be populated by JavaScript -->
         </div>
     </div>
 
-    <!-- Unit Log Display -->
-    <div id="unit-log-section" class="hidden">
-        <!-- Unit Header -->
-        <div class="unit-header">
-            <div class="unit-header-row">
-                <div class="unit-header-item">
-                    <strong>UNIT NO:</strong> <span id="display-unit-number">—</span>
-                </div>
-                <div class="unit-header-item">
-                    <strong>LOCATION:</strong> <span id="display-location">—</span>
-                </div>
-            </div>
-            <div class="unit-header-row">
-                <div class="unit-header-item">
-                    <strong>UNIT TYPE:</strong> <span id="display-unit-type">—</span>
-                </div>
-            </div>
-        </div>
-
-        <!-- Date Selection -->
-        <div class="date-selection-section">
-            <label for="log-date">Date:</label>
-            <input type="date" id="log-date" value="{{ today.isoformat() }}" class="date-input">
-            <button id="prev-date-btn" class="btn-icon">◀</button>
-            <button id="next-date-btn" class="btn-icon">▶</button>
-            <button id="today-btn" class="btn-secondary">Today</button>
-        </div>
-
-        <!-- Date Display -->
-        <div class="date-display">
-            <strong>DATE:</strong> <span id="display-date">—</span>
-        </div>
-
-        <!-- Temperature Log Table -->
-        <div class="temperature-log-table-wrapper">
-            <table class="temperature-log-table" id="temperature-log-table">
-                <thead>
-                    <tr>
-                        <th>TIME</th>
-                        <th>TEMPERATURE (°C)</th>
-                        <th>CORRECTIVE ACTION</th>
-                        <th>INITIAL</th>
-                    </tr>
-                </thead>
-                <tbody id="temperature-log-tbody">
-                    <!-- Rows will be populated by JavaScript -->
-                </tbody>
-            </table>
-        </div>
-
-        <!-- Supervisor Verification -->
-        <div class="supervisor-verification hidden" id="supervisor-verification-section">
-            <div class="verification-info">
-                <strong>Verified by:</strong> <span id="supervisor-name">—</span>
-                <strong>Date:</strong> <span id="verification-date">—</span>
-            </div>
-        </div>
-
-        <!-- Save Button -->
-        <div class="action-buttons">
-            <button id="verify-log-btn" class="btn-primary hidden">Verify Log</button>
-        </div>
+    <!-- Week View for Each Unit -->
+    <div id="units-week-view" class="units-week-view">
+        <!-- Each unit's week view will be generated here -->
     </div>
 
     <!-- Empty State -->
     <div id="empty-state" class="empty-state">
-        <p>Please select a unit to view or create temperature logs.</p>
+        <p>No units found. Please add units to start logging temperatures.</p>
     </div>
 </div>
 

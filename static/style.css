@@ -5895,6 +5895,197 @@ button.btn,
     color: #666;
 }
 
+/* Units Grid Section */
+.units-grid-section {
+    margin-bottom: 30px;
+}
+
+.units-grid-header {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+}
+
+.units-grid-header h3 {
+    margin: 0;
+    color: #2a2a2a;
+    font-size: 1.2rem;
+}
+
+.units-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 15px;
+    margin-bottom: 30px;
+}
+
+.unit-card {
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 15px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.unit-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.unit-card-header {
+    font-size: 1.1rem;
+    color: #2a2a2a;
+    margin-bottom: 10px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #eee;
+}
+
+.unit-card-body {
+    font-size: 0.9rem;
+    color: #666;
+    line-height: 1.6;
+}
+
+.unit-card-body div {
+    margin-bottom: 5px;
+}
+
+/* Units Week View */
+.units-week-view {
+    display: flex;
+    flex-direction: column;
+    gap: 40px;
+}
+
+.unit-week-section {
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.unit-week-header {
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 2px solid #d45a2a;
+}
+
+.unit-week-info {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    flex-wrap: wrap;
+}
+
+.unit-week-info strong {
+    font-size: 1.1rem;
+    color: #2a2a2a;
+}
+
+.unit-location-input {
+    padding: 5px 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 0.9rem;
+    background: #f9f9f9;
+}
+
+/* Week Tables Container */
+.week-tables-container {
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+}
+
+/* Day Table Wrapper */
+.day-table-wrapper {
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    padding: 15px;
+    background: #fafafa;
+}
+
+.day-table-header {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #ddd;
+}
+
+.day-date-input {
+    padding: 6px 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 0.9rem;
+    background: white;
+}
+
+.day-date-input:focus {
+    outline: none;
+    border-color: #d45a2a;
+}
+
+.day-date-label {
+    font-weight: 500;
+    color: #2a2a2a;
+    font-size: 0.95rem;
+}
+
+/* Day Table Styles */
+.day-table {
+    width: 100%;
+    background: white;
+    border-collapse: collapse;
+}
+
+.day-table thead {
+    background: #f5f5f5;
+}
+
+.day-table th {
+    padding: 12px 8px;
+    text-align: left;
+    font-weight: 600;
+    color: #2a2a2a;
+    border-bottom: 2px solid #ddd;
+    font-size: 0.85rem;
+}
+
+.day-table td {
+    padding: 10px 8px;
+    border-bottom: 1px solid #eee;
+    vertical-align: middle;
+}
+
+.day-table tbody tr:hover {
+    background: #f9f9f9;
+}
+
+.day-table .time-cell {
+    font-weight: 500;
+    color: #2a2a2a;
+    width: 100px;
+}
+
+.day-table .temperature-cell {
+    width: 150px;
+}
+
+.day-table .corrective-action-cell {
+    width: auto;
+    min-width: 200px;
+}
+
+.day-table .initial-cell {
+    width: 100px;
+}
+
 /* Modal */
 .modal {
     display: none;
@@ -6194,6 +6385,47 @@ button.btn,
         right: 10px;
         left: 10px;
         max-width: none;
+    }
+    
+    /* Cold Storage Responsive */
+    .units-grid {
+        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+        gap: 10px;
+    }
+    
+    .unit-week-section {
+        padding: 15px;
+    }
+    
+    .week-tables-container {
+        gap: 20px;
+    }
+    
+    .day-table-wrapper {
+        padding: 10px;
+        overflow-x: auto;
+    }
+    
+    .day-table {
+        min-width: 600px;
+    }
+    
+    .day-table th,
+    .day-table td {
+        padding: 8px 6px;
+        font-size: 0.8rem;
+    }
+    
+    .day-table-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+    
+    .unit-week-info {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
     }
 }
 
