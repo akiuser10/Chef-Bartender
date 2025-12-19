@@ -366,9 +366,10 @@ def ensure_schema_updates():
                                 # For PostgreSQL: Add column, calculate week_start_date for existing rows, then set NOT NULL
                                 conn.execute(db.text("ALTER TABLE temperature_log ADD COLUMN week_start_date DATE"))
                                 # Calculate week_start_date for existing rows (Monday of the week)
+                                # date_trunc('week', date) gives Monday of the week in PostgreSQL
                                 conn.execute(db.text("""
                                     UPDATE temperature_log 
-                                    SET week_start_date = log_date - INTERVAL '1 day' * EXTRACT(DOW FROM log_date)::int
+                                    SET week_start_date = DATE(date_trunc('week', log_date))
                                     WHERE week_start_date IS NULL
                                 """))
                                 # Set NOT NULL constraint
@@ -376,10 +377,15 @@ def ensure_schema_updates():
                             else:
                                 # For SQLite: Add column with default (SQLite doesn't support NOT NULL on ALTER easily)
                                 conn.execute(db.text("ALTER TABLE temperature_log ADD COLUMN week_start_date DATE"))
-                                # Calculate week_start_date for existing rows
+                                # Calculate week_start_date for existing rows (Monday of the week)
+                                # strftime('%w', date) returns 0-6 where 0=Sunday, 1=Monday, etc.
+                                # To get to Monday: subtract (day_of_week - 1) days, handling Sunday specially
                                 conn.execute(db.text("""
                                     UPDATE temperature_log 
-                                    SET week_start_date = date(log_date, '-' || (strftime('%w', log_date) || ' days'))
+                                    SET week_start_date = date(log_date, '-' || CASE 
+                                        WHEN CAST(strftime('%%w', log_date) AS INTEGER) = 0 THEN '6'
+                                        ELSE CAST(strftime('%%w', log_date) AS INTEGER) - 1
+                                    END || ' days')
                                     WHERE week_start_date IS NULL
                                 """))
                         except Exception as e:
