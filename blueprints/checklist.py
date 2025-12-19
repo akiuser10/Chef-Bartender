@@ -56,8 +56,13 @@ def kitchen_checklist():
 @role_required(['Manager', 'Bartender'])
 def cold_storage_temperature_log():
     """Main page for Cold Storage Temperature Log"""
-    org_filter = get_organization_filter(ColdStorageUnit)
-    units = ColdStorageUnit.query.filter(org_filter).filter_by(is_active=True).order_by(ColdStorageUnit.unit_number).all()
+    try:
+        org_filter = get_organization_filter(ColdStorageUnit)
+        units = ColdStorageUnit.query.filter(org_filter).filter_by(is_active=True).order_by(ColdStorageUnit.unit_number).all()
+    except Exception as e:
+        current_app.logger.error(f"Error loading cold storage units: {str(e)}", exc_info=True)
+        # If table doesn't exist yet, return empty list
+        units = []
     
     # Get today's date
     today = date.today()
@@ -71,16 +76,20 @@ def cold_storage_temperature_log():
 def manage_cold_storage_units():
     """API endpoint for managing cold storage units"""
     if request.method == 'GET':
-        org_filter = get_organization_filter(ColdStorageUnit)
-        units = ColdStorageUnit.query.filter(org_filter).filter_by(is_active=True).order_by(ColdStorageUnit.unit_number).all()
-        return jsonify([{
-            'id': unit.id,
-            'unit_number': unit.unit_number,
-            'location': unit.location,
-            'unit_type': unit.unit_type,
-            'min_temp': unit.min_temp,
-            'max_temp': unit.max_temp
-        } for unit in units])
+        try:
+            org_filter = get_organization_filter(ColdStorageUnit)
+            units = ColdStorageUnit.query.filter(org_filter).filter_by(is_active=True).order_by(ColdStorageUnit.unit_number).all()
+            return jsonify([{
+                'id': unit.id,
+                'unit_number': unit.unit_number,
+                'location': unit.location,
+                'unit_type': unit.unit_type,
+                'min_temp': unit.min_temp,
+                'max_temp': unit.max_temp
+            } for unit in units])
+        except Exception as e:
+            current_app.logger.error(f"Error loading units: {str(e)}", exc_info=True)
+            return jsonify([])  # Return empty list if error
     
     elif request.method == 'POST':
         data = request.get_json()

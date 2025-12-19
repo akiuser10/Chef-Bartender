@@ -9,7 +9,6 @@ from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.enums import TA_CENTER, TA_LEFT, TA_RIGHT
 from io import BytesIO
 from datetime import datetime, date, timedelta
-from models import TemperatureLog, TemperatureEntry
 
 
 def format_date_display(log_date):
@@ -26,6 +25,9 @@ def format_temperature(temp):
 
 def generate_temperature_log_pdf(units, start_date, end_date):
     """Generate PDF for temperature logs for given units and date range"""
+    # Import here to avoid circular imports
+    from models import TemperatureLog, TemperatureEntry
+    
     buffer = BytesIO()
     doc = SimpleDocTemplate(buffer, pagesize=letter, topMargin=0.5*inch, bottomMargin=0.5*inch)
     
