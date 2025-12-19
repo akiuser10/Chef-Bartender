@@ -180,7 +180,9 @@ def create_app(config_object='config.Config'):
             try:
                 # Create upload directories
                 upload_folder = app.config['UPLOAD_FOLDER']
+                app.logger.info(f'Upload folder configured: {upload_folder}')
                 os.makedirs(upload_folder, exist_ok=True)
+                app.logger.info(f'Upload directories created successfully at: {upload_folder}')
                 os.makedirs(os.path.join(upload_folder, 'products'), exist_ok=True)
                 os.makedirs(os.path.join(upload_folder, 'recipes'), exist_ok=True)
                 os.makedirs(os.path.join(upload_folder, 'slides'), exist_ok=True)

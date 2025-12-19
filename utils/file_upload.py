@@ -19,6 +19,10 @@ def save_uploaded_file(file, folder):
     if file and allowed_file(file.filename):
         # Create upload directory if it doesn't exist
         upload_dir = os.path.join(current_app.config['UPLOAD_FOLDER'], folder)
+        
+        # Log the upload directory for debugging
+        current_app.logger.info(f'Saving file to: {upload_dir} (UPLOAD_FOLDER: {current_app.config["UPLOAD_FOLDER"]})')
+        
         os.makedirs(upload_dir, exist_ok=True)
         
         # Generate unique filename
@@ -28,6 +32,13 @@ def save_uploaded_file(file, folder):
         
         filepath = os.path.join(upload_dir, filename)
         file.save(filepath)
+        
+        # Verify file was saved
+        if not os.path.exists(filepath):
+            current_app.logger.error(f'Failed to save file: {filepath}')
+            return None
+        
+        current_app.logger.info(f'File saved successfully: {filepath}')
         
         # Return relative path from static folder
         return os.path.join('uploads', folder, filename)
@@ -40,6 +51,9 @@ def save_slide_image(file):
         try:
             # Use UPLOAD_FOLDER for persistent storage (works on deployment platforms)
             upload_dir = os.path.join(current_app.config['UPLOAD_FOLDER'], 'slides')
+            
+            # Log the upload directory for debugging
+            current_app.logger.info(f'Saving slide image to: {upload_dir} (UPLOAD_FOLDER: {current_app.config["UPLOAD_FOLDER"]})')
             
             # Create directory if it doesn't exist
             os.makedirs(upload_dir, exist_ok=True)

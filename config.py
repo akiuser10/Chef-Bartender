@@ -17,7 +17,17 @@ class Config:
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     
     # Upload folder - use environment variable for production, or default to static/uploads
-    upload_base = os.environ.get('UPLOAD_FOLDER') or os.path.join(os.path.dirname(os.path.abspath(__file__)), 'static', 'uploads')
+    # For Railway: Use persistent volume at /data/uploads (survives redeployments)
+    # For local dev: Use static/uploads
+    if os.environ.get('UPLOAD_FOLDER'):
+        # Explicitly set via environment variable (highest priority)
+        upload_base = os.environ.get('UPLOAD_FOLDER')
+    elif os.path.exists('/data'):
+        # Railway persistent volume detected - use /data/uploads
+        upload_base = '/data/uploads'
+    else:
+        # Local development - use static/uploads
+        upload_base = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'static', 'uploads')
     UPLOAD_FOLDER = upload_base
     MAX_CONTENT_LENGTH = 50 * 1024 * 1024  # 50MB max file size (for PDFs)
     ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp', 'pdf'}
