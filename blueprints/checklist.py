@@ -92,61 +92,119 @@ def manage_cold_storage_units():
             return jsonify([])  # Return empty list if error
     
     elif request.method == 'POST':
-        data = request.get_json()
-        action = data.get('action')
-        
-        if action == 'create':
-            unit = ColdStorageUnit(
-                unit_number=data['unit_number'],
-                location=data['location'],
-                unit_type=data['unit_type'],
-                min_temp=data.get('min_temp'),
-                max_temp=data.get('max_temp'),
-                organisation=current_user.organisation or current_user.restaurant_bar_name,
-                created_by=current_user.id
-            )
-            db.session.add(unit)
-            db.session.commit()
-            return jsonify({'success': True, 'unit': {
-                'id': unit.id,
-                'unit_number': unit.unit_number,
-                'location': unit.location,
-                'unit_type': unit.unit_type,
-                'min_temp': unit.min_temp,
-                'max_temp': unit.max_temp
-            }})
-        
-        elif action == 'update':
-            unit = ColdStorageUnit.query.get(data['id'])
-            if not unit:
-                return jsonify({'success': False, 'error': 'Unit not found'}), 404
+        try:
+            data = request.get_json()
+            if not data:
+                return jsonify({'success': False, 'error': 'No data provided'}), 400
             
-            org_filter = get_organization_filter(ColdStorageUnit)
-            if not ColdStorageUnit.query.filter(org_filter).filter_by(id=unit.id).first():
-                return jsonify({'success': False, 'error': 'Unauthorized'}), 403
+            action = data.get('action')
             
-            unit.unit_number = data['unit_number']
-            unit.location = data['location']
-            unit.unit_type = data['unit_type']
-            unit.min_temp = data.get('min_temp')
-            unit.max_temp = data.get('max_temp')
-            db.session.commit()
-            return jsonify({'success': True})
-        
-        elif action == 'delete':
-            unit = ColdStorageUnit.query.get(data['id'])
-            if not unit:
-                return jsonify({'success': False, 'error': 'Unit not found'}), 404
+            if action == 'create':
+                # Validate required fields
+                if not data.get('unit_number') or not data.get('location') or not data.get('unit_type'):
+                    return jsonify({'success': False, 'error': 'Unit number, location, and unit type are required'}), 400
+                
+                try:
+                    # Handle temperature values - convert to float if provided, otherwise None
+                    min_temp = None
+                    max_temp = None
+                    if data.get('min_temp') and str(data.get('min_temp')).strip():
+                        min_temp = float(data['min_temp'])
+                    if data.get('max_temp') and str(data.get('max_temp')).strip():
+                        max_temp = float(data['max_temp'])
+                    
+                    unit = ColdStorageUnit(
+                        unit_number=data['unit_number'],
+                        location=data['location'],
+                        unit_type=data['unit_type'],
+                        min_temp=min_temp,
+                        max_temp=max_temp,
+                        organisation=current_user.organisation or current_user.restaurant_bar_name,
+                        created_by=current_user.id
+                    )
+                    db.session.add(unit)
+                    db.session.commit()
+                    return jsonify({'success': True, 'unit': {
+                        'id': unit.id,
+                        'unit_number': unit.unit_number,
+                        'location': unit.location,
+                        'unit_type': unit.unit_type,
+                        'min_temp': unit.min_temp,
+                        'max_temp': unit.max_temp
+                    }})
+                except ValueError as e:
+                    db.session.rollback()
+                    return jsonify({'success': False, 'error': f'Invalid temperature value: {str(e)}'}), 400
+                except Exception as e:
+                    db.session.rollback()
+                    current_app.logger.error(f"Error creating unit: {str(e)}", exc_info=True)
+                    return jsonify({'success': False, 'error': f'Error creating unit: {str(e)}'}), 500
             
-            org_filter = get_organization_filter(ColdStorageUnit)
-            if not ColdStorageUnit.query.filter(org_filter).filter_by(id=unit.id).first():
-                return jsonify({'success': False, 'error': 'Unauthorized'}), 403
+            elif action == 'update':
+                if not data.get('id'):
+                    return jsonify({'success': False, 'error': 'Unit ID is required'}), 400
+                
+                try:
+                    unit = ColdStorageUnit.query.get(data['id'])
+                    if not unit:
+                        return jsonify({'success': False, 'error': 'Unit not found'}), 404
+                    
+                    org_filter = get_organization_filter(ColdStorageUnit)
+                    if not ColdStorageUnit.query.filter(org_filter).filter_by(id=unit.id).first():
+                        return jsonify({'success': False, 'error': 'Unauthorized'}), 403
+                    
+                    # Validate required fields
+                    if not data.get('unit_number') or not data.get('location') or not data.get('unit_type'):
+                        return jsonify({'success': False, 'error': 'Unit number, location, and unit type are required'}), 400
+                    
+                    # Handle temperature values - convert to float if provided, otherwise None
+                    min_temp = None
+                    max_temp = None
+                    if data.get('min_temp') and str(data.get('min_temp')).strip():
+                        min_temp = float(data['min_temp'])
+                    if data.get('max_temp') and str(data.get('max_temp')).strip():
+                        max_temp = float(data['max_temp'])
+                    
+                    unit.unit_number = data['unit_number']
+                    unit.location = data['location']
+                    unit.unit_type = data['unit_type']
+                    unit.min_temp = min_temp
+                    unit.max_temp = max_temp
+                    db.session.commit()
+                    return jsonify({'success': True})
+                except ValueError as e:
+                    db.session.rollback()
+                    return jsonify({'success': False, 'error': f'Invalid temperature value: {str(e)}'}), 400
+                except Exception as e:
+                    db.session.rollback()
+                    current_app.logger.error(f"Error updating unit: {str(e)}", exc_info=True)
+                    return jsonify({'success': False, 'error': f'Error updating unit: {str(e)}'}), 500
             
-            unit.is_active = False
-            db.session.commit()
-            return jsonify({'success': True})
-        
-        return jsonify({'success': False, 'error': 'Invalid action'}), 400
+            elif action == 'delete':
+                if not data.get('id'):
+                    return jsonify({'success': False, 'error': 'Unit ID is required'}), 400
+                
+                try:
+                    unit = ColdStorageUnit.query.get(data['id'])
+                    if not unit:
+                        return jsonify({'success': False, 'error': 'Unit not found'}), 404
+                    
+                    org_filter = get_organization_filter(ColdStorageUnit)
+                    if not ColdStorageUnit.query.filter(org_filter).filter_by(id=unit.id).first():
+                        return jsonify({'success': False, 'error': 'Unauthorized'}), 403
+                    
+                    unit.is_active = False
+                    db.session.commit()
+                    return jsonify({'success': True})
+                except Exception as e:
+                    db.session.rollback()
+                    current_app.logger.error(f"Error deleting unit: {str(e)}", exc_info=True)
+                    return jsonify({'success': False, 'error': f'Error deleting unit: {str(e)}'}), 500
+            
+            return jsonify({'success': False, 'error': 'Invalid action'}), 400
+        except Exception as e:
+            current_app.logger.error(f"Unexpected error in manage_cold_storage_units: {str(e)}", exc_info=True)
+            return jsonify({'success': False, 'error': f'Unexpected error: {str(e)}'}), 500
 
 
 @checklist_bp.route('/bar/cold-storage/log/<int:unit_id>/<date_str>', methods=['GET', 'POST'])
