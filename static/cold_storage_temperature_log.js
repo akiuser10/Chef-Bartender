@@ -57,9 +57,25 @@ function initializeEventListeners() {
             openAddUnitForm();
         });
     }
-    document.getElementById('unit-form-close')?.addEventListener('click', closeUnitForm);
-    document.getElementById('cancel-unit-form')?.addEventListener('click', closeUnitForm);
-    document.getElementById('unit-form')?.addEventListener('submit', handleUnitFormSubmit);
+    const unitFormClose = document.getElementById('unit-form-close');
+    if (unitFormClose) {
+        unitFormClose.addEventListener('click', closeUnitForm);
+        console.log('Unit form close button listener attached');
+    }
+    
+    const cancelUnitForm = document.getElementById('cancel-unit-form');
+    if (cancelUnitForm) {
+        cancelUnitForm.addEventListener('click', closeUnitForm);
+        console.log('Cancel unit form button listener attached');
+    }
+    
+    const unitForm = document.getElementById('unit-form');
+    if (unitForm) {
+        unitForm.addEventListener('submit', handleUnitFormSubmit);
+        console.log('Unit form submit listener attached');
+    } else {
+        console.error('Unit form element not found!');
+    }
     
     // Unit type change - show/hide wine chiller temps
     document.getElementById('unit-type')?.addEventListener('change', function() {
@@ -756,13 +772,15 @@ function getScheduledTimeForSlot(date, timeSlot) {
 
 // Unit Management
 function openAddUnitForm() {
-    console.log('Opening Add Unit form...');
+    console.log('=== Opening Add Unit Form ===');
     const modal = document.getElementById('unit-form-modal');
     if (!modal) {
         console.error('Unit form modal not found!');
-        showNotification('Error: Unit form modal not found', 'error');
+        showNotification('Error: Unit form modal not found. Please refresh the page.', 'error');
         return;
     }
+    
+    console.log('Modal element found:', modal);
     
     // Reset form
     const formTitle = document.getElementById('unit-form-title');
@@ -770,20 +788,38 @@ function openAddUnitForm() {
     const unitForm = document.getElementById('unit-form');
     const wineChillerTemps = document.getElementById('wine-chiller-temps');
     
+    console.log('Form elements:', {
+        formTitle: !!formTitle,
+        unitIdInput: !!unitIdInput,
+        unitForm: !!unitForm,
+        wineChillerTemps: !!wineChillerTemps
+    });
+    
     if (formTitle) formTitle.textContent = 'Add Unit';
     if (unitIdInput) unitIdInput.value = '';
-    if (unitForm) unitForm.reset();
+    if (unitForm) {
+        unitForm.reset();
+        console.log('Form reset');
+    }
     if (wineChillerTemps) wineChillerTemps.classList.add('hidden');
     
     // Show modal
     modal.classList.remove('hidden');
-    console.log('Unit form modal opened successfully');
+    console.log('Modal classes after show:', modal.className);
+    console.log('Modal display style:', window.getComputedStyle(modal).display);
     
     // Focus on first input
     const unitNumberInput = document.getElementById('unit-number');
     if (unitNumberInput) {
-        setTimeout(() => unitNumberInput.focus(), 100);
+        setTimeout(() => {
+            unitNumberInput.focus();
+            console.log('Focused on unit number input');
+        }, 100);
+    } else {
+        console.warn('Unit number input not found');
     }
+    
+    console.log('=== Add Unit Form Opened ===');
 }
 
 function closeUnitForm() {
@@ -792,17 +828,50 @@ function closeUnitForm() {
 
 async function handleUnitFormSubmit(event) {
     event.preventDefault();
+    event.stopPropagation();
     
-    console.log('Unit form submitted');
+    console.log('=== Unit Form Submit Started ===');
     
-    const unitId = document.getElementById('unit-id').value;
-    const unitNumber = document.getElementById('unit-number').value;
-    const location = document.getElementById('unit-location').value;
-    const unitType = document.getElementById('unit-type').value;
+    // Get form elements
+    const unitIdEl = document.getElementById('unit-id');
+    const unitNumberEl = document.getElementById('unit-number');
+    const locationEl = document.getElementById('unit-location');
+    const unitTypeEl = document.getElementById('unit-type');
+    const minTempEl = document.getElementById('min-temp');
+    const maxTempEl = document.getElementById('max-temp');
+    
+    // Check if elements exist
+    if (!unitNumberEl || !locationEl || !unitTypeEl) {
+        console.error('Required form elements not found!', {
+            unitNumber: !!unitNumberEl,
+            location: !!locationEl,
+            unitType: !!unitTypeEl
+        });
+        showNotification('Error: Form elements not found. Please refresh the page.', 'error');
+        return;
+    }
+    
+    const unitId = unitIdEl ? unitIdEl.value : '';
+    const unitNumber = unitNumberEl.value.trim();
+    const location = locationEl.value.trim();
+    const unitType = unitTypeEl.value.trim();
+    
+    console.log('Form values:', { unitId, unitNumber, location, unitType });
     
     // Validate required fields
-    if (!unitNumber || !location || !unitType) {
-        showNotification('Please fill in all required fields (Unit Number, Location, and Unit Type)', 'error');
+    if (!unitNumber) {
+        showNotification('Unit Number is required', 'error');
+        unitNumberEl.focus();
+        return;
+    }
+    if (!location) {
+        showNotification('Location is required', 'error');
+        locationEl.focus();
+        return;
+    }
+    if (!unitType) {
+        showNotification('Unit Type is required', 'error');
+        unitTypeEl.focus();
         return;
     }
     
@@ -811,8 +880,8 @@ async function handleUnitFormSubmit(event) {
         unit_number: unitNumber,
         location: location,
         unit_type: unitType,
-        min_temp: document.getElementById('min-temp').value || null,
-        max_temp: document.getElementById('max-temp').value || null
+        min_temp: minTempEl && minTempEl.value ? minTempEl.value : null,
+        max_temp: maxTempEl && maxTempEl.value ? maxTempEl.value : null
     };
     
     if (formData.action === 'update') {
@@ -820,6 +889,15 @@ async function handleUnitFormSubmit(event) {
     }
     
     console.log('Submitting unit data:', formData);
+    console.log('API endpoint: /checklist/bar/cold-storage/units');
+    
+    // Disable submit button to prevent double submission
+    const submitBtn = event.target.querySelector('button[type="submit"]');
+    const originalBtnText = submitBtn ? submitBtn.textContent : '';
+    if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Saving...';
+    }
     
     try {
         const response = await fetch('/checklist/bar/cold-storage/units', {
@@ -830,25 +908,38 @@ async function handleUnitFormSubmit(event) {
             body: JSON.stringify(formData)
         });
         
+        console.log('Response status:', response.status, response.statusText);
+        
         // Check if response is ok
         if (!response.ok) {
-            const errorData = await response.json().catch(() => ({ error: `HTTP ${response.status}: ${response.statusText}` }));
+            let errorData;
+            try {
+                errorData = await response.json();
+            } catch (e) {
+                errorData = { error: `HTTP ${response.status}: ${response.statusText}` };
+            }
+            console.error('Response error:', errorData);
             throw new Error(errorData.error || `HTTP ${response.status}: ${response.statusText}`);
         }
         
         const data = await response.json();
+        console.log('Response data:', data);
         
         if (data.success) {
             const isNewUnit = formData.action === 'create';
-            const createdUnitId = isNewUnit ? data.unit?.id : null;
+            const createdUnitId = isNewUnit ? (data.unit?.id || null) : null;
+            
+            console.log('Unit saved successfully. Is new:', isNewUnit, 'Unit ID:', createdUnitId);
             
             showNotification(isNewUnit ? 'Unit created successfully' : 'Unit updated successfully', 'success');
             
             // Reload units and render tables
+            console.log('Reloading units...');
             await loadUnits();
             
             // If it's a new unit, scroll to it and highlight it
             if (isNewUnit && createdUnitId) {
+                console.log('Scrolling to new unit:', createdUnitId);
                 setTimeout(() => {
                     scrollToNewUnit(createdUnitId);
                     highlightNewUnit(createdUnitId);
@@ -862,10 +953,19 @@ async function handleUnitFormSubmit(event) {
             showNotification('Error saving unit: ' + errorMsg, 'error');
         }
     } catch (error) {
-        console.error('Error saving unit:', error);
+        console.error('Exception saving unit:', error);
+        console.error('Error stack:', error.stack);
         const errorMsg = error.message || 'Failed to save unit. Please check console for details.';
         showNotification('Error saving unit: ' + errorMsg, 'error');
+    } finally {
+        // Re-enable submit button
+        if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.textContent = originalBtnText;
+        }
     }
+    
+    console.log('=== Unit Form Submit Completed ===');
 }
 
 // Checklist Download
