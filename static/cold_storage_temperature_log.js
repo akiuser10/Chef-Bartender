@@ -1,64 +1,31 @@
 /**
  * Cold Storage Temperature Log - Frontend JavaScript
- * Handles temperature entry for multiple units with weekly view
+ * Date/Time-based entry: Select date and time, then enter temperature for all units
  */
 
 // Global state
 let allUnits = [];
-let unitLogs = {}; // Cache for unit logs: { unitId: { dateStr: logData } }
+let currentDate = new Date();
+let currentTime = '10:00 AM';
 let scheduledTimes = ['10:00 AM', '02:00 PM', '06:00 PM', '10:00 PM'];
-let startOfWeek = getStartOfWeek(new Date());
 
 // Initialize on page load
 document.addEventListener('DOMContentLoaded', function() {
     initializeEventListeners();
     setupNotifications();
+    updateDateDisplay();
     loadUnits();
 });
 
-// Helper: Get start of week (Monday)
-function getStartOfWeek(date) {
-    const d = new Date(date);
-    const day = d.getDay();
-    const diff = d.getDate() - day + (day === 0 ? -6 : 1); // Adjust when day is Sunday
-    return new Date(d.setDate(diff));
-}
-
-// Helper: Format date for display
-function formatDateDisplay(date) {
-    const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-    const months = ['January', 'February', 'March', 'April', 'May', 'June', 
-                    'July', 'August', 'September', 'October', 'November', 'December'];
-    
-    const dayName = days[date.getDay()];
-    const monthName = months[date.getMonth()];
-    const day = date.getDate();
-    const year = date.getFullYear();
-    
-    return `${dayName}, ${monthName} ${day}, ${year}`;
-}
-
-// Helper: Format date for input
-function formatDateForInput(date) {
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-    return `${year}-${month}-${day}`;
-}
-
-// Helper: Get date for day of week (0 = Monday, 6 = Sunday)
-function getDateForDay(dayIndex) {
-    const date = new Date(startOfWeek);
-    date.setDate(startOfWeek.getDate() + dayIndex);
-    return date;
-}
-
 // Event Listeners
 function initializeEventListeners() {
+    // Date and time selection
+    document.getElementById('log-date')?.addEventListener('change', handleDateChange);
+    document.getElementById('log-time')?.addEventListener('change', handleTimeChange);
+    
     // Unit management
-    document.getElementById('manage-units-btn')?.addEventListener('click', openUnitManagement);
-    document.getElementById('modal-close')?.addEventListener('click', closeUnitManagement);
     document.getElementById('add-unit-btn')?.addEventListener('click', openAddUnitForm);
+    document.getElementById('manage-add-unit-btn')?.addEventListener('click', openAddUnitForm);
     document.getElementById('unit-form-close')?.addEventListener('click', closeUnitForm);
     document.getElementById('cancel-unit-form')?.addEventListener('click', closeUnitForm);
     document.getElementById('unit-form')?.addEventListener('submit', handleUnitFormSubmit);
@@ -94,20 +61,80 @@ function initializeEventListeners() {
     });
 }
 
+// Date and Time Management
+function updateDateDisplay() {
+    const dateInput = document.getElementById('log-date');
+    if (dateInput) {
+        dateInput.value = formatDateForInput(currentDate);
+    }
+    
+    const displayDate = document.getElementById('display-date');
+    if (displayDate) {
+        displayDate.textContent = formatDateDisplay(currentDate);
+    }
+    
+    const displayTime = document.getElementById('display-time');
+    if (displayTime) {
+        displayTime.textContent = currentTime;
+    }
+}
+
+function formatDateForInput(date) {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+}
+
+function formatDateDisplay(date) {
+    const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    const months = ['January', 'February', 'March', 'April', 'May', 'June', 
+                    'July', 'August', 'September', 'October', 'November', 'December'];
+    
+    const dayName = days[date.getDay()];
+    const monthName = months[date.getMonth()];
+    const day = date.getDate();
+    const year = date.getFullYear();
+    
+    return `${dayName}, ${monthName} ${day}, ${year}`;
+}
+
+function handleDateChange() {
+    const dateInput = document.getElementById('log-date');
+    if (dateInput && dateInput.value) {
+        currentDate = new Date(dateInput.value);
+        updateDateDisplay();
+        loadTemperatureEntries();
+    }
+}
+
+function handleTimeChange() {
+    const timeSelect = document.getElementById('log-time');
+    if (timeSelect) {
+        currentTime = timeSelect.value;
+        updateDateDisplay();
+        loadTemperatureEntries();
+    }
+}
+
 // Load Units
 async function loadUnits() {
     try {
         const response = await fetch('/checklist/bar/cold-storage/units');
         allUnits = await response.json();
         
-        renderUnitsGrid();
-        renderWeekView();
+        renderTemperatureTable();
         
         // Hide empty state if units exist
+        const emptyState = document.getElementById('empty-state');
+        const logSection = document.getElementById('temperature-log-section');
+        
         if (allUnits.length > 0) {
-            document.getElementById('empty-state').classList.add('hidden');
+            if (emptyState) emptyState.classList.add('hidden');
+            if (logSection) logSection.style.display = 'block';
         } else {
-            document.getElementById('empty-state').classList.remove('hidden');
+            if (emptyState) emptyState.classList.remove('hidden');
+            if (logSection) logSection.style.display = 'none';
         }
     } catch (error) {
         console.error('Error loading units:', error);
@@ -115,135 +142,47 @@ async function loadUnits() {
     }
 }
 
-// Render Units Grid
-function renderUnitsGrid() {
-    const grid = document.getElementById('units-grid');
-    grid.innerHTML = '';
+// Render Temperature Table
+function renderTemperatureTable() {
+    const tbody = document.getElementById('temperature-log-tbody');
+    tbody.innerHTML = '';
+    
+    if (allUnits.length === 0) {
+        return;
+    }
     
     allUnits.forEach(unit => {
-        const unitCard = document.createElement('div');
-        unitCard.className = 'unit-card';
-        unitCard.innerHTML = `
-            <div class="unit-card-header">
-                <strong>${unit.unit_number}</strong>
-            </div>
-            <div class="unit-card-body">
-                <div>Location: ${unit.location}</div>
-                <div>Type: ${unit.unit_type}</div>
-            </div>
-        `;
-        grid.appendChild(unitCard);
-    });
-}
-
-// Render Week View for All Units
-function renderWeekView() {
-    const container = document.getElementById('units-week-view');
-    container.innerHTML = '';
-    
-    allUnits.forEach(unit => {
-        const unitWeekSection = document.createElement('div');
-        unitWeekSection.className = 'unit-week-section';
-        unitWeekSection.setAttribute('data-unit-id', unit.id);
-        
-        // Unit header
-        const unitHeader = document.createElement('div');
-        unitHeader.className = 'unit-week-header';
-        unitHeader.innerHTML = `
-            <div class="unit-week-info">
-                <strong>UNIT NO: ${unit.unit_number}</strong>
-                <span>Location: <input type="text" class="unit-location-input" value="${unit.location}" readonly></span>
-            </div>
-        `;
-        unitWeekSection.appendChild(unitHeader);
-        
-        // 7 tables for the week
-        const tablesContainer = document.createElement('div');
-        tablesContainer.className = 'week-tables-container';
-        
-        for (let dayIndex = 0; dayIndex < 7; dayIndex++) {
-            const date = getDateForDay(dayIndex);
-            const table = createDayTable(unit, date, dayIndex);
-            tablesContainer.appendChild(table);
-        }
-        
-        unitWeekSection.appendChild(tablesContainer);
-        container.appendChild(unitWeekSection);
-        
-        // Load data for this unit's week
-        loadUnitWeekData(unit.id);
-    });
-}
-
-// Create Day Table
-function createDayTable(unit, date, dayIndex) {
-    const tableWrapper = document.createElement('div');
-    tableWrapper.className = 'day-table-wrapper';
-    
-    // Date header with date picker
-    const dateHeader = document.createElement('div');
-    dateHeader.className = 'day-table-header';
-    const dateInput = document.createElement('input');
-    dateInput.type = 'date';
-    dateInput.className = 'day-date-input';
-    dateInput.value = formatDateForInput(date);
-    dateInput.setAttribute('data-unit-id', unit.id);
-    dateInput.setAttribute('data-day-index', dayIndex);
-    dateInput.addEventListener('change', handleDayDateChange);
-    
-    const dateLabel = document.createElement('div');
-    dateLabel.className = 'day-date-label';
-    dateLabel.textContent = formatDateDisplay(date);
-    dateLabel.setAttribute('data-date-input', formatDateForInput(date));
-    
-    dateHeader.appendChild(dateInput);
-    dateHeader.appendChild(dateLabel);
-    
-    // Table
-    const table = document.createElement('table');
-    table.className = 'temperature-log-table day-table';
-    table.setAttribute('data-unit-id', unit.id);
-    table.setAttribute('data-date', formatDateForInput(date));
-    
-    // Table header
-    const thead = document.createElement('thead');
-    thead.innerHTML = `
-        <tr>
-            <th>TIME</th>
-            <th>TEMPERATURE (°C)</th>
-            <th>CORRECTIVE ACTION</th>
-            <th>INITIAL</th>
-        </tr>
-    `;
-    table.appendChild(thead);
-    
-    // Table body
-    const tbody = document.createElement('tbody');
-    scheduledTimes.forEach(timeSlot => {
-        const row = createTemperatureRow(unit.id, formatDateForInput(date), timeSlot);
+        const row = createUnitRow(unit);
         tbody.appendChild(row);
     });
-    table.appendChild(tbody);
     
-    tableWrapper.appendChild(dateHeader);
-    tableWrapper.appendChild(table);
-    
-    return tableWrapper;
+    // Load existing entries for current date/time
+    loadTemperatureEntries();
 }
 
-// Create Temperature Row
-function createTemperatureRow(unitId, dateStr, timeSlot) {
+// Create Unit Row
+function createUnitRow(unit) {
     const row = document.createElement('tr');
     row.className = 'temperature-row';
-    row.setAttribute('data-unit-id', unitId);
-    row.setAttribute('data-date', dateStr);
-    row.setAttribute('data-time', timeSlot);
+    row.setAttribute('data-unit-id', unit.id);
     
-    // Time cell
-    const timeCell = document.createElement('td');
-    timeCell.className = 'time-cell';
-    timeCell.textContent = timeSlot;
-    row.appendChild(timeCell);
+    // Unit Number cell
+    const unitCell = document.createElement('td');
+    unitCell.className = 'unit-cell';
+    unitCell.textContent = unit.unit_number;
+    row.appendChild(unitCell);
+    
+    // Location cell
+    const locationCell = document.createElement('td');
+    locationCell.className = 'location-cell';
+    locationCell.textContent = unit.location;
+    row.appendChild(locationCell);
+    
+    // Type cell
+    const typeCell = document.createElement('td');
+    typeCell.className = 'type-cell';
+    typeCell.textContent = unit.unit_type;
+    row.appendChild(typeCell);
     
     // Temperature cell
     const tempCell = document.createElement('td');
@@ -255,9 +194,7 @@ function createTemperatureRow(unitId, dateStr, timeSlot) {
     tempInput.type = 'number';
     tempInput.step = '0.1';
     tempInput.className = 'temperature-input';
-    tempInput.setAttribute('data-unit-id', unitId);
-    tempInput.setAttribute('data-date', dateStr);
-    tempInput.setAttribute('data-time', timeSlot);
+    tempInput.setAttribute('data-unit-id', unit.id);
     tempInput.placeholder = 'Enter temperature';
     
     const tempUnit = document.createElement('span');
@@ -267,8 +204,8 @@ function createTemperatureRow(unitId, dateStr, timeSlot) {
     tempInputWrapper.appendChild(tempInput);
     tempInputWrapper.appendChild(tempUnit);
     tempCell.appendChild(tempInputWrapper);
-    tempInput.addEventListener('blur', () => validateAndSaveEntry(unitId, dateStr, timeSlot));
-    tempInput.addEventListener('input', () => validateTemperatureInput(unitId, dateStr, timeSlot));
+    tempInput.addEventListener('blur', () => validateAndSaveEntry(unit.id));
+    tempInput.addEventListener('input', () => validateTemperatureInput(unit.id));
     
     row.appendChild(tempCell);
     
@@ -277,11 +214,9 @@ function createTemperatureRow(unitId, dateStr, timeSlot) {
     actionCell.className = 'corrective-action-cell';
     const actionTextarea = document.createElement('textarea');
     actionTextarea.className = 'corrective-action-input';
-    actionTextarea.setAttribute('data-unit-id', unitId);
-    actionTextarea.setAttribute('data-date', dateStr);
-    actionTextarea.setAttribute('data-time', timeSlot);
+    actionTextarea.setAttribute('data-unit-id', unit.id);
     actionTextarea.placeholder = 'Enter corrective action if needed';
-    actionTextarea.addEventListener('blur', () => saveEntry(unitId, dateStr, timeSlot));
+    actionTextarea.addEventListener('blur', () => saveEntry(unit.id));
     actionCell.appendChild(actionTextarea);
     row.appendChild(actionCell);
     
@@ -291,117 +226,69 @@ function createTemperatureRow(unitId, dateStr, timeSlot) {
     const initialInput = document.createElement('input');
     initialInput.type = 'text';
     initialInput.className = 'initial-input';
-    initialInput.setAttribute('data-unit-id', unitId);
-    initialInput.setAttribute('data-date', dateStr);
-    initialInput.setAttribute('data-time', timeSlot);
+    initialInput.setAttribute('data-unit-id', unit.id);
     initialInput.placeholder = 'Initials';
     initialInput.maxLength = 10;
     initialInput.required = true;
-    initialInput.addEventListener('blur', () => saveEntry(unitId, dateStr, timeSlot));
+    initialInput.addEventListener('blur', () => saveEntry(unit.id));
     initialCell.appendChild(initialInput);
     row.appendChild(initialCell);
     
     return row;
 }
 
-// Handle Day Date Change
-function handleDayDateChange(event) {
-    const dateInput = event.target;
-    const unitId = parseInt(dateInput.getAttribute('data-unit-id'));
-    const dayIndex = parseInt(dateInput.getAttribute('data-day-index'));
-    const newDate = new Date(dateInput.value);
+// Load Temperature Entries
+async function loadTemperatureEntries() {
+    if (allUnits.length === 0) return;
     
-    // Update the date label
-    const dateLabel = dateInput.nextElementSibling;
-    dateLabel.textContent = formatDateDisplay(newDate);
-    dateLabel.setAttribute('data-date-input', formatDateForInput(newDate));
+    const dateStr = formatDateForInput(currentDate);
     
-    // Update the table's date attribute
-    const table = dateInput.closest('.day-table-wrapper').querySelector('.day-table');
-    const newDateStr = formatDateForInput(newDate);
-    table.setAttribute('data-date', newDateStr);
+    // Load entries for all units in parallel
+    const promises = allUnits.map(unit => 
+        fetch(`/checklist/bar/cold-storage/log/${unit.id}/${dateStr}`)
+            .then(response => response.json())
+            .then(data => ({ unitId: unit.id, data }))
+            .catch(error => {
+                console.error(`Error loading entry for unit ${unit.id}:`, error);
+                return { unitId: unit.id, data: null };
+            })
+    );
     
-    // Update all rows in this table
-    const rows = table.querySelectorAll('.temperature-row');
-    rows.forEach(row => {
-        row.setAttribute('data-date', newDateStr);
-        const inputs = row.querySelectorAll('input, textarea');
-        inputs.forEach(input => {
-            input.setAttribute('data-date', newDateStr);
-        });
-    });
+    const results = await Promise.all(promises);
     
-    // Load data for new date
-    loadDayData(unitId, newDateStr);
-}
-
-// Load Unit Week Data
-async function loadUnitWeekData(unitId) {
-    const dates = [];
-    for (let i = 0; i < 7; i++) {
-        dates.push(formatDateForInput(getDateForDay(i)));
-    }
-    
-    // Load all dates in parallel
-    await Promise.all(dates.map(dateStr => loadDayData(unitId, dateStr)));
-}
-
-// Load Day Data
-async function loadDayData(unitId, dateStr) {
-    try {
-        const response = await fetch(`/checklist/bar/cold-storage/log/${unitId}/${dateStr}`);
-        const data = await response.json();
-        
-        if (data.success) {
-            // Cache the log
-            if (!unitLogs[unitId]) {
-                unitLogs[unitId] = {};
-            }
-            unitLogs[unitId][dateStr] = data.log;
-            
-            // Populate the table
-            const table = document.querySelector(`.day-table[data-unit-id="${unitId}"][data-date="${dateStr}"]`);
-            if (table) {
-                populateTable(table, data.log.entries);
-            }
-        }
-    } catch (error) {
-        console.error(`Error loading data for unit ${unitId}, date ${dateStr}:`, error);
-    }
-}
-
-// Populate Table with Entries
-function populateTable(table, entries) {
-    const rows = table.querySelectorAll('.temperature-row');
-    rows.forEach(row => {
-        const timeSlot = row.getAttribute('data-time');
-        const entry = entries[timeSlot] || null;
-        
-        // Set temperature
-        const tempInput = row.querySelector('.temperature-input');
-        if (tempInput) {
-            tempInput.value = entry?.temperature ?? '';
-            if (entry?.temperature !== null && entry?.temperature !== undefined) {
-                validateTemperatureInput(
-                    parseInt(row.getAttribute('data-unit-id')),
-                    row.getAttribute('data-date'),
-                    timeSlot
-                );
-            }
-        }
-        
-        // Set corrective action
-        const actionTextarea = row.querySelector('.corrective-action-input');
-        if (actionTextarea) {
-            actionTextarea.value = entry?.corrective_action ?? '';
-        }
-        
-        // Set initial
-        const initialInput = row.querySelector('.initial-input');
-        if (initialInput) {
-            initialInput.value = entry?.initial ?? '';
+    results.forEach(({ unitId, data }) => {
+        if (data && data.success) {
+            const entry = data.log.entries[currentTime] || null;
+            populateUnitRow(unitId, entry);
         }
     });
+}
+
+// Populate Unit Row with Entry Data
+function populateUnitRow(unitId, entry) {
+    const row = document.querySelector(`.temperature-row[data-unit-id="${unitId}"]`);
+    if (!row) return;
+    
+    // Set temperature
+    const tempInput = row.querySelector('.temperature-input');
+    if (tempInput) {
+        tempInput.value = entry?.temperature ?? '';
+        if (entry?.temperature !== null && entry?.temperature !== undefined) {
+            validateTemperatureInput(unitId);
+        }
+    }
+    
+    // Set corrective action
+    const actionTextarea = row.querySelector('.corrective-action-input');
+    if (actionTextarea) {
+        actionTextarea.value = entry?.corrective_action ?? '';
+    }
+    
+    // Set initial
+    const initialInput = row.querySelector('.initial-input');
+    if (initialInput) {
+        initialInput.value = entry?.initial ?? '';
+    }
 }
 
 // Temperature Validation
@@ -429,13 +316,13 @@ function checkTemperatureRange(unitId, temperature) {
     return temperature < limits.min || temperature > limits.max;
 }
 
-function validateTemperatureInput(unitId, dateStr, timeSlot) {
-    const input = document.querySelector(
-        `.temperature-input[data-unit-id="${unitId}"][data-date="${dateStr}"][data-time="${timeSlot}"]`
-    );
+function validateTemperatureInput(unitId) {
+    const row = document.querySelector(`.temperature-row[data-unit-id="${unitId}"]`);
+    if (!row) return;
+    
+    const input = row.querySelector('.temperature-input');
     if (!input) return;
     
-    const row = input.closest('.temperature-row');
     const tempCell = input.closest('.temperature-cell');
     
     if (input.value === '') {
@@ -465,30 +352,28 @@ function validateTemperatureInput(unitId, dateStr, timeSlot) {
     }
 }
 
-async function validateAndSaveEntry(unitId, dateStr, timeSlot) {
-    const input = document.querySelector(
-        `.temperature-input[data-unit-id="${unitId}"][data-date="${dateStr}"][data-time="${timeSlot}"]`
-    );
+async function validateAndSaveEntry(unitId) {
+    const row = document.querySelector(`.temperature-row[data-unit-id="${unitId}"]`);
+    if (!row) return;
+    
+    const input = row.querySelector('.temperature-input');
     const temperature = input.value ? parseFloat(input.value) : null;
     
     if (temperature !== null) {
-        validateTemperatureInput(unitId, dateStr, timeSlot);
+        validateTemperatureInput(unitId);
     }
     
-    await saveEntry(unitId, dateStr, timeSlot);
+    await saveEntry(unitId);
 }
 
 // Save Entry
-async function saveEntry(unitId, dateStr, timeSlot) {
-    const tempInput = document.querySelector(
-        `.temperature-input[data-unit-id="${unitId}"][data-date="${dateStr}"][data-time="${timeSlot}"]`
-    );
-    const actionTextarea = document.querySelector(
-        `.corrective-action-input[data-unit-id="${unitId}"][data-date="${dateStr}"][data-time="${timeSlot}"]`
-    );
-    const initialInput = document.querySelector(
-        `.initial-input[data-unit-id="${unitId}"][data-date="${dateStr}"][data-time="${timeSlot}"]`
-    );
+async function saveEntry(unitId) {
+    const row = document.querySelector(`.temperature-row[data-unit-id="${unitId}"]`);
+    if (!row) return;
+    
+    const tempInput = row.querySelector('.temperature-input');
+    const actionTextarea = row.querySelector('.corrective-action-input');
+    const initialInput = row.querySelector('.initial-input');
     
     if (!tempInput || !actionTextarea || !initialInput) return;
     
@@ -512,9 +397,11 @@ async function saveEntry(unitId, dateStr, timeSlot) {
     }
     
     // Check if entry is late
-    const scheduledTime = getScheduledTimeForSlot(dateStr, timeSlot);
+    const scheduledTime = getScheduledTimeForSlot(currentDate, currentTime);
     const now = new Date();
     const isLateEntry = now > scheduledTime;
+    
+    const dateStr = formatDateForInput(currentDate);
     
     try {
         const response = await fetch(`/checklist/bar/cold-storage/log/${unitId}/${dateStr}`, {
@@ -524,7 +411,7 @@ async function saveEntry(unitId, dateStr, timeSlot) {
             },
             body: JSON.stringify({
                 action: 'save_entry',
-                scheduled_time: timeSlot,
+                scheduled_time: currentTime,
                 temperature: temperature,
                 corrective_action: correctiveAction,
                 action_time: isOutOfRange && correctiveAction ? new Date().toISOString() : null,
@@ -537,17 +424,8 @@ async function saveEntry(unitId, dateStr, timeSlot) {
         const data = await response.json();
         
         if (data.success) {
-            // Update cache
-            if (!unitLogs[unitId]) {
-                unitLogs[unitId] = {};
-            }
-            if (!unitLogs[unitId][dateStr]) {
-                unitLogs[unitId][dateStr] = { entries: {} };
-            }
-            unitLogs[unitId][dateStr].entries[timeSlot] = data.entry;
-            
             if (isLateEntry) {
-                showNotification(`Entry for ${timeSlot} marked as Late Entry`, 'warning');
+                showNotification(`Entry for ${currentTime} marked as Late Entry`, 'warning');
             } else {
                 showNotification('Entry saved successfully', 'success');
             }
@@ -560,11 +438,11 @@ async function saveEntry(unitId, dateStr, timeSlot) {
     }
 }
 
-function getScheduledTimeForSlot(dateStr, timeSlot) {
+function getScheduledTimeForSlot(date, timeSlot) {
     const [time, period] = timeSlot.split(' ');
     const [hours, minutes] = time.split(':').map(Number);
     
-    const scheduledDate = new Date(dateStr);
+    const scheduledDate = new Date(date);
     let hour24 = hours;
     
     if (period === 'PM' && hours !== 12) {
@@ -577,56 +455,7 @@ function getScheduledTimeForSlot(dateStr, timeSlot) {
     return scheduledDate;
 }
 
-// Unit Management Modal
-async function openUnitManagement() {
-    const modal = document.getElementById('unit-modal');
-    const container = document.getElementById('unit-list-container');
-    
-    try {
-        const response = await fetch('/checklist/bar/cold-storage/units');
-        const units = await response.json();
-        
-        container.innerHTML = '';
-        
-        if (units.length === 0) {
-            container.innerHTML = '<p>No units found. Add your first unit to get started.</p>';
-        } else {
-            units.forEach(unit => {
-                const unitDiv = document.createElement('div');
-                unitDiv.className = 'unit-item';
-                unitDiv.innerHTML = `
-                    <div class="unit-item-info">
-                        <strong>${unit.unit_number}</strong> - ${unit.location} (${unit.unit_type})
-                    </div>
-                    <div class="unit-item-actions">
-                        <button class="btn-small edit-unit" data-id="${unit.id}">Edit</button>
-                        <button class="btn-small delete-unit" data-id="${unit.id}">Delete</button>
-                    </div>
-                `;
-                container.appendChild(unitDiv);
-            });
-            
-            // Add event listeners
-            container.querySelectorAll('.edit-unit').forEach(btn => {
-                btn.addEventListener('click', () => editUnit(parseInt(btn.getAttribute('data-id'))));
-            });
-            
-            container.querySelectorAll('.delete-unit').forEach(btn => {
-                btn.addEventListener('click', () => deleteUnit(parseInt(btn.getAttribute('data-id'))));
-            });
-        }
-        
-        modal.classList.remove('hidden');
-    } catch (error) {
-        console.error('Error loading units:', error);
-        showNotification('Error loading units', 'error');
-    }
-}
-
-function closeUnitManagement() {
-    document.getElementById('unit-modal').classList.add('hidden');
-}
-
+// Unit Management
 function openAddUnitForm() {
     document.getElementById('unit-form-title').textContent = 'Add Unit';
     document.getElementById('unit-id').value = '';
@@ -637,70 +466,6 @@ function openAddUnitForm() {
 
 function closeUnitForm() {
     document.getElementById('unit-form-modal').classList.add('hidden');
-}
-
-async function editUnit(unitId) {
-    try {
-        const response = await fetch('/checklist/bar/cold-storage/units');
-        const units = await response.json();
-        const unit = units.find(u => u.id === unitId);
-        
-        if (!unit) {
-            showNotification('Unit not found', 'error');
-            return;
-        }
-        
-        document.getElementById('unit-form-title').textContent = 'Edit Unit';
-        document.getElementById('unit-id').value = unit.id;
-        document.getElementById('unit-number').value = unit.unit_number;
-        document.getElementById('unit-location').value = unit.location;
-        document.getElementById('unit-type').value = unit.unit_type;
-        
-        if (unit.unit_type === 'Wine Chiller') {
-            document.getElementById('wine-chiller-temps').classList.remove('hidden');
-            document.getElementById('min-temp').value = unit.min_temp || '';
-            document.getElementById('max-temp').value = unit.max_temp || '';
-        } else {
-            document.getElementById('wine-chiller-temps').classList.add('hidden');
-        }
-        
-        document.getElementById('unit-form-modal').classList.remove('hidden');
-    } catch (error) {
-        console.error('Error loading unit:', error);
-        showNotification('Error loading unit', 'error');
-    }
-}
-
-async function deleteUnit(unitId) {
-    if (!confirm('Are you sure you want to delete this unit? This action cannot be undone.')) {
-        return;
-    }
-    
-    try {
-        const response = await fetch('/checklist/bar/cold-storage/units', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                action: 'delete',
-                id: unitId
-            })
-        });
-        
-        const data = await response.json();
-        
-        if (data.success) {
-            showNotification('Unit deleted successfully', 'success');
-            await loadUnits();
-            closeUnitManagement();
-        } else {
-            showNotification('Error deleting unit: ' + (data.error || 'Unknown error'), 'error');
-        }
-    } catch (error) {
-        console.error('Error deleting unit:', error);
-        showNotification('Error deleting unit', 'error');
-    }
 }
 
 async function handleUnitFormSubmit(event) {
@@ -734,7 +499,6 @@ async function handleUnitFormSubmit(event) {
             showNotification(formData.action === 'create' ? 'Unit created successfully' : 'Unit updated successfully', 'success');
             await loadUnits();
             closeUnitForm();
-            closeUnitManagement();
         } else {
             showNotification('Error saving unit: ' + (data.error || 'Unknown error'), 'error');
         }

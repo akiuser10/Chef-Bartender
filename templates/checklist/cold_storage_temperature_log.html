@@ -5,42 +5,56 @@
 </div>
 
 <div class="cold-storage-container">
-    <!-- Unit Grid at Top -->
-    <div class="units-grid-section">
-        <div class="units-grid-header">
-            <h3>Units</h3>
-            <button id="manage-units-btn" class="btn-secondary">Manage Units</button>
-            <button id="generate-pdf-btn" class="btn-primary">Generate PDF</button>
+    <!-- Date and Time Selection -->
+    <div class="date-time-selection">
+        <div class="selection-group">
+            <label for="log-date">Date:</label>
+            <input type="date" id="log-date" value="{{ today.isoformat() }}" class="date-input">
         </div>
-        <div id="units-grid" class="units-grid">
-            <!-- Units will be populated by JavaScript -->
+        <div class="selection-group">
+            <label for="log-time">Time:</label>
+            <select id="log-time" class="time-select">
+                <option value="10:00 AM">10:00 AM</option>
+                <option value="02:00 PM">02:00 PM</option>
+                <option value="06:00 PM">06:00 PM</option>
+                <option value="10:00 PM">10:00 PM</option>
+            </select>
+        </div>
+        <div class="selection-group">
+            <button id="add-unit-btn" class="btn-primary">Add New Unit</button>
+            <button id="generate-pdf-btn" class="btn-secondary">Generate PDF</button>
         </div>
     </div>
 
-    <!-- Week View for Each Unit -->
-    <div id="units-week-view" class="units-week-view">
-        <!-- Each unit's week view will be generated here -->
+    <!-- Temperature Log Table -->
+    <div class="temperature-log-section">
+        <div id="date-display" class="date-display">
+            <strong>DATE:</strong> <span id="display-date">—</span>
+            <strong>TIME:</strong> <span id="display-time">—</span>
+        </div>
+        
+        <div class="temperature-log-table-wrapper">
+            <table class="temperature-log-table" id="temperature-log-table">
+                <thead>
+                    <tr>
+                        <th>UNIT NO</th>
+                        <th>LOCATION</th>
+                        <th>TYPE</th>
+                        <th>TEMPERATURE (°C)</th>
+                        <th>CORRECTIVE ACTION</th>
+                        <th>INITIAL</th>
+                    </tr>
+                </thead>
+                <tbody id="temperature-log-tbody">
+                    <!-- Rows will be populated by JavaScript -->
+                </tbody>
+            </table>
+        </div>
     </div>
 
     <!-- Empty State -->
     <div id="empty-state" class="empty-state">
         <p>No units found. Please add units to start logging temperatures.</p>
-    </div>
-</div>
-
-<!-- Unit Management Modal -->
-<div id="unit-modal" class="modal hidden">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h3 id="modal-title">Manage Units</h3>
-            <button class="modal-close" id="modal-close">&times;</button>
-        </div>
-        <div class="modal-body">
-            <div id="unit-list-container">
-                <!-- Unit list will be populated here -->
-            </div>
-            <button id="add-unit-btn" class="btn-primary">Add New Unit</button>
-        </div>
     </div>
 </div>
 
@@ -82,6 +96,22 @@
                     <button type="button" class="btn-secondary" id="cancel-unit-form">Cancel</button>
                 </div>
             </form>
+        </div>
+    </div>
+</div>
+
+<!-- Unit Management Modal -->
+<div id="unit-modal" class="modal hidden">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 id="modal-title">Manage Units</h3>
+            <button class="modal-close" id="modal-close">&times;</button>
+        </div>
+        <div class="modal-body">
+            <div id="unit-list-container">
+                <!-- Unit list will be populated here -->
+            </div>
+            <button id="manage-add-unit-btn" class="btn-primary">Add New Unit</button>
         </div>
     </div>
 </div>
