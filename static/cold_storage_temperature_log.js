@@ -26,11 +26,21 @@ function initializeEventListeners() {
     // Unit management (only for Managers)
     const addUnitBtn = document.getElementById('add-unit-btn');
     if (addUnitBtn) {
-        addUnitBtn.addEventListener('click', openAddUnitForm);
+        console.log('Add Unit button found, attaching event listener');
+        addUnitBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            console.log('Add Unit button clicked');
+            openAddUnitForm();
+        });
+    } else {
+        console.warn('Add Unit button not found - may not be visible for this user role');
     }
     const manageAddUnitBtn = document.getElementById('manage-add-unit-btn');
     if (manageAddUnitBtn) {
-        manageAddUnitBtn.addEventListener('click', openAddUnitForm);
+        manageAddUnitBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            openAddUnitForm();
+        });
     }
     document.getElementById('unit-form-close')?.addEventListener('click', closeUnitForm);
     document.getElementById('cancel-unit-form')?.addEventListener('click', closeUnitForm);
@@ -703,12 +713,26 @@ function openAddUnitForm() {
         return;
     }
     
-    document.getElementById('unit-form-title').textContent = 'Add Unit';
-    document.getElementById('unit-id').value = '';
-    document.getElementById('unit-form').reset();
-    document.getElementById('wine-chiller-temps').classList.add('hidden');
+    // Reset form
+    const formTitle = document.getElementById('unit-form-title');
+    const unitIdInput = document.getElementById('unit-id');
+    const unitForm = document.getElementById('unit-form');
+    const wineChillerTemps = document.getElementById('wine-chiller-temps');
+    
+    if (formTitle) formTitle.textContent = 'Add Unit';
+    if (unitIdInput) unitIdInput.value = '';
+    if (unitForm) unitForm.reset();
+    if (wineChillerTemps) wineChillerTemps.classList.add('hidden');
+    
+    // Show modal
     modal.classList.remove('hidden');
-    console.log('Unit form modal opened');
+    console.log('Unit form modal opened successfully');
+    
+    // Focus on first input
+    const unitNumberInput = document.getElementById('unit-number');
+    if (unitNumberInput) {
+        setTimeout(() => unitNumberInput.focus(), 100);
+    }
 }
 
 function closeUnitForm() {
