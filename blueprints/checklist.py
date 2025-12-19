@@ -114,36 +114,62 @@ def manage_cold_storage_units():
                     return jsonify({'success': False, 'error': 'Only Managers can create new units'}), 403
                 
                 # Validate required fields
-                if not data.get('unit_number') or not data.get('location') or not data.get('unit_type'):
-                    return jsonify({'success': False, 'error': 'Unit number, location, and unit type are required'}), 400
+                unit_number = data.get('unit_number', '').strip()
+                location = data.get('location', '').strip()
+                unit_type = data.get('unit_type', '').strip()
+                
+                if not unit_number:
+                    return jsonify({'success': False, 'error': 'Unit number is required'}), 400
+                if not location:
+                    return jsonify({'success': False, 'error': 'Location is required'}), 400
+                if not unit_type:
+                    return jsonify({'success': False, 'error': 'Unit type is required'}), 400
+                
+                # Validate unit type
+                valid_types = ['Refrigerator', 'Freezer', 'Wine Chiller']
+                if unit_type not in valid_types:
+                    return jsonify({'success': False, 'error': f'Invalid unit type. Must be one of: {", ".join(valid_types)}'}), 400
                 
                 try:
                     # Check if unit number already exists in organization
                     org_filter = get_organization_filter(ColdStorageUnit)
                     existing_unit = ColdStorageUnit.query.filter(org_filter).filter_by(
-                        unit_number=data['unit_number'],
+                        unit_number=unit_number,
                         is_active=True
                     ).first()
                     
                     if existing_unit:
-                        return jsonify({'success': False, 'error': f'Unit number "{data["unit_number"]}" already exists'}), 400
+                        return jsonify({'success': False, 'error': f'Unit number "{unit_number}" already exists in your organization'}), 400
                     
                     # Handle temperature values - convert to float if provided, otherwise None
                     min_temp = None
                     max_temp = None
                     if data.get('min_temp') and str(data.get('min_temp')).strip():
-                        min_temp = float(data['min_temp'])
+                        try:
+                            min_temp = float(data['min_temp'])
+                        except (ValueError, TypeError):
+                            return jsonify({'success': False, 'error': 'Invalid minimum temperature value'}), 400
                     if data.get('max_temp') and str(data.get('max_temp')).strip():
-                        max_temp = float(data['max_temp'])
+                        try:
+                            max_temp = float(data['max_temp'])
+                        except (ValueError, TypeError):
+                            return jsonify({'success': False, 'error': 'Invalid maximum temperature value'}), 400
                     
+                    # Validate temperature range for Wine Chiller
+                    if unit_type == 'Wine Chiller':
+                        if min_temp is not None and max_temp is not None and min_temp >= max_temp:
+                            return jsonify({'success': False, 'error': 'Minimum temperature must be less than maximum temperature'}), 400
+                    
+                    # Create the unit
                     unit = ColdStorageUnit(
-                        unit_number=data['unit_number'],
-                        location=data['location'],
-                        unit_type=data['unit_type'],
+                        unit_number=unit_number,
+                        location=location,
+                        unit_type=unit_type,
                         min_temp=min_temp,
                         max_temp=max_temp,
                         organisation=current_user.organisation or current_user.restaurant_bar_name,
-                        created_by=current_user.id
+                        created_by=current_user.id,
+                        is_active=True
                     )
                     db.session.add(unit)
                     db.session.commit()
@@ -161,14 +187,16 @@ def manage_cold_storage_units():
                 except ValueError as e:
                     db.session.rollback()
                     current_app.logger.error(f"ValueError creating unit: {str(e)}")
-                    return jsonify({'success': False, 'error': f'Invalid temperature value: {str(e)}'}), 400
+                    return jsonify({'success': False, 'error': f'Invalid input value: {str(e)}'}), 400
                 except Exception as e:
                     db.session.rollback()
                     error_msg = str(e)
                     current_app.logger.error(f"Error creating unit: {error_msg}", exc_info=True)
                     # Provide more user-friendly error message
-                    if 'duplicate' in error_msg.lower() or 'unique' in error_msg.lower():
-                        return jsonify({'success': False, 'error': f'Unit number "{data.get("unit_number")}" already exists'}), 400
+                    if 'duplicate' in error_msg.lower() or 'unique' in error_msg.lower() or 'already exists' in error_msg.lower():
+                        return jsonify({'success': False, 'error': f'Unit number "{unit_number}" already exists'}), 400
+                    if 'foreign key' in error_msg.lower() or 'constraint' in error_msg.lower():
+                        return jsonify({'success': False, 'error': 'Database constraint error. Please contact support.'}), 500
                     return jsonify({'success': False, 'error': f'Error creating unit: {error_msg}'}), 500
             
             elif action == 'update':
