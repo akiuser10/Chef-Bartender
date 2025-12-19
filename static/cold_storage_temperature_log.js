@@ -15,6 +15,21 @@ document.addEventListener('DOMContentLoaded', function() {
     setupNotifications();
     updateDateDisplay();
     loadUnits();
+    
+    // Fallback: Ensure Add Unit button is accessible even if loaded late
+    setTimeout(function() {
+        const addUnitBtn = document.getElementById('add-unit-btn');
+        if (addUnitBtn && !addUnitBtn.hasAttribute('data-listener-attached')) {
+            console.log('Fallback: Attaching event listener to Add Unit button');
+            addUnitBtn.setAttribute('data-listener-attached', 'true');
+            addUnitBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                console.log('Add Unit button clicked (fallback handler)');
+                openAddUnitForm();
+            });
+        }
+    }, 500);
 });
 
 // Event Listeners
