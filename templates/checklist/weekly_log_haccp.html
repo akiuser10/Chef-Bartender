@@ -57,6 +57,18 @@
                 </div>
             </div>
 
+            <!-- Instructions for Manual Entry -->
+            <div style="background: #fff3cd; padding: 15px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid #ffc107;">
+                <h4 style="margin-top: 0; color: #856404;">📝 Manual Temperature Entry Instructions</h4>
+                <p style="margin: 5px 0; color: #856404; font-size: 0.95em;">
+                    <strong>How to enter temperatures:</strong> Click on any temperature input field for a specific unit and time slot, then manually type the temperature reading in degrees Celsius (°C). 
+                    The system will automatically validate the reading against critical limits and show status (OK or OUT OF RANGE).
+                </p>
+                <p style="margin: 5px 0; color: #856404; font-size: 0.95em;">
+                    <strong>Example:</strong> For a Refrigerator at 10:00 AM on Monday, click the input field under that unit's column and enter the temperature (e.g., "2.5" for 2.5°C).
+                </p>
+            </div>
+
             <!-- Weekly Temperature Table -->
             <div style="overflow-x: auto; margin-bottom: 30px;">
                 <table class="form-table" style="min-width: 1000px;" id="temperatureTable">
@@ -99,20 +111,27 @@
                                 <td>
                                     {% set log_key = (day_date, time_slot, unit.id) %}
                                     {% set existing_log = log_dict.get(log_key) %}
+                                    {% set min_temp, max_temp = unit.get_temp_range() %}
                                     <input type="number" 
                                            name="temp_{{ day_idx }}_{{ time_slot }}_{{ unit.id }}" 
                                            class="form-input temp-input" 
                                            step="0.1" 
                                            value="{% if existing_log %}{{ existing_log.temperature }}{% endif %}"
+                                           placeholder="{% if min_temp is not none and max_temp is not none %}{{ min_temp }}°-{{ max_temp }}°{% else %}Enter temp{% endif %}"
                                            data-unit-id="{{ unit.id }}"
                                            data-unit-number="{{ unit.unit_number }}"
                                            data-day="{{ day }}"
                                            data-time="{{ time_slot }}"
-                                           data-min="{{ unit.get_temp_range()[0] if unit.get_temp_range()[0] is not none else '' }}"
-                                           data-max="{{ unit.get_temp_range()[1] if unit.get_temp_range()[1] is not none else '' }}"
-                                           style="width: 100%; text-align: center;"
+                                           data-min="{{ min_temp if min_temp is not none else '' }}"
+                                           data-max="{{ max_temp if max_temp is not none else '' }}"
+                                           style="width: 100%; text-align: center; padding: 10px; font-size: 1em; font-weight: 500; min-height: 40px;"
                                            onchange="checkTemperature(this)"
+                                           onfocus="this.style.backgroundColor='#fff'; this.style.borderColor='#d45a2a';"
+                                           onblur="checkTemperature(this)"
                                            {% if is_locked %}readonly{% endif %}>
+                                    <small style="display: block; font-size: 0.75em; color: #999; margin-top: 2px; text-align: center;">
+                                        {{ unit.unit_number }}
+                                    </small>
                                 </td>
                                 <td style="text-align: center;">
                                     <span class="status-indicator" id="status_{{ day_idx }}_{{ time_slot }}_{{ unit.id }}" style="display: inline-block; padding: 4px 8px; border-radius: 4px; font-size: 0.85em; font-weight: bold;">
