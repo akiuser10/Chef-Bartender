@@ -1,0 +1,169 @@
+{% extends "base.html" %}
+{% block page_panel %}
+<div class="panel-header">
+    <h2>Weekly Cold Storage Temperature Log</h2>
+    <p>Week of {{ week_start.strftime('%B %d, %Y') }}</p>
+    <div style="margin-top: 10px;">
+        <a href="{{ url_for('checklist.weekly_log', week_start=week_start.strftime('%Y-%m-%d')) }}" class="btn btn-primary">Edit</a>
+        <button onclick="window.print()" class="btn btn-secondary">Print / PDF</button>
+        <a href="{{ url_for('checklist.temperature_log_index') }}" class="btn btn-secondary">Back</a>
+    </div>
+</div>
+
+<div class="page-panel">
+    <div class="section-container">
+        <!-- Metadata Section -->
+        <div style="background: #f9f9f9; padding: 20px; border-radius: 8px; margin-bottom: 30px; page-break-inside: avoid;">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                <div>
+                    <p><strong>Bar / Outlet Name:</strong> {{ metadata.bar_name or '-' }}</p>
+                    <p><strong>Location:</strong> {{ metadata.location or '-' }}</p>
+                    <p><strong>Week Start Date:</strong> {{ week_start.strftime('%B %d, %Y') }}</p>
+                </div>
+                <div>
+                    <p><strong>Checked By:</strong> {{ metadata.checked_by or '-' }}</p>
+                    {% if metadata.supervisor_name %}
+                    <p><strong>Supervisor Name:</strong> {{ metadata.supervisor_name }}</p>
+                    <p><strong>Supervisor Signature:</strong> {{ metadata.supervisor_signature or '-' }}</p>
+                    {% if metadata.supervisor_date %}
+                    <p><strong>Supervisor Date:</strong> {{ metadata.supervisor_date.strftime('%B %d, %Y') }}</p>
+                    {% endif %}
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Weekly Temperature Table -->
+        <div style="overflow-x: auto; margin-bottom: 30px;">
+            <table class="form-table" style="min-width: 800px; page-break-inside: auto;">
+                <thead>
+                    <tr>
+                        <th rowspan="2" style="min-width: 100px; background: #2a2a2a;">Day / Time</th>
+                        {% for unit in units %}
+                        <th colspan="2" style="min-width: 150px; background: #2a2a2a;">{{ unit.unit_number }}</th>
+                        {% endfor %}
+                        <th rowspan="2" style="min-width: 200px; background: #2a2a2a;">Remarks</th>
+                    </tr>
+                    <tr>
+                        {% for unit in units %}
+                        <th style="font-size: 0.85em; font-weight: normal; background: #2a2a2a;">
+                            {% set min_temp, max_temp = unit.get_temp_range() %}
+                            {% if min_temp is not none and max_temp is not none %}
+                                Temp (°C)<br><small>{{ min_temp }}° to {{ max_temp }}°</small>
+                            {% else %}
+                                Temp (°C)
+                            {% endif %}
+                        </th>
+                        <th style="font-size: 0.85em; font-weight: normal; background: #2a2a2a;">Action</th>
+                        {% endfor %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for day in days %}
+                        {% set day_idx = loop.index0 %}
+                        {% set day_date = week_dates[day_idx] %}
+                        {% for time_slot in time_slots %}
+                        <tr style="page-break-inside: avoid;">
+                            {% if loop.first %}
+                            <td rowspan="{{ time_slots|length }}" style="vertical-align: middle; font-weight: bold; background: #1a1a1a;">
+                                {{ day }}<br><small>{{ day_date.strftime('%b %d') }}</small>
+                            </td>
+                            {% endif %}
+                            <td style="background: #2a2a2a; font-weight: 500;">{{ time_slot }}</td>
+                            {% for unit in units %}
+                            <td style="text-align: center;">
+                                {% set log_key = (day_date, time_slot, unit.id) %}
+                                {% set existing_log = log_dict.get(log_key) %}
+                                {% if existing_log %}
+                                    {% set is_valid = existing_log.is_temp_valid() %}
+                                    <span style="display: inline-block; padding: 5px 10px; border-radius: 4px; font-weight: bold;
+                                        {% if is_valid %}background: #e8f5e9; color: #2e7d32;
+                                        {% else %}background: #ffebee; color: #c62828;{% endif %}">
+                                        {{ existing_log.temperature }}°C
+                                    </span>
+                                {% else %}
+                                    <span style="color: #666;">-</span>
+                                {% endif %}
+                            </td>
+                            <td style="font-size: 0.9em;">
+                                {% if existing_log and existing_log.corrective_action %}
+                                    {{ existing_log.corrective_action }}
+                                {% else %}
+                                    <span style="color: #666;">-</span>
+                                {% endif %}
+                            </td>
+                            {% endfor %}
+                            <td style="font-size: 0.9em; color: #999;">-</td>
+                        </tr>
+                        {% endfor %}
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Legend -->
+        <div style="background: #f9f9f9; padding: 15px; border-radius: 8px; margin-top: 20px; page-break-inside: avoid;">
+            <h3 style="margin-top: 0; font-size: 1.1em;">Temperature Status Legend</h3>
+            <div style="display: flex; gap: 20px; flex-wrap: wrap;">
+                <div>
+                    <span style="display: inline-block; width: 20px; height: 20px; background: #e8f5e9; border: 1px solid #4caf50; border-radius: 3px; vertical-align: middle; margin-right: 5px;"></span>
+                    Within acceptable range
+                </div>
+                <div>
+                    <span style="display: inline-block; width: 20px; height: 20px; background: #ffebee; border: 1px solid #f44336; border-radius: 3px; vertical-align: middle; margin-right: 5px;"></span>
+                    Outside acceptable range (corrective action required)
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+@media print {
+    .panel-header, .main-nav, .site-header, .page-panel {
+        background: white !important;
+    }
+    
+    .panel-header {
+        border-bottom: 2px solid #000;
+        padding-bottom: 10px;
+        margin-bottom: 20px;
+    }
+    
+    .panel-header button, .panel-header a {
+        display: none;
+    }
+    
+    .form-table {
+        background: white !important;
+        border: 2px solid #000 !important;
+    }
+    
+    .form-table th {
+        background: #f0f0f0 !important;
+        color: #000 !important;
+        border: 1px solid #000 !important;
+    }
+    
+    .form-table td {
+        background: white !important;
+        color: #000 !important;
+        border: 1px solid #000 !important;
+    }
+    
+    .form-table tr:nth-child(even) td {
+        background: #f9f9f9 !important;
+    }
+    
+    @page {
+        margin: 1cm;
+        size: A4 landscape;
+    }
+    
+    body {
+        background: white !important;
+    }
+}
+</style>
+{% endblock %}
+

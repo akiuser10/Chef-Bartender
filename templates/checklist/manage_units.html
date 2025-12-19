@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+{% block page_panel %}
+<div class="panel-header">
+    <h2>Manage Cold Storage Units</h2>
+</div>
+
+<div class="page-panel">
+    <div class="section-container">
+        <div style="margin-bottom: 20px;">
+            <a href="{{ url_for('checklist.add_unit') }}" class="btn btn-primary">Add New Unit</a>
+            <a href="{{ url_for('checklist.temperature_log_index') }}" class="btn btn-secondary" style="margin-left: 10px;">Back to Temperature Log</a>
+        </div>
+
+        {% if units %}
+        <div class="table-container">
+            <table class="form-table">
+                <thead>
+                    <tr>
+                        <th>Unit Number</th>
+                        <th>Unit Name</th>
+                        <th>Type</th>
+                        <th>Temperature Range</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for unit in units %}
+                    <tr>
+                        <td><strong>{{ unit.unit_number }}</strong></td>
+                        <td>{{ unit.unit_name or '-' }}</td>
+                        <td>{{ unit.unit_type }}</td>
+                        <td>
+                            {% set min_temp, max_temp = unit.get_temp_range() %}
+                            {% if min_temp is not none and max_temp is not none %}
+                                {{ min_temp }}°C to {{ max_temp }}°C
+                            {% else %}
+                                Not defined
+                            {% endif %}
+                        </td>
+                        <td>
+                            <a href="{{ url_for('checklist.edit_unit', unit_id=unit.id) }}" class="btn btn-small">Edit</a>
+                            <form method="POST" action="{{ url_for('checklist.delete_unit', unit_id=unit.id) }}" style="display: inline;" onsubmit="return confirm('Are you sure you want to delete this unit?');">
+                                <button type="submit" class="btn btn-small btn-secondary">Delete</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="info-box" style="text-align: center; padding: 40px;">
+            <p>No units configured yet.</p>
+            <a href="{{ url_for('checklist.add_unit') }}" class="btn btn-primary">Add Your First Unit</a>
+        </div>
+        {% endif %}
+
+        <div class="info-box" style="background: #f0f8ff; padding: 15px; border-radius: 8px; margin-top: 20px;">
+            <h3 style="margin-top: 0;">Default Units</h3>
+            <p>You can add any number of units. Common setup includes:</p>
+            <ul>
+                <li>1 Freezer</li>
+                <li>5 Refrigerators</li>
+                <li>2 Wine Chillers</li>
+            </ul>
+            <p><strong>Note:</strong> Units can be added dynamically - there's no limit to the number of units you can configure.</p>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

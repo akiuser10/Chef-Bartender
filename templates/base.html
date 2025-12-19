@@ -64,6 +64,7 @@
             <div class="nav-dropdown-menu" id="checklistDropdownMenu">
                 {% if current_user.user_role in ['Manager', 'Bartender'] %}
                 <a href="{{ url_for('checklist.bar_checklist') }}" class="nav-dropdown-item">Bar</a>
+                <a href="{{ url_for('checklist.temperature_log_index') }}" class="nav-dropdown-item">Temperature Log</a>
                 {% endif %}
                 {% if current_user.user_role in ['Chef', 'Manager'] %}
                 <a href="{{ url_for('checklist.kitchen_checklist') }}" class="nav-dropdown-item">Kitchen</a>

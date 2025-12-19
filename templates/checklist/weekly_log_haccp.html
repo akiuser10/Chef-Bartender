@@ -1,0 +1,401 @@
+{% extends "base.html" %}
+{% block page_panel %}
+<div class="panel-header">
+    <h2>Weekly Cold Storage Temperature Log – HACCP Compliant</h2>
+    <p style="color: #d45a2a; font-weight: bold; margin-top: 5px;">CCP (Critical Control Point)</p>
+    <p>Week of {{ week_start.strftime('%B %d, %Y') }}</p>
+    {% if is_locked %}
+    <div style="background: #ffebee; padding: 10px; border-radius: 6px; margin-top: 10px; border-left: 4px solid #f44336;">
+        <strong style="color: #c62828;">⚠️ This log is LOCKED and cannot be edited.</strong>
+    </div>
+    {% endif %}
+</div>
+
+<div class="page-panel">
+    <div class="section-container">
+        <form method="POST" class="form-container" id="temperatureLogForm" onsubmit="return validateForm()">
+            <!-- HACCP Information Box -->
+            <div style="background: #e3f2fd; padding: 20px; border-radius: 8px; margin-bottom: 30px; border-left: 4px solid #2196F3;">
+                <h3 style="margin-top: 0; color: #1976D2;">HACCP Compliance Information</h3>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                    <div>
+                        <p><strong>Critical Limits:</strong></p>
+                        <ul style="margin: 5px 0;">
+                            <li>Refrigerator: 0°C to 4°C</li>
+                            <li>Freezer: -12°C to -22°C</li>
+                            <li>Wine Chiller: User-defined range</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <p><strong>Monitoring Frequency:</strong> 4 times daily</p>
+                        <p><strong>Corrective Actions:</strong> Required for all out-of-range temperatures</p>
+                        <p><strong>Verification:</strong> Daily verification and weekly supervisor review</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Metadata Section -->
+            <div style="background: #f9f9f9; padding: 20px; border-radius: 8px; margin-bottom: 30px;">
+                <h3 style="margin-top: 0;">Log Information</h3>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                    <div class="form-group">
+                        <label for="bar_name">Bar / Outlet Name *</label>
+                        <input type="text" id="bar_name" name="bar_name" class="form-input" required value="{{ metadata.bar_name }}" {% if is_locked %}readonly{% endif %}>
+                    </div>
+                    <div class="form-group">
+                        <label for="location">Location *</label>
+                        <input type="text" id="location" name="location" class="form-input" required value="{{ metadata.location }}" {% if is_locked %}readonly{% endif %}>
+                    </div>
+                    <div class="form-group">
+                        <label for="checked_by">Checked By *</label>
+                        <input type="text" id="checked_by" name="checked_by" class="form-input" required value="{{ metadata.checked_by }}" {% if is_locked %}readonly{% endif %}>
+                    </div>
+                    <div class="form-group">
+                        <label for="week_start">Week Start Date</label>
+                        <input type="date" id="week_start" name="week_start" class="form-input" value="{{ week_start.strftime('%Y-%m-%d') }}" readonly style="background: #e9e9e9;">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Weekly Temperature Table -->
+            <div style="overflow-x: auto; margin-bottom: 30px;">
+                <table class="form-table" style="min-width: 1000px;" id="temperatureTable">
+                    <thead>
+                        <tr>
+                            <th rowspan="2" style="min-width: 120px;">Day / Time</th>
+                            {% for unit in units %}
+                            <th colspan="3" style="min-width: 200px; background: #2a2a2a;">{{ unit.unit_number }}</th>
+                            {% endfor %}
+                            <th rowspan="2" style="min-width: 250px;">Corrective Action / Remarks</th>
+                        </tr>
+                        <tr>
+                            {% for unit in units %}
+                            <th style="font-size: 0.85em; font-weight: normal; background: #2a2a2a;">
+                                {% set min_temp, max_temp = unit.get_temp_range() %}
+                                {% if min_temp is not none and max_temp is not none %}
+                                    Temp (°C)<br><small><strong>Critical Limit:</strong> {{ min_temp }}° to {{ max_temp }}°</small>
+                                {% else %}
+                                    Temp (°C)
+                                {% endif %}
+                            </th>
+                            <th style="font-size: 0.85em; font-weight: normal; background: #2a2a2a;">Status</th>
+                            <th style="font-size: 0.85em; font-weight: normal; background: #2a2a2a;">Action Type</th>
+                            {% endfor %}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for day in days %}
+                            {% set day_idx = loop.index0 %}
+                            {% set day_date = week_dates[day_idx] %}
+                            {% for time_slot in time_slots %}
+                            <tr>
+                                {% if loop.first %}
+                                <td rowspan="{{ time_slots|length }}" style="vertical-align: middle; font-weight: bold; background: #1a1a1a;">
+                                    {{ day }}<br><small>{{ day_date.strftime('%b %d') }}</small>
+                                </td>
+                                {% endif %}
+                                <td style="background: #2a2a2a; font-weight: 500;">{{ time_slot }}</td>
+                                {% for unit in units %}
+                                <td>
+                                    {% set log_key = (day_date, time_slot, unit.id) %}
+                                    {% set existing_log = log_dict.get(log_key) %}
+                                    <input type="number" 
+                                           name="temp_{{ day_idx }}_{{ time_slot }}_{{ unit.id }}" 
+                                           class="form-input temp-input" 
+                                           step="0.1" 
+                                           value="{% if existing_log %}{{ existing_log.temperature }}{% endif %}"
+                                           data-unit-id="{{ unit.id }}"
+                                           data-unit-number="{{ unit.unit_number }}"
+                                           data-day="{{ day }}"
+                                           data-time="{{ time_slot }}"
+                                           data-min="{{ unit.get_temp_range()[0] if unit.get_temp_range()[0] is not none else '' }}"
+                                           data-max="{{ unit.get_temp_range()[1] if unit.get_temp_range()[1] is not none else '' }}"
+                                           style="width: 100%; text-align: center;"
+                                           onchange="checkTemperature(this)"
+                                           {% if is_locked %}readonly{% endif %}>
+                                </td>
+                                <td style="text-align: center;">
+                                    <span class="status-indicator" id="status_{{ day_idx }}_{{ time_slot }}_{{ unit.id }}" style="display: inline-block; padding: 4px 8px; border-radius: 4px; font-size: 0.85em; font-weight: bold;">
+                                        {% if existing_log %}
+                                            {% if existing_log.status == 'OK' %}
+                                                <span style="background: #e8f5e9; color: #2e7d32; padding: 4px 8px; border-radius: 4px;">OK</span>
+                                            {% else %}
+                                                <span style="background: #ffebee; color: #c62828; padding: 4px 8px; border-radius: 4px;">OUT OF RANGE</span>
+                                            {% endif %}
+                                        {% else %}
+                                            <span style="color: #999;">-</span>
+                                        {% endif %}
+                                    </span>
+                                </td>
+                                <td>
+                                    <select name="action_type_{{ day_idx }}_{{ time_slot }}_{{ unit.id }}" 
+                                            class="form-input action-type-select" 
+                                            id="action_type_{{ day_idx }}_{{ time_slot }}_{{ unit.id }}"
+                                            onchange="toggleActionFields(this)"
+                                            style="width: 100%; font-size: 0.9em;"
+                                            {% if is_locked %}disabled{% endif %}>
+                                        <option value="">Select Action</option>
+                                        {% for action in corrective_actions %}
+                                        <option value="{{ action }}" {% if existing_log and existing_log.corrective_action_type == action %}selected{% endif %}>{{ action }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </td>
+                                {% endfor %}
+                                <td>
+                                    <div class="corrective-action-container" style="display: none;" id="action_container_{{ day_idx }}_{{ time_slot }}">
+                                        {% for unit in units %}
+                                        <div class="unit-action-group" id="action_group_{{ day_idx }}_{{ time_slot }}_{{ unit.id }}" style="margin-bottom: 8px; display: none;">
+                                            <label style="font-size: 0.85em; font-weight: bold; color: #d45a2a;">{{ unit.unit_number }}:</label>
+                                            <textarea name="action_{{ day_idx }}_{{ time_slot }}_{{ unit.id }}" 
+                                                      class="form-input action-input" 
+                                                      rows="2" 
+                                                      placeholder="Describe corrective action taken"
+                                                      style="width: 100%; font-size: 0.9em; min-height: 50px;"
+                                                      {% if is_locked %}readonly{% endif %}>{% if existing_log %}{{ existing_log.corrective_action or '' }}{% endif %}</textarea>
+                                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 5px; margin-top: 5px;">
+                                                <input type="number" 
+                                                       name="recheck_{{ day_idx }}_{{ time_slot }}_{{ unit.id }}" 
+                                                       class="form-input" 
+                                                       step="0.1" 
+                                                       placeholder="Recheck temp (°C)"
+                                                       value="{% if existing_log and existing_log.recheck_temperature %}{{ existing_log.recheck_temperature }}{% endif %}"
+                                                       style="font-size: 0.85em;"
+                                                       {% if is_locked %}readonly{% endif %}>
+                                                <input type="text" 
+                                                       name="action_time_{{ day_idx }}_{{ time_slot }}_{{ unit.id }}" 
+                                                       class="form-input" 
+                                                       placeholder="Time completed"
+                                                       value="{% if existing_log and existing_log.corrective_action_time %}{{ existing_log.corrective_action_time }}{% endif %}"
+                                                       style="font-size: 0.85em;"
+                                                       {% if is_locked %}readonly{% endif %}>
+                                            </div>
+                                        </div>
+                                        {% endfor %}
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                            <!-- Daily Verification -->
+                            <tr style="background: #f5f5f5;">
+                                <td colspan="{{ (units|length * 3) + 2 }}" style="padding: 10px;">
+                                    {% set day_verified = false %}
+                                    {% for log in log_dict.values() %}
+                                        {% if log.log_date == day_date and log.daily_verified %}
+                                            {% set day_verified = true %}
+                                        {% endif %}
+                                    {% endfor %}
+                                    <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
+                                        <input type="checkbox" 
+                                               name="daily_verified_{{ day_idx }}" 
+                                               id="daily_verified_{{ day_idx }}"
+                                               {% if day_verified %}checked{% endif %}
+                                               {% if is_locked %}disabled{% endif %}>
+                                        <strong>Daily Verification - {{ day }} {{ day_date.strftime('%b %d') }}:</strong> I verify that all temperature readings for this day have been checked and corrective actions (if any) have been completed.
+                                    </label>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Supervisor Verification -->
+            <div style="background: #f9f9f9; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+                <h3 style="margin-top: 0;">Supervisor / Manager Verification (HACCP Verification)</h3>
+                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px;">
+                    <div class="form-group">
+                        <label for="supervisor_name">Supervisor Name</label>
+                        <input type="text" id="supervisor_name" name="supervisor_name" class="form-input" value="{{ metadata.supervisor_name }}" {% if is_locked %}readonly{% endif %}>
+                    </div>
+                    <div class="form-group">
+                        <label for="supervisor_signature">Signature</label>
+                        <input type="text" id="supervisor_signature" name="supervisor_signature" class="form-input" value="{{ metadata.supervisor_signature }}" {% if is_locked %}readonly{% endif %}>
+                    </div>
+                    <div class="form-group">
+                        <label for="supervisor_date">Date</label>
+                        <input type="date" id="supervisor_date" name="supervisor_date" class="form-input" value="{{ metadata.supervisor_date }}" {% if is_locked %}readonly{% endif %}>
+                    </div>
+                </div>
+                {% if not is_locked %}
+                <div style="margin-top: 15px;">
+                    <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
+                        <input type="checkbox" id="lock_record" name="lock_record">
+                        <strong>Lock this record after saving</strong> (Tamper-evident - cannot be edited after locking)
+                    </label>
+                </div>
+                {% endif %}
+            </div>
+
+            <div class="form-actions">
+                {% if not is_locked %}
+                <button type="submit" class="btn btn-primary">Save Weekly Log</button>
+                {% endif %}
+                <a href="{{ url_for('checklist.view_weekly_log', week_start=week_start.strftime('%Y-%m-%d')) }}" class="btn btn-secondary">View / Print</a>
+                <a href="{{ url_for('checklist.temperature_log_index') }}" class="btn btn-secondary">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+// Alert container for out-of-range temperatures
+let alertContainer = null;
+
+function createAlertContainer() {
+    if (!alertContainer) {
+        alertContainer = document.createElement('div');
+        alertContainer.id = 'temp-alert-container';
+        alertContainer.style.cssText = 'position: fixed; top: 80px; right: 20px; max-width: 400px; z-index: 1000;';
+        document.body.appendChild(alertContainer);
+    }
+    return alertContainer;
+}
+
+function showAlert(unitNumber, time, temperature, minTemp, maxTemp) {
+    const container = createAlertContainer();
+    const alert = document.createElement('div');
+    alert.style.cssText = 'background: #ffebee; border-left: 4px solid #f44336; padding: 15px; margin-bottom: 10px; border-radius: 4px; box-shadow: 0 2px 8px rgba(0,0,0,0.2);';
+    alert.innerHTML = `
+        <strong style="color: #c62828;">⚠️ OUT OF RANGE ALERT</strong><br>
+        <strong>Unit:</strong> ${unitNumber}<br>
+        <strong>Time:</strong> ${time}<br>
+        <strong>Temperature:</strong> ${temperature}°C<br>
+        <strong>Critical Limit:</strong> ${minTemp}°C to ${maxTemp}°C<br>
+        <small style="color: #666;">Corrective action required!</small>
+    `;
+    container.appendChild(alert);
+    
+    // Auto-remove after 10 seconds
+    setTimeout(() => {
+        if (alert.parentNode) {
+            alert.parentNode.removeChild(alert);
+        }
+    }, 10000);
+}
+
+function checkTemperature(input) {
+    const unitId = input.dataset.unitId;
+    const unitNumber = input.dataset.unitNumber;
+    const day = input.dataset.day;
+    const time = input.dataset.time;
+    const minTemp = parseFloat(input.dataset.min) || -Infinity;
+    const maxTemp = parseFloat(input.dataset.max) || Infinity;
+    const temp = parseFloat(input.value);
+    const statusCell = document.getElementById(`status_${input.name.replace('temp_', '')}`);
+    const actionTypeSelect = document.getElementById(`action_type_${input.name.replace('temp_', '')}`);
+    const actionContainer = document.getElementById(`action_container_${input.name.split('_')[1]}_${input.name.split('_')[2]}`);
+    const actionGroup = document.getElementById(`action_group_${input.name.replace('temp_', 'action_')}`);
+    
+    if (isNaN(temp)) {
+        input.style.backgroundColor = '';
+        input.style.borderColor = '';
+        if (statusCell) statusCell.innerHTML = '<span style="color: #999;">-</span>';
+        return;
+    }
+    
+    if (temp < minTemp || temp > maxTemp) {
+        // OUT OF RANGE
+        input.style.backgroundColor = '#ffebee';
+        input.style.borderColor = '#f44336';
+        if (statusCell) {
+            statusCell.innerHTML = '<span style="background: #ffebee; color: #c62828; padding: 4px 8px; border-radius: 4px; font-weight: bold;">OUT OF RANGE</span>';
+        }
+        
+        // Show alert
+        showAlert(unitNumber, `${day} ${time}`, temp, minTemp, maxTemp);
+        
+        // Show corrective action fields
+        if (actionContainer) actionContainer.style.display = 'block';
+        if (actionGroup) actionGroup.style.display = 'block';
+        if (actionTypeSelect) {
+            actionTypeSelect.required = true;
+            actionTypeSelect.style.borderColor = '#f44336';
+        }
+    } else {
+        // WITHIN RANGE
+        input.style.backgroundColor = '#e8f5e9';
+        input.style.borderColor = '#4caf50';
+        if (statusCell) {
+            statusCell.innerHTML = '<span style="background: #e8f5e9; color: #2e7d32; padding: 4px 8px; border-radius: 4px; font-weight: bold;">OK</span>';
+        }
+        
+        // Hide corrective action if not needed
+        if (actionTypeSelect) {
+            actionTypeSelect.required = false;
+            actionTypeSelect.style.borderColor = '';
+        }
+    }
+}
+
+function toggleActionFields(select) {
+    const selectName = select.name;
+    const parts = selectName.split('_');
+    const dayIdx = parts[2];
+    const timeSlot = parts[3];
+    const unitId = parts[4];
+    
+    const actionContainer = document.getElementById(`action_container_${dayIdx}_${timeSlot}`);
+    const actionGroup = document.getElementById(`action_group_${dayIdx}_${timeSlot}_${unitId}`);
+    
+    if (select.value && actionContainer && actionGroup) {
+        actionContainer.style.display = 'block';
+        actionGroup.style.display = 'block';
+    } else if (!select.value && actionGroup) {
+        actionGroup.style.display = 'none';
+    }
+}
+
+function validateForm() {
+    const outOfRangeInputs = document.querySelectorAll('.temp-input[style*="background-color: rgb(255, 235, 238)"]');
+    let hasErrors = false;
+    const errors = [];
+    
+    outOfRangeInputs.forEach(input => {
+        const selectName = input.name.replace('temp_', 'action_type_');
+        const actionSelect = document.getElementById(selectName);
+        const actionInputName = input.name.replace('temp_', 'action_');
+        const actionInput = document.querySelector(`textarea[name="${actionInputName}"]`);
+        
+        if (actionSelect && (!actionSelect.value || !actionInput || !actionInput.value.trim())) {
+            hasErrors = true;
+            const unitNumber = input.dataset.unitNumber;
+            const day = input.dataset.day;
+            const time = input.dataset.time;
+            errors.push(`${day} ${time} - ${unitNumber}: Corrective action required`);
+        }
+    });
+    
+    if (hasErrors) {
+        alert('Cannot save: Please provide corrective actions for all out-of-range temperatures:\n\n' + errors.join('\n'));
+        return false;
+    }
+    
+    return true;
+}
+
+// Check all existing temperatures on page load
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('.temp-input').forEach(input => {
+        if (input.value) {
+            checkTemperature(input);
+        }
+    });
+    
+    // Show action fields for existing out-of-range entries
+    document.querySelectorAll('.action-type-select').forEach(select => {
+        if (select.value) {
+            toggleActionFields(select);
+        }
+    });
+});
+</script>
+
+<style>
+@media print {
+    .form-actions, .panel-header button, .main-nav, .site-header {
+        display: none;
+    }
+}
+</style>
+{% endblock %}
+

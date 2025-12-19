@@ -1,0 +1,261 @@
+{% extends "base.html" %}
+{% block page_panel %}
+<div class="panel-header">
+    <h2>Weekly Cold Storage Temperature Log – HACCP Compliant</h2>
+    <p style="color: #d45a2a; font-weight: bold; margin-top: 5px;">CCP (Critical Control Point)</p>
+    <p>Week of {{ week_start.strftime('%B %d, %Y') }}</p>
+    {% if metadata.is_locked %}
+    <div style="background: #fff3cd; padding: 10px; border-radius: 6px; margin-top: 10px; border-left: 4px solid #ffc107;">
+        <strong style="color: #856404;">🔒 This record is LOCKED (Tamper-evident)</strong>
+    </div>
+    {% endif %}
+    {% if out_of_range_count > 0 %}
+    <div style="background: #ffebee; padding: 10px; border-radius: 6px; margin-top: 10px; border-left: 4px solid #f44336;">
+        <strong style="color: #c62828;">⚠️ {{ out_of_range_count }} out-of-range temperature(s) detected</strong>
+    </div>
+    {% endif %}
+    <div style="margin-top: 10px;">
+        <a href="{{ url_for('checklist.weekly_log', week_start=week_start.strftime('%Y-%m-%d')) }}" class="btn btn-primary" {% if metadata.is_locked %}style="display: none;"{% endif %}>Edit</a>
+        <a href="{{ url_for('checklist.export_weekly_log_pdf', week_start=week_start.strftime('%Y-%m-%d')) }}" class="btn" style="background: #d45a2a; color: white; border: none;">📄 Generate PDF for Audit</a>
+        <button onclick="window.print()" class="btn btn-secondary">Print</button>
+        <a href="{{ url_for('checklist.temperature_log_index') }}" class="btn btn-secondary">Back</a>
+    </div>
+</div>
+
+<div class="page-panel">
+    <div class="section-container">
+        <!-- HACCP Information Box -->
+        <div style="background: #e3f2fd; padding: 20px; border-radius: 8px; margin-bottom: 30px; border-left: 4px solid #2196F3; page-break-inside: avoid;">
+            <h3 style="margin-top: 0; color: #1976D2;">HACCP Compliance Record</h3>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                <div>
+                    <p><strong>Critical Limits:</strong></p>
+                    <ul style="margin: 5px 0;">
+                        <li>Refrigerator: 0°C to 4°C</li>
+                        <li>Freezer: -12°C to -22°C</li>
+                        <li>Wine Chiller: User-defined range</li>
+                    </ul>
+                </div>
+                <div>
+                    <p><strong>Monitoring:</strong> 4 times daily</p>
+                    <p><strong>Verification:</strong> Daily + Weekly Supervisor Review</p>
+                    <p><strong>Record Status:</strong> {% if metadata.is_locked %}<span style="color: #ffc107; font-weight: bold;">LOCKED</span>{% else %}<span style="color: #4caf50;">UNLOCKED</span>{% endif %}</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Metadata Section -->
+        <div style="background: #f9f9f9; padding: 20px; border-radius: 8px; margin-bottom: 30px; page-break-inside: avoid;">
+            <h3 style="margin-top: 0;">Log Information</h3>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                <div>
+                    <p><strong>Bar / Outlet Name:</strong> {{ metadata.bar_name or '-' }}</p>
+                    <p><strong>Location:</strong> {{ metadata.location or '-' }}</p>
+                    <p><strong>Week Start Date:</strong> {{ week_start.strftime('%B %d, %Y') }}</p>
+                    <p><strong>Checked By:</strong> {{ metadata.checked_by or '-' }}</p>
+                </div>
+                <div>
+                    {% if metadata.supervisor_name %}
+                    <p><strong>Supervisor Name:</strong> {{ metadata.supervisor_name }}</p>
+                    <p><strong>Supervisor Signature:</strong> {{ metadata.supervisor_signature or '-' }}</p>
+                    {% if metadata.supervisor_date %}
+                    <p><strong>Supervisor Date:</strong> {{ metadata.supervisor_date.strftime('%B %d, %Y') }}</p>
+                    {% endif %}
+                    {% endif %}
+                    <p><strong>Record Status:</strong> {% if metadata.is_locked %}<span style="color: #f44336; font-weight: bold;">🔒 LOCKED</span>{% else %}<span style="color: #4caf50;">UNLOCKED</span>{% endif %}</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Weekly Temperature Table -->
+        <div style="overflow-x: auto; margin-bottom: 30px;">
+            <table class="form-table" style="min-width: 1000px; page-break-inside: auto;">
+                <thead>
+                    <tr>
+                        <th rowspan="2" style="min-width: 120px; background: #2a2a2a;">Day / Time</th>
+                        {% for unit in units %}
+                        <th colspan="3" style="min-width: 200px; background: #2a2a2a;">{{ unit.unit_number }}</th>
+                        {% endfor %}
+                        <th rowspan="2" style="min-width: 250px; background: #2a2a2a;">Corrective Action</th>
+                    </tr>
+                    <tr>
+                        {% for unit in units %}
+                        <th style="font-size: 0.85em; font-weight: normal; background: #2a2a2a;">
+                            {% set min_temp, max_temp = unit.get_temp_range() %}
+                            {% if min_temp is not none and max_temp is not none %}
+                                Temp (°C)<br><small><strong>Critical Limit:</strong> {{ min_temp }}° to {{ max_temp }}°</small>
+                            {% else %}
+                                Temp (°C)
+                            {% endif %}
+                        </th>
+                        <th style="font-size: 0.85em; font-weight: normal; background: #2a2a2a;">Status</th>
+                        <th style="font-size: 0.85em; font-weight: normal; background: #2a2a2a;">Action Type</th>
+                        {% endfor %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for day in days %}
+                        {% set day_idx = loop.index0 %}
+                        {% set day_date = week_dates[day_idx] %}
+                        {% for time_slot in time_slots %}
+                        <tr style="page-break-inside: avoid;">
+                            {% if loop.first %}
+                            <td rowspan="{{ time_slots|length }}" style="vertical-align: middle; font-weight: bold; background: #1a1a1a;">
+                                {{ day }}<br><small>{{ day_date.strftime('%b %d') }}</small>
+                            </td>
+                            {% endif %}
+                            <td style="background: #2a2a2a; font-weight: 500;">{{ time_slot }}</td>
+                            {% for unit in units %}
+                            <td style="text-align: center;">
+                                {% set log_key = (day_date, time_slot, unit.id) %}
+                                {% set existing_log = log_dict.get(log_key) %}
+                                {% if existing_log %}
+                                    <span style="font-weight: bold; font-size: 1.1em;">{{ existing_log.temperature }}°C</span>
+                                {% else %}
+                                    <span style="color: #666;">-</span>
+                                {% endif %}
+                            </td>
+                            <td style="text-align: center;">
+                                {% if existing_log %}
+                                    {% if existing_log.status == 'OK' %}
+                                        <span style="display: inline-block; padding: 5px 10px; border-radius: 4px; font-weight: bold; background: #e8f5e9; color: #2e7d32;">OK</span>
+                                    {% else %}
+                                        <span style="display: inline-block; padding: 5px 10px; border-radius: 4px; font-weight: bold; background: #ffebee; color: #c62828;">OUT OF RANGE</span>
+                                    {% endif %}
+                                {% else %}
+                                    <span style="color: #666;">-</span>
+                                {% endif %}
+                            </td>
+                            <td style="font-size: 0.9em;">
+                                {% if existing_log and existing_log.corrective_action_type %}
+                                    {{ existing_log.corrective_action_type }}
+                                {% else %}
+                                    <span style="color: #666;">-</span>
+                                {% endif %}
+                            </td>
+                            {% endfor %}
+                            <td style="font-size: 0.85em;">
+                                {% for unit in units %}
+                                    {% set log_key = (day_date, time_slot, unit.id) %}
+                                    {% set existing_log = log_dict.get(log_key) %}
+                                    {% if existing_log and existing_log.status == 'OUT OF RANGE' %}
+                                        <div style="margin-bottom: 8px; padding: 8px; background: #fff3cd; border-left: 3px solid #ffc107; border-radius: 4px;">
+                                            <strong>{{ unit.unit_number }}:</strong>
+                                            {% if existing_log.corrective_action_type %}
+                                                <br><strong>Action:</strong> {{ existing_log.corrective_action_type }}
+                                            {% endif %}
+                                            {% if existing_log.corrective_action %}
+                                                <br><strong>Details:</strong> {{ existing_log.corrective_action }}
+                                            {% endif %}
+                                            {% if existing_log.recheck_temperature %}
+                                                <br><strong>Recheck Temp:</strong> {{ existing_log.recheck_temperature }}°C
+                                            {% endif %}
+                                            {% if existing_log.corrective_action_time %}
+                                                <br><strong>Time Completed:</strong> {{ existing_log.corrective_action_time }}
+                                            {% endif %}
+                                        </div>
+                                    {% endif %}
+                                {% endfor %}
+                                {% set has_out_of_range = false %}
+                                {% for unit in units %}
+                                    {% set log_key = (day_date, time_slot, unit.id) %}
+                                    {% set log = log_dict.get(log_key) %}
+                                    {% if log and log.status == 'OUT OF RANGE' %}
+                                        {% set has_out_of_range = true %}
+                                    {% endif %}
+                                {% endfor %}
+                                {% if not has_out_of_range %}
+                                    <span style="color: #999;">-</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                        <!-- Daily Verification Status -->
+                        {% set day_logs = log_dict.values()|selectattr('log_date', 'equalto', day_date)|list %}
+                        {% set day_verified = day_logs|selectattr('daily_verified', 'equalto', true)|list|length > 0 if day_logs else false %}
+                        <tr style="background: #f5f5f5; page-break-inside: avoid;">
+                            <td colspan="{{ (units|length * 3) + 2 }}" style="padding: 10px;">
+                                <strong>Daily Verification - {{ day }} {{ day_date.strftime('%b %d') }}:</strong>
+                                {% if day_verified %}
+                                    <span style="color: #4caf50; font-weight: bold;">✓ VERIFIED</span>
+                                {% else %}
+                                    <span style="color: #999;">Not verified</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Legend -->
+        <div style="background: #f9f9f9; padding: 15px; border-radius: 8px; margin-top: 20px; page-break-inside: avoid;">
+            <h3 style="margin-top: 0; font-size: 1.1em;">Temperature Status Legend</h3>
+            <div style="display: flex; gap: 20px; flex-wrap: wrap;">
+                <div>
+                    <span style="display: inline-block; width: 20px; height: 20px; background: #e8f5e9; border: 1px solid #4caf50; border-radius: 3px; vertical-align: middle; margin-right: 5px;"></span>
+                    <strong>OK</strong> - Within acceptable range
+                </div>
+                <div>
+                    <span style="display: inline-block; width: 20px; height: 20px; background: #ffebee; border: 1px solid #f44336; border-radius: 3px; vertical-align: middle; margin-right: 5px;"></span>
+                    <strong>OUT OF RANGE</strong> - Outside critical limits (corrective action required)
+                </div>
+            </div>
+        </div>
+
+        <!-- HACCP Compliance Footer -->
+        <div style="background: #e8f5e9; padding: 15px; border-radius: 8px; margin-top: 20px; page-break-inside: avoid; border-left: 4px solid #4caf50;">
+            <h3 style="margin-top: 0; font-size: 1.1em;">HACCP Record Keeping</h3>
+            <p style="margin: 5px 0;"><strong>This record is maintained for audit purposes and regulatory compliance.</strong></p>
+            <p style="margin: 5px 0; font-size: 0.9em; color: #666;">
+                {% if metadata.is_locked %}Record is LOCKED and tamper-evident.{% else %}Record is UNLOCKED and can be edited.{% endif %}
+            </p>
+        </div>
+    </div>
+</div>
+
+<style>
+@media print {
+    .panel-header button, .panel-header a, .main-nav, .site-header, .page-panel {
+        background: white !important;
+    }
+    
+    .panel-header {
+        border-bottom: 2px solid #000;
+        padding-bottom: 10px;
+        margin-bottom: 20px;
+    }
+    
+    .form-table {
+        background: white !important;
+        border: 2px solid #000 !important;
+    }
+    
+    .form-table th {
+        background: #f0f0f0 !important;
+        color: #000 !important;
+        border: 1px solid #000 !important;
+    }
+    
+    .form-table td {
+        background: white !important;
+        color: #000 !important;
+        border: 1px solid #000 !important;
+    }
+    
+    .form-table tr:nth-child(even) td {
+        background: #f9f9f9 !important;
+    }
+    
+    @page {
+        margin: 1cm;
+        size: A4 landscape;
+    }
+    
+    body {
+        background: white !important;
+    }
+}
+</style>
+{% endblock %}
+
