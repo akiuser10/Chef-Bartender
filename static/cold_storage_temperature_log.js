@@ -40,7 +40,16 @@ function initializeEventListeners() {
         }
     });
     
-    // PDF generation
+    // Update Temperature button
+    document.getElementById('update-temperature-btn')?.addEventListener('click', handleUpdateTemperature);
+    
+    // Checklist Download
+    document.getElementById('checklist-download-btn')?.addEventListener('click', openChecklistDownloadModal);
+    document.getElementById('checklist-modal-close')?.addEventListener('click', closeChecklistDownloadModal);
+    document.getElementById('cancel-checklist')?.addEventListener('click', closeChecklistDownloadModal);
+    document.getElementById('checklist-form')?.addEventListener('submit', handleChecklistDownload);
+    
+    // PDF generation (legacy)
     document.getElementById('generate-pdf-btn')?.addEventListener('click', openPDFModal);
     document.getElementById('pdf-modal-close')?.addEventListener('click', closePDFModal);
     document.getElementById('cancel-pdf')?.addEventListener('click', closePDFModal);
@@ -104,6 +113,8 @@ function handleDateChange() {
     if (dateInput && dateInput.value) {
         currentDate = new Date(dateInput.value);
         updateDateDisplay();
+        // Hide checklist download button when date changes (new data needs to be saved)
+        document.getElementById('checklist-download-btn').classList.add('hidden');
         loadTemperatureEntries();
     }
 }
@@ -113,6 +124,8 @@ function handleTimeChange() {
     if (timeSelect) {
         currentTime = timeSelect.value;
         updateDateDisplay();
+        // Hide checklist download button when time changes (new data needs to be saved)
+        document.getElementById('checklist-download-btn').classList.add('hidden');
         loadTemperatureEntries();
     }
 }
@@ -204,7 +217,6 @@ function createUnitRow(unit) {
     tempInputWrapper.appendChild(tempInput);
     tempInputWrapper.appendChild(tempUnit);
     tempCell.appendChild(tempInputWrapper);
-    tempInput.addEventListener('blur', () => validateAndSaveEntry(unit.id));
     tempInput.addEventListener('input', () => validateTemperatureInput(unit.id));
     
     row.appendChild(tempCell);
@@ -216,7 +228,6 @@ function createUnitRow(unit) {
     actionTextarea.className = 'corrective-action-input';
     actionTextarea.setAttribute('data-unit-id', unit.id);
     actionTextarea.placeholder = 'Enter corrective action if needed';
-    actionTextarea.addEventListener('blur', () => saveEntry(unit.id));
     actionCell.appendChild(actionTextarea);
     row.appendChild(actionCell);
     
@@ -230,7 +241,6 @@ function createUnitRow(unit) {
     initialInput.placeholder = 'Initials';
     initialInput.maxLength = 10;
     initialInput.required = true;
-    initialInput.addEventListener('blur', () => saveEntry(unit.id));
     initialCell.appendChild(initialInput);
     row.appendChild(initialCell);
     
@@ -352,18 +362,108 @@ function validateTemperatureInput(unitId) {
     }
 }
 
-async function validateAndSaveEntry(unitId) {
-    const row = document.querySelector(`.temperature-row[data-unit-id="${unitId}"]`);
-    if (!row) return;
+// Update All Temperatures
+async function handleUpdateTemperature() {
+    const updateBtn = document.getElementById('update-temperature-btn');
+    const originalText = updateBtn.textContent;
     
-    const input = row.querySelector('.temperature-input');
-    const temperature = input.value ? parseFloat(input.value) : null;
+    // Disable button and show loading
+    updateBtn.disabled = true;
+    updateBtn.textContent = 'Updating...';
     
-    if (temperature !== null) {
-        validateTemperatureInput(unitId);
+    let successCount = 0;
+    let errorCount = 0;
+    const errors = [];
+    
+    // Save all entries
+    for (const unit of allUnits) {
+        try {
+            const row = document.querySelector(`.temperature-row[data-unit-id="${unit.id}"]`);
+            if (!row) continue;
+            
+            const tempInput = row.querySelector('.temperature-input');
+            const actionTextarea = row.querySelector('.corrective-action-input');
+            const initialInput = row.querySelector('.initial-input');
+            
+            if (!tempInput || !actionTextarea || !initialInput) continue;
+            
+            const temperature = tempInput.value ? parseFloat(tempInput.value) : null;
+            const correctiveAction = actionTextarea.value.trim();
+            const initial = initialInput.value.trim();
+            
+            // Skip if no data entered
+            if (temperature === null && !correctiveAction && !initial) continue;
+            
+            // Validate initials
+            if (!initial) {
+                errors.push(`${unit.unit_number}: Initials are required`);
+                errorCount++;
+                continue;
+            }
+            
+            // Check if corrective action is required
+            const isOutOfRange = temperature !== null && checkTemperatureRange(unit.id, temperature);
+            if (isOutOfRange && !correctiveAction) {
+                errors.push(`${unit.unit_number}: Corrective action required for out-of-range temperature`);
+                errorCount++;
+                continue;
+            }
+            
+            // Save entry
+            const dateStr = formatDateForInput(currentDate);
+            const scheduledTime = getScheduledTimeForSlot(currentDate, currentTime);
+            const now = new Date();
+            const isLateEntry = now > scheduledTime;
+            
+            const response = await fetch(`/checklist/bar/cold-storage/log/${unit.id}/${dateStr}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    action: 'save_entry',
+                    scheduled_time: currentTime,
+                    temperature: temperature,
+                    corrective_action: correctiveAction,
+                    action_time: isOutOfRange && correctiveAction ? new Date().toISOString() : null,
+                    recheck_temperature: null,
+                    initial: initial,
+                    is_late_entry: isLateEntry
+                })
+            });
+            
+            const data = await response.json();
+            
+            if (data.success) {
+                successCount++;
+            } else {
+                errors.push(`${unit.unit_number}: ${data.error || 'Unknown error'}`);
+                errorCount++;
+            }
+        } catch (error) {
+            console.error(`Error saving entry for unit ${unit.id}:`, error);
+            errors.push(`${unit.unit_number}: Error saving entry`);
+            errorCount++;
+        }
     }
     
-    await saveEntry(unitId);
+    // Re-enable button
+    updateBtn.disabled = false;
+    updateBtn.textContent = originalText;
+    
+    // Show results
+    if (errorCount === 0 && successCount > 0) {
+        showNotification(`Successfully updated ${successCount} unit(s)`, 'success');
+        // Show Checklist Download button
+        document.getElementById('checklist-download-btn').classList.remove('hidden');
+    } else if (successCount > 0) {
+        showNotification(`Updated ${successCount} unit(s), ${errorCount} error(s)`, 'warning');
+        if (errors.length > 0) {
+            console.error('Errors:', errors);
+        }
+    } else {
+        showNotification(`Failed to update: ${errors.join('; ')}`, 'error');
+    }
 }
 
 // Save Entry
@@ -508,7 +608,98 @@ async function handleUnitFormSubmit(event) {
     }
 }
 
-// PDF Generation
+// Checklist Download
+function openChecklistDownloadModal() {
+    const modal = document.getElementById('checklist-download-modal');
+    
+    // Populate unit checkboxes
+    const checkboxesContainer = document.getElementById('checklist-unit-checkboxes');
+    checkboxesContainer.innerHTML = '';
+    
+    allUnits.forEach(unit => {
+        const label = document.createElement('label');
+        label.className = 'checkbox-label';
+        label.innerHTML = `
+            <input type="checkbox" name="units" value="${unit.id}" checked>
+            ${unit.unit_number} - ${unit.location} (${unit.unit_type})
+        `;
+        checkboxesContainer.appendChild(label);
+    });
+    
+    // Set default dates (current date)
+    const today = new Date();
+    document.getElementById('checklist-start-date').value = formatDateForInput(today);
+    document.getElementById('checklist-end-date').value = formatDateForInput(today);
+    
+    modal.classList.remove('hidden');
+}
+
+function closeChecklistDownloadModal() {
+    document.getElementById('checklist-download-modal').classList.add('hidden');
+}
+
+async function handleChecklistDownload(event) {
+    event.preventDefault();
+    
+    const formData = new FormData(event.target);
+    const startDate = formData.get('start_date');
+    const endDate = formData.get('end_date');
+    const selectedTimes = Array.from(document.querySelectorAll('#checklist-time-checkboxes input[name="times"]:checked')).map(cb => cb.value);
+    const selectedUnits = Array.from(document.querySelectorAll('#checklist-unit-checkboxes input[name="units"]:checked')).map(cb => parseInt(cb.value));
+    
+    if (selectedUnits.length === 0) {
+        showNotification('Please select at least one unit', 'error');
+        return;
+    }
+    
+    if (selectedTimes.length === 0) {
+        showNotification('Please select at least one time', 'error');
+        return;
+    }
+    
+    if (!startDate || !endDate) {
+        showNotification('Please select start and end dates', 'error');
+        return;
+    }
+    
+    try {
+        const response = await fetch('/checklist/bar/cold-storage/checklist-pdf', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                unit_ids: selectedUnits,
+                start_date: startDate,
+                end_date: endDate,
+                times: selectedTimes
+            })
+        });
+        
+        if (response.ok) {
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `temperature_checklist_${startDate}_${endDate}.pdf`;
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
+            
+            showNotification('Checklist PDF generated successfully', 'success');
+            closeChecklistDownloadModal();
+        } else {
+            const data = await response.json();
+            showNotification('Error generating PDF: ' + (data.error || 'Unknown error'), 'error');
+        }
+    } catch (error) {
+        console.error('Error generating checklist PDF:', error);
+        showNotification('Error generating checklist PDF', 'error');
+    }
+}
+
+// PDF Generation (Legacy)
 async function openPDFModal() {
     const modal = document.getElementById('pdf-modal');
     

@@ -399,6 +399,49 @@ def temperature_log_entry(unit_id, date_str):
             return jsonify({'success': False, 'error': f'Unexpected error: {str(e)}'}), 500
 
 
+@checklist_bp.route('/bar/cold-storage/checklist-pdf', methods=['POST'])
+@login_required
+@role_required(['Manager', 'Bartender'])
+def generate_checklist_pdf():
+    """Generate checklist PDF organized by date/time with all selected units"""
+    try:
+        from utils.pdf_generator import generate_checklist_pdf
+        
+        data = request.get_json()
+        unit_ids = data.get('unit_ids', [])
+        times = data.get('times', [])
+        start_date = datetime.strptime(data['start_date'], '%Y-%m-%d').date()
+        end_date = datetime.strptime(data['end_date'], '%Y-%m-%d').date()
+        
+        if not unit_ids:
+            return jsonify({'success': False, 'error': 'No units selected'}), 400
+        
+        if not times:
+            return jsonify({'success': False, 'error': 'No times selected'}), 400
+        
+        org_filter = get_organization_filter(ColdStorageUnit)
+        units = ColdStorageUnit.query.filter(org_filter).filter(
+            ColdStorageUnit.id.in_(unit_ids),
+            ColdStorageUnit.is_active == True
+        ).all()
+        
+        if not units:
+            return jsonify({'success': False, 'error': 'No units found'}), 400
+        
+        # Generate PDF
+        pdf_buffer = generate_checklist_pdf(units, start_date, end_date, times)
+        
+        return send_file(
+            pdf_buffer,
+            mimetype='application/pdf',
+            as_attachment=True,
+            download_name=f'temperature_checklist_{start_date}_{end_date}.pdf'
+        )
+    except Exception as e:
+        current_app.logger.error(f"Error generating checklist PDF: {str(e)}", exc_info=True)
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
 @checklist_bp.route('/bar/cold-storage/pdf', methods=['POST'])
 @login_required
 @role_required(['Manager', 'Bartender'])

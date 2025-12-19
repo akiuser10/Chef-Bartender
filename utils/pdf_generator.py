@@ -175,3 +175,128 @@ def generate_temperature_log_pdf(units, start_date, end_date):
     doc.build(story)
     buffer.seek(0)
     return buffer
+
+
+def generate_checklist_pdf(units, start_date, end_date, times):
+    """Generate checklist PDF organized by date and time, showing all units for each date/time combination"""
+    # Import here to avoid circular imports
+    from models import TemperatureLog, TemperatureEntry
+    
+    buffer = BytesIO()
+    doc = SimpleDocTemplate(buffer, pagesize=letter, topMargin=0.5*inch, bottomMargin=0.5*inch)
+    
+    story = []
+    styles = getSampleStyleSheet()
+    
+    # Custom styles
+    title_style = ParagraphStyle(
+        'CustomTitle',
+        parent=styles['Heading1'],
+        fontSize=16,
+        textColor=colors.HexColor('#1a1a1a'),
+        spaceAfter=12,
+        alignment=TA_CENTER
+    )
+    
+    header_style = ParagraphStyle(
+        'CustomHeader',
+        parent=styles['Normal'],
+        fontSize=11,
+        textColor=colors.HexColor('#1a1a1a'),
+        spaceAfter=8,
+        alignment=TA_LEFT,
+        fontName='Helvetica-Bold'
+    )
+    
+    # Title
+    title = Paragraph("Cold Storage Temperature Log Checklist (HACCP)", title_style)
+    story.append(title)
+    story.append(Spacer(1, 0.2*inch))
+    
+    # Generate one section per date/time combination
+    current_date = start_date
+    while current_date <= end_date:
+        for time_slot in times:
+            # Date and Time Header
+            date_time_header = f"DATE: {format_date_display(current_date)} | TIME: {time_slot}"
+            header_para = Paragraph(date_time_header, header_style)
+            story.append(header_para)
+            story.append(Spacer(1, 0.1*inch))
+            
+            # Table Headers
+            table_data = [['UNIT NO', 'LOCATION', 'TYPE', 'TEMPERATURE (°C)', 'CORRECTIVE ACTION', 'INITIAL']]
+            
+            # Add rows for each unit
+            for unit in units:
+                log = TemperatureLog.query.filter_by(unit_id=unit.id, log_date=current_date).first()
+                
+                if log:
+                    entry = TemperatureEntry.query.filter_by(log_id=log.id, scheduled_time=time_slot).first()
+                else:
+                    entry = None
+                
+                if entry and entry.temperature is not None:
+                    temp = format_temperature(entry.temperature)
+                    corrective = entry.corrective_action or "—"
+                    initial = entry.initial or "—"
+                else:
+                    temp = "—"
+                    corrective = "—"
+                    initial = "—"
+                
+                row = [
+                    unit.unit_number,
+                    unit.location,
+                    unit.unit_type,
+                    temp,
+                    corrective,
+                    initial
+                ]
+                table_data.append(row)
+            
+            # Create table
+            table = Table(table_data, colWidths=[1*inch, 1.5*inch, 1*inch, 1.2*inch, 2*inch, 0.8*inch])
+            
+            # Table style
+            table_style = [
+                # Header row
+                ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#f0f0f0')),
+                ('TEXTCOLOR', (0, 0), (-1, 0), colors.HexColor('#1a1a1a')),
+                ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+                ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                ('FONTSIZE', (0, 0), (-1, 0), 8),
+                ('BOTTOMPADDING', (0, 0), (-1, 0), 6),
+                ('TOPPADDING', (0, 0), (-1, 0), 6),
+                # Data rows
+                ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
+                ('FONTSIZE', (0, 1), (-1, -1), 8),
+                ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#cccccc')),
+                ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+                ('BOTTOMPADDING', (0, 1), (-1, -1), 5),
+                ('TOPPADDING', (0, 1), (-1, -1), 5),
+            ]
+            
+            # Highlight out of range temperatures
+            for idx, unit in enumerate(units, start=1):
+                log = TemperatureLog.query.filter_by(unit_id=unit.id, log_date=current_date).first()
+                if log:
+                    entry = TemperatureEntry.query.filter_by(log_id=log.id, scheduled_time=time_slot).first()
+                    if entry and entry.temperature is not None:
+                        try:
+                            if entry.is_out_of_range(unit):
+                                table_style.append(('TEXTCOLOR', (3, idx), (3, idx), colors.red))
+                                table_style.append(('BACKGROUND', (3, idx), (3, idx), colors.HexColor('#ffe6e6')))
+                        except:
+                            pass  # Skip if error checking range
+            
+            table.setStyle(TableStyle(table_style))
+            story.append(table)
+            story.append(Spacer(1, 0.3*inch))
+        
+        # Move to next date
+        current_date += timedelta(days=1)
+    
+    # Build PDF
+    doc.build(story)
+    buffer.seek(0)
+    return buffer

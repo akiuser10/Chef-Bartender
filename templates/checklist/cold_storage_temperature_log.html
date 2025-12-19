@@ -50,6 +50,11 @@
                 </tbody>
             </table>
         </div>
+        
+        <div class="action-buttons-section">
+            <button id="update-temperature-btn" class="btn-primary">Update Temperature</button>
+            <button id="checklist-download-btn" class="btn-secondary hidden">Checklist Download</button>
+        </div>
     </div>
 
     <!-- Empty State -->
@@ -116,7 +121,54 @@
     </div>
 </div>
 
-<!-- PDF Generation Modal -->
+<!-- Checklist Download Modal -->
+<div id="checklist-download-modal" class="modal hidden">
+    <div class="modal-content" style="max-width: 800px;">
+        <div class="modal-header">
+            <h3>Download Checklist PDF</h3>
+            <button class="modal-close" id="checklist-modal-close">&times;</button>
+        </div>
+        <div class="modal-body">
+            <form id="checklist-form">
+                <div class="form-group">
+                    <label>Select Unit Numbers *</label>
+                    <div id="checklist-unit-checkboxes" class="checkbox-group">
+                        <!-- Checkboxes will be populated by JavaScript -->
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Select Dates *</label>
+                    <div class="date-range-selection">
+                        <div>
+                            <label for="checklist-start-date">Start Date:</label>
+                            <input type="date" id="checklist-start-date" name="start_date" required>
+                        </div>
+                        <div>
+                            <label for="checklist-end-date">End Date:</label>
+                            <input type="date" id="checklist-end-date" name="end_date" required>
+                        </div>
+                    </div>
+                    <small class="form-help">All dates between start and end date will be included</small>
+                </div>
+                <div class="form-group">
+                    <label>Select Times *</label>
+                    <div id="checklist-time-checkboxes" class="checkbox-group">
+                        <label><input type="checkbox" name="times" value="10:00 AM" checked> 10:00 AM</label>
+                        <label><input type="checkbox" name="times" value="02:00 PM" checked> 02:00 PM</label>
+                        <label><input type="checkbox" name="times" value="06:00 PM" checked> 06:00 PM</label>
+                        <label><input type="checkbox" name="times" value="10:00 PM" checked> 10:00 PM</label>
+                    </div>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn-primary">Generate PDF</button>
+                    <button type="button" class="btn-secondary" id="cancel-checklist">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- PDF Generation Modal (Legacy) -->
 <div id="pdf-modal" class="modal hidden">
     <div class="modal-content">
         <div class="modal-header">
