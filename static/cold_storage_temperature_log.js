@@ -563,11 +563,20 @@ function getScheduledTimeForSlot(date, timeSlot) {
 
 // Unit Management
 function openAddUnitForm() {
+    console.log('Opening Add Unit form...');
+    const modal = document.getElementById('unit-form-modal');
+    if (!modal) {
+        console.error('Unit form modal not found!');
+        showNotification('Error: Unit form modal not found', 'error');
+        return;
+    }
+    
     document.getElementById('unit-form-title').textContent = 'Add Unit';
     document.getElementById('unit-id').value = '';
     document.getElementById('unit-form').reset();
     document.getElementById('wine-chiller-temps').classList.add('hidden');
-    document.getElementById('unit-form-modal').classList.remove('hidden');
+    modal.classList.remove('hidden');
+    console.log('Unit form modal opened');
 }
 
 function closeUnitForm() {
@@ -577,18 +586,33 @@ function closeUnitForm() {
 async function handleUnitFormSubmit(event) {
     event.preventDefault();
     
+    console.log('Unit form submitted');
+    
+    const unitId = document.getElementById('unit-id').value;
+    const unitNumber = document.getElementById('unit-number').value;
+    const location = document.getElementById('unit-location').value;
+    const unitType = document.getElementById('unit-type').value;
+    
+    // Validate required fields
+    if (!unitNumber || !location || !unitType) {
+        showNotification('Please fill in all required fields (Unit Number, Location, and Unit Type)', 'error');
+        return;
+    }
+    
     const formData = {
-        action: document.getElementById('unit-id').value ? 'update' : 'create',
-        unit_number: document.getElementById('unit-number').value,
-        location: document.getElementById('unit-location').value,
-        unit_type: document.getElementById('unit-type').value,
+        action: unitId ? 'update' : 'create',
+        unit_number: unitNumber,
+        location: location,
+        unit_type: unitType,
         min_temp: document.getElementById('min-temp').value || null,
         max_temp: document.getElementById('max-temp').value || null
     };
     
     if (formData.action === 'update') {
-        formData.id = parseInt(document.getElementById('unit-id').value);
+        formData.id = parseInt(unitId);
     }
+    
+    console.log('Submitting unit data:', formData);
     
     try {
         const response = await fetch('/checklist/bar/cold-storage/units', {
