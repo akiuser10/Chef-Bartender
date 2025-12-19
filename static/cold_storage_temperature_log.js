@@ -166,7 +166,17 @@ function handleTimeChange() {
 async function loadUnits() {
     try {
         const response = await fetch('/checklist/bar/cold-storage/units');
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        
         allUnits = await response.json();
+        
+        // Ensure we have an array
+        if (!Array.isArray(allUnits)) {
+            console.error('Invalid units data:', allUnits);
+            allUnits = [];
+        }
         
         renderTemperatureTable();
         
@@ -183,26 +193,52 @@ async function loadUnits() {
         }
     } catch (error) {
         console.error('Error loading units:', error);
-        showNotification('Error loading units', 'error');
+        showNotification('Error loading units: ' + error.message, 'error');
     }
 }
 
 // Render Temperature Tables (one table per unit)
 function renderTemperatureTable() {
     const container = document.getElementById('units-tables-container');
+    if (!container) return;
+    
     container.innerHTML = '';
     
     if (allUnits.length === 0) {
         return;
     }
     
-    allUnits.forEach(unit => {
+    // Sort units by ID to ensure new units appear at the end
+    const sortedUnits = [...allUnits].sort((a, b) => a.id - b.id);
+    
+    sortedUnits.forEach(unit => {
         const unitTable = createUnitTable(unit);
         container.appendChild(unitTable);
     });
     
     // Load existing entries for current date
     loadTemperatureEntries();
+}
+
+// Scroll to newly created unit table
+function scrollToNewUnit(unitId) {
+    const unitTableWrapper = document.querySelector(`.unit-table-wrapper[data-unit-id="${unitId}"]`);
+    if (unitTableWrapper) {
+        unitTableWrapper.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+}
+
+// Highlight newly created unit table
+function highlightNewUnit(unitId) {
+    const unitTableWrapper = document.querySelector(`.unit-table-wrapper[data-unit-id="${unitId}"]`);
+    if (unitTableWrapper) {
+        unitTableWrapper.classList.add('newly-created');
+        
+        // Remove highlight after 3 seconds
+        setTimeout(() => {
+            unitTableWrapper.classList.remove('newly-created');
+        }, 3000);
+    }
 }
 
 // Create Unit Table (one table per unit with time slots as rows)
@@ -803,8 +839,22 @@ async function handleUnitFormSubmit(event) {
         const data = await response.json();
         
         if (data.success) {
-            showNotification(formData.action === 'create' ? 'Unit created successfully' : 'Unit updated successfully', 'success');
+            const isNewUnit = formData.action === 'create';
+            const createdUnitId = isNewUnit ? data.unit?.id : null;
+            
+            showNotification(isNewUnit ? 'Unit created successfully' : 'Unit updated successfully', 'success');
+            
+            // Reload units and render tables
             await loadUnits();
+            
+            // If it's a new unit, scroll to it and highlight it
+            if (isNewUnit && createdUnitId) {
+                setTimeout(() => {
+                    scrollToNewUnit(createdUnitId);
+                    highlightNewUnit(createdUnitId);
+                }, 100);
+            }
+            
             closeUnitForm();
         } else {
             const errorMsg = data.error || 'Unknown error';

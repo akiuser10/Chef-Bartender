@@ -5766,6 +5766,32 @@ button.btn,
 .unit-table-wrapper {
     width: 100%;
     margin-bottom: 20px;
+    transition: all 0.3s ease;
+}
+
+/* Highlight newly created unit table */
+.unit-table-wrapper.newly-created {
+    animation: highlightNewTable 0.5s ease-in-out;
+    box-shadow: 0 0 20px rgba(33, 150, 243, 0.5);
+    border: 2px solid #2196F3;
+    border-radius: 8px;
+    padding: 10px;
+    background: #f0f8ff;
+}
+
+@keyframes highlightNewTable {
+    0% {
+        transform: scale(1);
+        box-shadow: 0 0 0 rgba(33, 150, 243, 0);
+    }
+    50% {
+        transform: scale(1.02);
+        box-shadow: 0 0 30px rgba(33, 150, 243, 0.7);
+    }
+    100% {
+        transform: scale(1);
+        box-shadow: 0 0 20px rgba(33, 150, 243, 0.5);
+    }
 }
 
 .unit-table {
