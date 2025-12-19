@@ -22,12 +22,12 @@
                 </select>
             </div>
             <button id="manage-units-btn" class="btn-secondary">Manage Units</button>
-            <button id="generate-pdf-btn" class="btn-primary" style="display: none;">Generate PDF</button>
+            <button id="generate-pdf-btn" class="btn-primary hidden">Generate PDF</button>
         </div>
     </div>
 
     <!-- Unit Log Display -->
-    <div id="unit-log-section" style="display: none;">
+    <div id="unit-log-section" class="hidden">
         <!-- Unit Header -->
         <div class="unit-header">
             <div class="unit-header-row">
@@ -77,7 +77,7 @@
         </div>
 
         <!-- Supervisor Verification -->
-        <div class="supervisor-verification" id="supervisor-verification-section" style="display: none;">
+        <div class="supervisor-verification hidden" id="supervisor-verification-section">
             <div class="verification-info">
                 <strong>Verified by:</strong> <span id="supervisor-name">—</span>
                 <strong>Date:</strong> <span id="verification-date">—</span>
@@ -86,7 +86,7 @@
 
         <!-- Save Button -->
         <div class="action-buttons">
-            <button id="verify-log-btn" class="btn-primary" style="display: none;">Verify Log</button>
+            <button id="verify-log-btn" class="btn-primary hidden">Verify Log</button>
         </div>
     </div>
 
@@ -97,7 +97,7 @@
 </div>
 
 <!-- Unit Management Modal -->
-<div id="unit-modal" class="modal" style="display: none;">
+<div id="unit-modal" class="modal hidden">
     <div class="modal-content">
         <div class="modal-header">
             <h3 id="modal-title">Manage Units</h3>
@@ -113,7 +113,7 @@
 </div>
 
 <!-- Add/Edit Unit Form Modal -->
-<div id="unit-form-modal" class="modal" style="display: none;">
+<div id="unit-form-modal" class="modal hidden">
     <div class="modal-content">
         <div class="modal-header">
             <h3 id="unit-form-title">Add Unit</h3>
@@ -139,7 +139,7 @@
                         <option value="Wine Chiller">Wine Chiller</option>
                     </select>
                 </div>
-                <div class="form-group" id="wine-chiller-temps" style="display: none;">
+                <div class="form-group hidden" id="wine-chiller-temps">
                     <label for="min-temp">Minimum Temperature (°C)</label>
                     <input type="number" id="min-temp" name="min_temp" step="0.1">
                     <label for="max-temp">Maximum Temperature (°C)</label>
@@ -155,7 +155,7 @@
 </div>
 
 <!-- PDF Generation Modal -->
-<div id="pdf-modal" class="modal" style="display: none;">
+<div id="pdf-modal" class="modal hidden">
     <div class="modal-content">
         <div class="modal-header">
             <h3>Generate PDF Report</h3>
@@ -174,7 +174,7 @@
                     <label for="pdf-start-date">Start Date *</label>
                     <input type="date" id="pdf-start-date" name="start_date" required>
                 </div>
-                <div class="form-group" id="pdf-end-date-group" style="display: none;">
+                <div class="form-group hidden" id="pdf-end-date-group">
                     <label for="pdf-end-date">End Date *</label>
                     <input type="date" id="pdf-end-date" name="end_date">
                 </div>

@@ -5370,6 +5370,7 @@ button.btn-action[style*="background-color:#dc3545"]:hover {
     background: rgba(255, 255, 255, 0.9);
     padding: 8px 12px;
     border-radius: 8px;
+    -webkit-backdrop-filter: blur(5px);
     backdrop-filter: blur(5px);
     width: calc(100% - 24px);
     box-sizing: border-box;
@@ -5813,6 +5814,7 @@ button.btn,
 .temp-unit {
     color: #666;
     font-size: 0.9rem;
+    -webkit-user-select: none;
     user-select: none;
 }
 
@@ -6191,4 +6193,9 @@ button.btn,
         left: 10px;
         max-width: none;
     }
+}
+
+/* Utility Classes */
+.hidden {
+    display: none;
 }
