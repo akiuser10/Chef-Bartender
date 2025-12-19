@@ -673,7 +673,7 @@ class TemperatureLog(db.Model):
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
     # Relationships
-    entries = db.relationship('TemperatureEntry', backref='log', cascade='all, delete-orphan', lazy='dynamic', order_by='TemperatureEntry.scheduled_time')
+    entries = db.relationship('TemperatureEntry', backref='log', cascade='all, delete-orphan', lazy='dynamic')
     
     # Unique constraint: one log per unit per date
     __table_args__ = (db.UniqueConstraint('unit_id', 'log_date', name='unique_unit_date'),)

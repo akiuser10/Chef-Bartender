@@ -178,8 +178,8 @@ def temperature_log_entry(unit_id, date_str):
             db.session.add(log)
             db.session.commit()
         
-        # Get all entries for this log
-        entries = log.entries.all()
+        # Get all entries for this log, ordered by scheduled time
+        entries = log.entries.order_by(TemperatureEntry.scheduled_time).all()
         entry_dict = {entry.scheduled_time: {
             'id': entry.id,
             'temperature': entry.temperature,
