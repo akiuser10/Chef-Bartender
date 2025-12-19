@@ -803,10 +803,13 @@ function openAddUnitForm() {
     }
     if (wineChillerTemps) wineChillerTemps.classList.add('hidden');
     
-    // Show modal
+    // Show modal - remove hidden class and ensure display is set
     modal.classList.remove('hidden');
+    // Force display block in case CSS is conflicting
+    modal.style.display = 'block';
     console.log('Modal classes after show:', modal.className);
     console.log('Modal display style:', window.getComputedStyle(modal).display);
+    console.log('Modal visibility:', window.getComputedStyle(modal).visibility);
     
     // Focus on first input
     const unitNumberInput = document.getElementById('unit-number');
@@ -823,7 +826,11 @@ function openAddUnitForm() {
 }
 
 function closeUnitForm() {
-    document.getElementById('unit-form-modal').classList.add('hidden');
+    const modal = document.getElementById('unit-form-modal');
+    if (modal) {
+        modal.classList.add('hidden');
+        modal.style.display = 'none';
+    }
 }
 
 async function handleUnitFormSubmit(event) {
