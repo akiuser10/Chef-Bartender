@@ -437,16 +437,25 @@ def ensure_schema_updates():
                         conn.execute(db.text("ALTER TABLE temperature_log ADD COLUMN created_at TIMESTAMP"))
                     if 'updated_at' not in temp_log_columns:
                         conn.execute(db.text("ALTER TABLE temperature_log ADD COLUMN updated_at TIMESTAMP"))
-                    # Handle time_slot column - add if missing, or update NULL values if it exists with NOT NULL constraint
+                    # Handle time_slot column - add if missing, or update NULL values if it exists
                     if 'time_slot' not in temp_log_columns:
                         try:
-                            # Add column as nullable first
-                            conn.execute(db.text("ALTER TABLE temperature_log ADD COLUMN time_slot VARCHAR(10)"))
+                            db_url = str(db.engine.url)
+                            is_postgres = 'postgresql' in db_url.lower() or 'postgres' in db_url.lower()
+                            
+                            if is_postgres:
+                                # For PostgreSQL: Add column with default, update existing rows, then set NOT NULL if needed
+                                conn.execute(db.text("ALTER TABLE temperature_log ADD COLUMN time_slot VARCHAR(10) DEFAULT '10:00 AM'"))
+                                conn.execute(db.text("UPDATE temperature_log SET time_slot = '10:00 AM' WHERE time_slot IS NULL"))
+                                # Note: We keep it nullable in the model for backward compatibility, but DB may have NOT NULL
+                            else:
+                                # For SQLite: Add column with default
+                                conn.execute(db.text("ALTER TABLE temperature_log ADD COLUMN time_slot VARCHAR(10) DEFAULT '10:00 AM'"))
+                                conn.execute(db.text("UPDATE temperature_log SET time_slot = '10:00 AM' WHERE time_slot IS NULL"))
                         except Exception as e:
                             current_app.logger.warning(f"Could not add time_slot column to temperature_log: {str(e)}")
                     else:
-                        # Column exists - check if it has NOT NULL constraint and has NULL values
-                        # If database requires NOT NULL, we need to set a default value for existing NULL rows
+                        # Column exists - update any NULL values to ensure NOT NULL constraint is satisfied
                         try:
                             db_url = str(db.engine.url)
                             is_postgres = 'postgresql' in db_url.lower() or 'postgres' in db_url.lower()
