@@ -319,6 +319,40 @@ def ensure_schema_updates():
                                 conn.execute(db.text("ALTER TABLE book ALTER COLUMN pdf_path DROP NOT NULL"))
                     except Exception as e:
                         current_app.logger.warning(f"Could not update pdf_path column: {str(e)}")
+                
+                # Cold Storage Unit table updates
+                if table_exists(conn, 'cold_storage_unit'):
+                    cold_storage_columns = get_table_columns(conn, 'cold_storage_unit')
+                    if 'location' not in cold_storage_columns:
+                        # Add location column - for existing records, set a default value
+                        try:
+                            db_url = str(db.engine.url)
+                            is_postgres = 'postgresql' in db_url.lower() or 'postgres' in db_url.lower()
+                            
+                            if is_postgres:
+                                # For PostgreSQL: Add column with default, update existing rows, then set NOT NULL
+                                conn.execute(db.text("ALTER TABLE cold_storage_unit ADD COLUMN location VARCHAR(200) DEFAULT 'Unknown'"))
+                                conn.execute(db.text("UPDATE cold_storage_unit SET location = 'Unknown' WHERE location IS NULL"))
+                                # Now make it NOT NULL
+                                conn.execute(db.text("ALTER TABLE cold_storage_unit ALTER COLUMN location SET NOT NULL"))
+                            else:
+                                # For SQLite: Add column with default (SQLite doesn't support NOT NULL on ALTER)
+                                conn.execute(db.text("ALTER TABLE cold_storage_unit ADD COLUMN location VARCHAR(200) DEFAULT 'Unknown'"))
+                                conn.execute(db.text("UPDATE cold_storage_unit SET location = 'Unknown' WHERE location IS NULL"))
+                        except Exception as e:
+                            current_app.logger.warning(f"Could not add location column to cold_storage_unit: {str(e)}")
+                    if 'min_temp' not in cold_storage_columns:
+                        conn.execute(db.text("ALTER TABLE cold_storage_unit ADD COLUMN min_temp FLOAT"))
+                    if 'max_temp' not in cold_storage_columns:
+                        conn.execute(db.text("ALTER TABLE cold_storage_unit ADD COLUMN max_temp FLOAT"))
+                    if 'organisation' not in cold_storage_columns:
+                        conn.execute(db.text("ALTER TABLE cold_storage_unit ADD COLUMN organisation VARCHAR(200)"))
+                    if 'created_by' not in cold_storage_columns:
+                        conn.execute(db.text("ALTER TABLE cold_storage_unit ADD COLUMN created_by INTEGER"))
+                    if 'created_at' not in cold_storage_columns:
+                        conn.execute(db.text("ALTER TABLE cold_storage_unit ADD COLUMN created_at TIMESTAMP"))
+                    if 'is_active' not in cold_storage_columns:
+                        conn.execute(db.text("ALTER TABLE cold_storage_unit ADD COLUMN is_active BOOLEAN DEFAULT TRUE"))
                     
     except Exception as e:
         current_app.logger.error(f"Error in ensure_schema_updates: {str(e)}", exc_info=True)

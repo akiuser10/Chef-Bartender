@@ -56,6 +56,10 @@ def kitchen_checklist():
 @role_required(['Manager', 'Bartender'])
 def cold_storage_temperature_log():
     """Main page for Cold Storage Temperature Log"""
+    # Ensure schema is up to date (adds missing columns like 'location')
+    from utils.db_helpers import ensure_schema_updates
+    ensure_schema_updates()
+    
     try:
         org_filter = get_organization_filter(ColdStorageUnit)
         units = ColdStorageUnit.query.filter(org_filter).filter_by(is_active=True).order_by(ColdStorageUnit.unit_number).all()
