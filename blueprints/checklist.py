@@ -104,6 +104,10 @@ def manage_cold_storage_units():
             action = data.get('action')
             
             if action == 'create':
+                # Only Managers can create units
+                if current_user.user_role != 'Manager':
+                    return jsonify({'success': False, 'error': 'Only Managers can create new units'}), 403
+                
                 # Validate required fields
                 if not data.get('unit_number') or not data.get('location') or not data.get('unit_type'):
                     return jsonify({'success': False, 'error': 'Unit number, location, and unit type are required'}), 400
@@ -145,6 +149,10 @@ def manage_cold_storage_units():
                     return jsonify({'success': False, 'error': f'Error creating unit: {str(e)}'}), 500
             
             elif action == 'update':
+                # Only Managers can update units
+                if current_user.user_role != 'Manager':
+                    return jsonify({'success': False, 'error': 'Only Managers can update units'}), 403
+                
                 if not data.get('id'):
                     return jsonify({'success': False, 'error': 'Unit ID is required'}), 400
                 
@@ -185,6 +193,10 @@ def manage_cold_storage_units():
                     return jsonify({'success': False, 'error': f'Error updating unit: {str(e)}'}), 500
             
             elif action == 'delete':
+                # Only Managers can delete units
+                if current_user.user_role != 'Manager':
+                    return jsonify({'success': False, 'error': 'Only Managers can delete units'}), 403
+                
                 if not data.get('id'):
                     return jsonify({'success': False, 'error': 'Unit ID is required'}), 400
                 

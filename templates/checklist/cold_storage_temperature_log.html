@@ -21,7 +21,9 @@
             </select>
         </div>
         <div class="selection-group">
+            {% if current_user.user_role == 'Manager' %}
             <button id="add-unit-btn" class="btn-primary">Add New Unit</button>
+            {% endif %}
             <button id="generate-pdf-btn" class="btn-secondary">Generate PDF</button>
         </div>
     </div>
@@ -123,7 +125,7 @@
 
 <!-- Checklist Download Modal -->
 <div id="checklist-download-modal" class="modal hidden">
-    <div class="modal-content" style="max-width: 800px;">
+    <div class="modal-content checklist-modal-content">
         <div class="modal-header">
             <h3>Download Checklist PDF</h3>
             <button class="modal-close" id="checklist-modal-close">&times;</button>

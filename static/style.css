@@ -5958,6 +5958,10 @@ button.btn,
     font-style: italic;
 }
 
+.checklist-modal-content {
+    max-width: 800px;
+}
+
 /* Empty State */
 .empty-state {
     text-align: center;

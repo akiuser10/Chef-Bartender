@@ -23,9 +23,15 @@ function initializeEventListeners() {
     document.getElementById('log-date')?.addEventListener('change', handleDateChange);
     document.getElementById('log-time')?.addEventListener('change', handleTimeChange);
     
-    // Unit management
-    document.getElementById('add-unit-btn')?.addEventListener('click', openAddUnitForm);
-    document.getElementById('manage-add-unit-btn')?.addEventListener('click', openAddUnitForm);
+    // Unit management (only for Managers)
+    const addUnitBtn = document.getElementById('add-unit-btn');
+    if (addUnitBtn) {
+        addUnitBtn.addEventListener('click', openAddUnitForm);
+    }
+    const manageAddUnitBtn = document.getElementById('manage-add-unit-btn');
+    if (manageAddUnitBtn) {
+        manageAddUnitBtn.addEventListener('click', openAddUnitForm);
+    }
     document.getElementById('unit-form-close')?.addEventListener('click', closeUnitForm);
     document.getElementById('cancel-unit-form')?.addEventListener('click', closeUnitForm);
     document.getElementById('unit-form')?.addEventListener('submit', handleUnitFormSubmit);
