@@ -353,6 +353,67 @@ def ensure_schema_updates():
                         conn.execute(db.text("ALTER TABLE cold_storage_unit ADD COLUMN created_at TIMESTAMP"))
                     if 'is_active' not in cold_storage_columns:
                         conn.execute(db.text("ALTER TABLE cold_storage_unit ADD COLUMN is_active BOOLEAN DEFAULT TRUE"))
+                
+                # Temperature Log table updates
+                if table_exists(conn, 'temperature_log'):
+                    temp_log_columns = get_table_columns(conn, 'temperature_log')
+                    if 'supervisor_verified' not in temp_log_columns:
+                        try:
+                            db_url = str(db.engine.url)
+                            is_postgres = 'postgresql' in db_url.lower() or 'postgres' in db_url.lower()
+                            
+                            if is_postgres:
+                                conn.execute(db.text("ALTER TABLE temperature_log ADD COLUMN supervisor_verified BOOLEAN DEFAULT FALSE"))
+                            else:
+                                conn.execute(db.text("ALTER TABLE temperature_log ADD COLUMN supervisor_verified BOOLEAN DEFAULT 0"))
+                        except Exception as e:
+                            current_app.logger.warning(f"Could not add supervisor_verified column to temperature_log: {str(e)}")
+                    if 'supervisor_name' not in temp_log_columns:
+                        conn.execute(db.text("ALTER TABLE temperature_log ADD COLUMN supervisor_name VARCHAR(200)"))
+                    if 'supervisor_verified_at' not in temp_log_columns:
+                        conn.execute(db.text("ALTER TABLE temperature_log ADD COLUMN supervisor_verified_at TIMESTAMP"))
+                    if 'organisation' not in temp_log_columns:
+                        conn.execute(db.text("ALTER TABLE temperature_log ADD COLUMN organisation VARCHAR(200)"))
+                    if 'created_at' not in temp_log_columns:
+                        conn.execute(db.text("ALTER TABLE temperature_log ADD COLUMN created_at TIMESTAMP"))
+                    if 'updated_at' not in temp_log_columns:
+                        conn.execute(db.text("ALTER TABLE temperature_log ADD COLUMN updated_at TIMESTAMP"))
+                
+                # Temperature Entry table updates
+                if table_exists(conn, 'temperature_entry'):
+                    temp_entry_columns = get_table_columns(conn, 'temperature_entry')
+                    if 'action_time' not in temp_entry_columns:
+                        conn.execute(db.text("ALTER TABLE temperature_entry ADD COLUMN action_time TIMESTAMP"))
+                    if 'recheck_temperature' not in temp_entry_columns:
+                        conn.execute(db.text("ALTER TABLE temperature_entry ADD COLUMN recheck_temperature FLOAT"))
+                    if 'initial' not in temp_entry_columns:
+                        try:
+                            db_url = str(db.engine.url)
+                            is_postgres = 'postgresql' in db_url.lower() or 'postgres' in db_url.lower()
+                            
+                            if is_postgres:
+                                conn.execute(db.text("ALTER TABLE temperature_entry ADD COLUMN initial VARCHAR(10) DEFAULT ''"))
+                                conn.execute(db.text("UPDATE temperature_entry SET initial = '' WHERE initial IS NULL"))
+                                conn.execute(db.text("ALTER TABLE temperature_entry ALTER COLUMN initial SET NOT NULL"))
+                            else:
+                                conn.execute(db.text("ALTER TABLE temperature_entry ADD COLUMN initial VARCHAR(10) DEFAULT ''"))
+                        except Exception as e:
+                            current_app.logger.warning(f"Could not add initial column to temperature_entry: {str(e)}")
+                    if 'is_late_entry' not in temp_entry_columns:
+                        try:
+                            db_url = str(db.engine.url)
+                            is_postgres = 'postgresql' in db_url.lower() or 'postgres' in db_url.lower()
+                            
+                            if is_postgres:
+                                conn.execute(db.text("ALTER TABLE temperature_entry ADD COLUMN is_late_entry BOOLEAN DEFAULT FALSE"))
+                            else:
+                                conn.execute(db.text("ALTER TABLE temperature_entry ADD COLUMN is_late_entry BOOLEAN DEFAULT 0"))
+                        except Exception as e:
+                            current_app.logger.warning(f"Could not add is_late_entry column to temperature_entry: {str(e)}")
+                    if 'entry_timestamp' not in temp_entry_columns:
+                        conn.execute(db.text("ALTER TABLE temperature_entry ADD COLUMN entry_timestamp TIMESTAMP"))
+                    if 'created_by' not in temp_entry_columns:
+                        conn.execute(db.text("ALTER TABLE temperature_entry ADD COLUMN created_by INTEGER"))
                     
     except Exception as e:
         current_app.logger.error(f"Error in ensure_schema_updates: {str(e)}", exc_info=True)
