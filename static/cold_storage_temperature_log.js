@@ -162,103 +162,154 @@ async function loadUnits() {
     }
 }
 
-// Render Temperature Table
+// Render Temperature Tables (one table per unit)
 function renderTemperatureTable() {
-    const tbody = document.getElementById('temperature-log-tbody');
-    tbody.innerHTML = '';
+    const container = document.getElementById('units-tables-container');
+    container.innerHTML = '';
     
     if (allUnits.length === 0) {
         return;
     }
     
     allUnits.forEach(unit => {
-        const row = createUnitRow(unit);
-        tbody.appendChild(row);
+        const unitTable = createUnitTable(unit);
+        container.appendChild(unitTable);
     });
     
-    // Load existing entries for current date/time
+    // Load existing entries for current date
     loadTemperatureEntries();
 }
 
-// Create Unit Row with all time slots
-function createUnitRow(unit) {
-    const row = document.createElement('tr');
-    row.className = 'temperature-row';
-    row.setAttribute('data-unit-id', unit.id);
+// Create Unit Table (one table per unit with time slots as rows)
+function createUnitTable(unit) {
+    // Create table wrapper
+    const tableWrapper = document.createElement('div');
+    tableWrapper.className = 'unit-table-wrapper';
+    tableWrapper.setAttribute('data-unit-id', unit.id);
     
-    // Unit Number cell
-    const unitCell = document.createElement('td');
-    unitCell.className = 'unit-cell';
-    unitCell.textContent = unit.unit_number;
-    row.appendChild(unitCell);
+    // Create table
+    const table = document.createElement('table');
+    table.className = 'temperature-log-table unit-table';
     
-    // Location cell
-    const locationCell = document.createElement('td');
-    locationCell.className = 'location-cell';
-    locationCell.textContent = unit.location;
-    row.appendChild(locationCell);
+    // Create header
+    const thead = document.createElement('thead');
+    const headerRow = document.createElement('tr');
     
-    // Type cell
-    const typeCell = document.createElement('td');
-    typeCell.className = 'type-cell';
-    typeCell.textContent = unit.unit_type;
-    row.appendChild(typeCell);
+    // Unit info header
+    const unitHeader = document.createElement('th');
+    unitHeader.colSpan = 4;
+    unitHeader.className = 'unit-header';
+    unitHeader.innerHTML = `
+        <div class="unit-header-content">
+            <span class="unit-number">UNIT NO: ${unit.unit_number}</span>
+            <span class="unit-location">Location: ${unit.location || '—'}</span>
+            <span class="unit-type">Type: ${unit.unit_type}</span>
+        </div>
+    `;
+    headerRow.appendChild(unitHeader);
+    thead.appendChild(headerRow);
     
-    // Create cells for each time slot (10:00 AM, 02:00 PM, 06:00 PM, 10:00 PM)
+    // Column headers
+    const columnHeaderRow = document.createElement('tr');
+    const timeHeader = document.createElement('th');
+    timeHeader.textContent = 'TIME';
+    columnHeaderRow.appendChild(timeHeader);
+    
+    const tempHeader = document.createElement('th');
+    tempHeader.textContent = 'TEMPERATURE (°C)';
+    columnHeaderRow.appendChild(tempHeader);
+    
+    const actionHeader = document.createElement('th');
+    actionHeader.textContent = 'CORRECTIVE ACTION';
+    columnHeaderRow.appendChild(actionHeader);
+    
+    const initialHeader = document.createElement('th');
+    initialHeader.textContent = 'INITIAL';
+    columnHeaderRow.appendChild(initialHeader);
+    
+    thead.appendChild(columnHeaderRow);
+    table.appendChild(thead);
+    
+    // Create tbody
+    const tbody = document.createElement('tbody');
+    tbody.className = 'unit-tbody';
+    tbody.setAttribute('data-unit-id', unit.id);
+    
+    // Create rows for each time slot
     scheduledTimes.forEach(time => {
-        // Temperature cell for this time
-        const tempCell = document.createElement('td');
-        tempCell.className = 'temperature-cell';
-        tempCell.setAttribute('data-time', time);
-        const tempInputWrapper = document.createElement('div');
-        tempInputWrapper.className = 'temp-input-wrapper';
-        
-        const tempInput = document.createElement('input');
-        tempInput.type = 'number';
-        tempInput.step = '0.1';
-        tempInput.className = 'temperature-input';
-        tempInput.setAttribute('data-unit-id', unit.id);
-        tempInput.setAttribute('data-time', time);
-        tempInput.placeholder = '—';
-        tempInput.readOnly = true; // Make read-only, will be editable only for current time
-        
-        const tempUnit = document.createElement('span');
-        tempUnit.className = 'temp-unit';
-        tempUnit.textContent = '°C';
-        
-        tempInputWrapper.appendChild(tempInput);
-        tempInputWrapper.appendChild(tempUnit);
-        tempCell.appendChild(tempInputWrapper);
-        row.appendChild(tempCell);
-        
-        // Corrective action cell for this time
-        const actionCell = document.createElement('td');
-        actionCell.className = 'corrective-action-cell';
-        actionCell.setAttribute('data-time', time);
-        const actionTextarea = document.createElement('textarea');
-        actionTextarea.className = 'corrective-action-input';
-        actionTextarea.setAttribute('data-unit-id', unit.id);
-        actionTextarea.setAttribute('data-time', time);
-        actionTextarea.placeholder = '—';
-        actionTextarea.readOnly = true; // Make read-only, will be editable only for current time
-        actionCell.appendChild(actionTextarea);
-        row.appendChild(actionCell);
-        
-        // Initial cell for this time
-        const initialCell = document.createElement('td');
-        initialCell.className = 'initial-cell';
-        initialCell.setAttribute('data-time', time);
-        const initialInput = document.createElement('input');
-        initialInput.type = 'text';
-        initialInput.className = 'initial-input';
-        initialInput.setAttribute('data-unit-id', unit.id);
-        initialInput.setAttribute('data-time', time);
-        initialInput.placeholder = '—';
-        initialInput.maxLength = 10;
-        initialInput.readOnly = true; // Make read-only, will be editable only for current time
-        initialCell.appendChild(initialInput);
-        row.appendChild(initialCell);
+        const row = createTimeRow(unit.id, time);
+        tbody.appendChild(row);
     });
+    
+    table.appendChild(tbody);
+    tableWrapper.appendChild(table);
+    
+    return tableWrapper;
+}
+
+// Create Time Row (one row per time slot)
+function createTimeRow(unitId, time) {
+    const row = document.createElement('tr');
+    row.className = 'time-row';
+    row.setAttribute('data-unit-id', unitId);
+    row.setAttribute('data-time', time);
+    
+    // Time cell
+    const timeCell = document.createElement('td');
+    timeCell.className = 'time-cell';
+    timeCell.textContent = time;
+    row.appendChild(timeCell);
+    
+    // Temperature cell
+    const tempCell = document.createElement('td');
+    tempCell.className = 'temperature-cell';
+    const tempInputWrapper = document.createElement('div');
+    tempInputWrapper.className = 'temp-input-wrapper';
+    
+    const tempInput = document.createElement('input');
+    tempInput.type = 'number';
+    tempInput.step = '0.1';
+    tempInput.className = 'temperature-input';
+    tempInput.setAttribute('data-unit-id', unitId);
+    tempInput.setAttribute('data-time', time);
+    tempInput.placeholder = '—';
+    tempInput.readOnly = true; // Will be editable only for current time
+    
+    const tempUnit = document.createElement('span');
+    tempUnit.className = 'temp-unit';
+    tempUnit.textContent = '°C';
+    
+    tempInputWrapper.appendChild(tempInput);
+    tempInputWrapper.appendChild(tempUnit);
+    tempCell.appendChild(tempInputWrapper);
+    row.appendChild(tempCell);
+    
+    // Corrective action cell
+    const actionCell = document.createElement('td');
+    actionCell.className = 'corrective-action-cell';
+    const actionTextarea = document.createElement('textarea');
+    actionTextarea.className = 'corrective-action-input';
+    actionTextarea.setAttribute('data-unit-id', unitId);
+    actionTextarea.setAttribute('data-time', time);
+    actionTextarea.placeholder = '—';
+    actionTextarea.readOnly = true; // Will be editable only for current time
+    actionTextarea.rows = 2;
+    actionCell.appendChild(actionTextarea);
+    row.appendChild(actionCell);
+    
+    // Initial cell
+    const initialCell = document.createElement('td');
+    initialCell.className = 'initial-cell';
+    const initialInput = document.createElement('input');
+    initialInput.type = 'text';
+    initialInput.className = 'initial-input';
+    initialInput.setAttribute('data-unit-id', unitId);
+    initialInput.setAttribute('data-time', time);
+    initialInput.placeholder = '—';
+    initialInput.maxLength = 10;
+    initialInput.readOnly = true; // Will be editable only for current time
+    initialCell.appendChild(initialInput);
+    row.appendChild(initialCell);
     
     return row;
 }
@@ -286,10 +337,10 @@ async function loadTemperatureEntries() {
     results.forEach(({ unitId, data }) => {
         if (data && data.success) {
             const entries = data.log.entries || {};
-            populateUnitRow(unitId, entries);
+            populateUnitTable(unitId, entries);
         } else {
             // No data, populate with empty entries
-            populateUnitRow(unitId, {});
+            populateUnitTable(unitId, {});
         }
     });
     
@@ -297,17 +348,17 @@ async function loadTemperatureEntries() {
     updateEditableFields();
 }
 
-// Populate Unit Row with Entry Data for all time slots
-function populateUnitRow(unitId, entries) {
-    const row = document.querySelector(`.temperature-row[data-unit-id="${unitId}"]`);
-    if (!row) return;
-    
-    // Populate each time slot
+// Populate Unit Table with Entry Data for all time slots
+function populateUnitTable(unitId, entries) {
+    // Populate each time slot row
     scheduledTimes.forEach(time => {
+        const row = document.querySelector(`.time-row[data-unit-id="${unitId}"][data-time="${time}"]`);
+        if (!row) return;
+        
         const entry = entries[time] || null;
         
         // Set temperature
-        const tempInput = row.querySelector(`.temperature-input[data-time="${time}"]`);
+        const tempInput = row.querySelector('.temperature-input');
         if (tempInput) {
             if (entry?.temperature !== null && entry?.temperature !== undefined) {
                 tempInput.value = entry.temperature;
@@ -317,13 +368,13 @@ function populateUnitRow(unitId, entries) {
         }
         
         // Set corrective action
-        const actionTextarea = row.querySelector(`.corrective-action-input[data-time="${time}"]`);
+        const actionTextarea = row.querySelector('.corrective-action-input');
         if (actionTextarea) {
             actionTextarea.value = entry?.corrective_action ?? '';
         }
         
         // Set initial
-        const initialInput = row.querySelector(`.initial-input[data-time="${time}"]`);
+        const initialInput = row.querySelector('.initial-input');
         if (initialInput) {
             initialInput.value = entry?.initial ?? '';
         }
@@ -332,43 +383,40 @@ function populateUnitRow(unitId, entries) {
 
 // Update editable fields based on current time selection
 function updateEditableFields() {
-    const rows = document.querySelectorAll('.temperature-row');
-    
-    rows.forEach(row => {
-        scheduledTimes.forEach(time => {
-            const isCurrentTime = time === currentTime;
-            
+    // Update all time rows across all units
+    scheduledTimes.forEach(time => {
+        const isCurrentTime = time === currentTime;
+        const rows = document.querySelectorAll(`.time-row[data-time="${time}"]`);
+        
+        rows.forEach(row => {
             // Temperature input
-            const tempInput = row.querySelector(`.temperature-input[data-time="${time}"]`);
+            const tempInput = row.querySelector('.temperature-input');
             if (tempInput) {
                 tempInput.readOnly = !isCurrentTime;
                 tempInput.placeholder = isCurrentTime ? 'Enter temperature' : '—';
             }
             
             // Corrective action textarea
-            const actionTextarea = row.querySelector(`.corrective-action-input[data-time="${time}"]`);
+            const actionTextarea = row.querySelector('.corrective-action-input');
             if (actionTextarea) {
                 actionTextarea.readOnly = !isCurrentTime;
                 actionTextarea.placeholder = isCurrentTime ? 'Enter corrective action if needed' : '—';
             }
             
             // Initial input
-            const initialInput = row.querySelector(`.initial-input[data-time="${time}"]`);
+            const initialInput = row.querySelector('.initial-input');
             if (initialInput) {
                 initialInput.readOnly = !isCurrentTime;
                 initialInput.placeholder = isCurrentTime ? 'Initials' : '—';
                 initialInput.required = isCurrentTime;
             }
             
-            // Add visual indicator for current time column
-            const cells = row.querySelectorAll(`[data-time="${time}"]`);
-            cells.forEach(cell => {
-                if (isCurrentTime) {
-                    cell.classList.add('current-time-column');
-                } else {
-                    cell.classList.remove('current-time-column');
-                }
-            });
+            // Add visual indicator for current time row
+            if (isCurrentTime) {
+                row.classList.add('current-time-row');
+            } else {
+                row.classList.remove('current-time-row');
+            }
         });
     });
 }
@@ -410,10 +458,10 @@ function checkTemperatureRange(unitId, temperature) {
 }
 
 function validateTemperatureInput(unitId, time) {
-    const row = document.querySelector(`.temperature-row[data-unit-id="${unitId}"]`);
+    const row = document.querySelector(`.time-row[data-unit-id="${unitId}"][data-time="${time}"]`);
     if (!row) return;
     
-    const input = row.querySelector(`.temperature-input[data-time="${time}"]`);
+    const input = row.querySelector('.temperature-input');
     if (!input) return;
     
     const tempCell = input.closest('.temperature-cell');
@@ -461,13 +509,14 @@ async function handleUpdateTemperature() {
     // Save all entries for the current time slot only
     for (const unit of allUnits) {
         try {
-            const row = document.querySelector(`.temperature-row[data-unit-id="${unit.id}"]`);
+            // Get row for current time
+            const row = document.querySelector(`.time-row[data-unit-id="${unit.id}"][data-time="${currentTime}"]`);
             if (!row) continue;
             
-            // Get inputs for current time only
-            const tempInput = row.querySelector(`.temperature-input[data-time="${currentTime}"]`);
-            const actionTextarea = row.querySelector(`.corrective-action-input[data-time="${currentTime}"]`);
-            const initialInput = row.querySelector(`.initial-input[data-time="${currentTime}"]`);
+            // Get inputs for current time
+            const tempInput = row.querySelector('.temperature-input');
+            const actionTextarea = row.querySelector('.corrective-action-input');
+            const initialInput = row.querySelector('.initial-input');
             
             if (!tempInput || !actionTextarea || !initialInput) continue;
             

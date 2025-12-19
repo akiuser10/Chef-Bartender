@@ -5754,6 +5754,112 @@ button.btn,
 }
 
 /* Temperature Log Table */
+/* Units Tables Container */
+#units-tables-container {
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+    margin-bottom: 20px;
+}
+
+/* Unit Table Wrapper */
+.unit-table-wrapper {
+    width: 100%;
+    margin-bottom: 20px;
+}
+
+.unit-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: white;
+    border: 2px solid #333;
+    margin-bottom: 0;
+}
+
+.unit-table thead {
+    background: #f0f0f0;
+}
+
+.unit-table th {
+    padding: 12px;
+    text-align: left;
+    font-weight: 600;
+    color: #2a2a2a;
+    border: 1px solid #ddd;
+    font-size: 0.9rem;
+}
+
+.unit-table .unit-header {
+    background: #e0e0e0;
+    text-align: center;
+    padding: 15px;
+}
+
+.unit-header-content {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 20px;
+    flex-wrap: wrap;
+}
+
+.unit-header-content .unit-number {
+    font-weight: 700;
+    font-size: 1.1rem;
+    color: #2a2a2a;
+}
+
+.unit-header-content .unit-location,
+.unit-header-content .unit-type {
+    color: #666;
+    font-size: 0.95rem;
+}
+
+.unit-table td {
+    padding: 12px;
+    border: 1px solid #ddd;
+    text-align: left;
+    vertical-align: middle;
+}
+
+.unit-table .time-cell {
+    font-weight: 600;
+    color: #2a2a2a;
+    min-width: 120px;
+    background: #f8f9fa;
+}
+
+.unit-table .temperature-cell {
+    min-width: 150px;
+}
+
+.unit-table .corrective-action-cell {
+    min-width: 250px;
+}
+
+.unit-table .initial-cell {
+    min-width: 120px;
+}
+
+.unit-table tbody tr {
+    border-bottom: 1px solid #ddd;
+}
+
+.unit-table tbody tr:hover {
+    background: #f8f9fa;
+}
+
+/* Current time row highlighting */
+.unit-table .current-time-row {
+    background: #e8f4f8 !important;
+    border-left: 4px solid #2196F3 !important;
+}
+
+.unit-table tbody .current-time-row:hover {
+    background: #d4e8f0 !important;
+}
+
+/* Temperature Log Table (legacy support) */
 .temperature-log-table-wrapper {
     overflow-x: auto;
     margin-bottom: 20px;
@@ -5766,93 +5872,24 @@ button.btn,
     border: 1px solid #ddd;
 }
 
-.temperature-log-table thead {
-    background: #f0f0f0;
-}
-
-.temperature-log-table th {
-    padding: 12px;
-    text-align: left;
-    font-weight: 600;
-    color: #2a2a2a;
-    border: 1px solid #ddd;
-    font-size: 0.9rem;
-    white-space: nowrap;
-}
-
-.temperature-log-table td {
-    padding: 12px;
-    border: 1px solid #ddd;
-    text-align: left;
-    vertical-align: middle;
-}
-
-.temperature-log-table .unit-cell {
-    font-weight: 600;
-    color: #2a2a2a;
-    min-width: 100px;
-}
-
-.temperature-log-table .location-cell {
-    color: #666;
-    min-width: 150px;
-}
-
-.temperature-log-table .type-cell {
-    color: #666;
-    min-width: 120px;
-}
-
-.temperature-log-table tbody tr:hover {
-    background: #f8f9fa;
-}
-
-/* Current time column highlighting */
-.temperature-log-table .current-time-column {
-    background: #e8f4f8 !important;
-    border-left: 3px solid #2196F3 !important;
-    border-right: 3px solid #2196F3 !important;
-}
-
-.temperature-log-table tbody tr:hover .current-time-column {
-    background: #d4e8f0 !important;
-}
-
-/* Time slot column styles */
-.temperature-log-table th[colspan] {
-    text-align: center;
-    font-weight: 600;
-    background: #e0e0e0;
-}
-
-.temperature-log-table .temperature-cell,
-.temperature-log-table .corrective-action-cell,
-.temperature-log-table .initial-cell {
-    min-width: 100px;
-    max-width: 150px;
-}
-
-.temperature-log-table .corrective-action-input {
-    width: 100%;
-    min-height: 40px;
-    resize: vertical;
-}
-
 /* Temperature Input */
 .temp-input-wrapper {
     display: flex;
     align-items: center;
-    justify-content: center;
     gap: 5px;
+    width: 100%;
 }
 
 .temperature-input {
-    width: 80px;
+    flex: 1;
+    min-width: 80px;
+    max-width: 120px;
     padding: 8px;
     border: 1px solid #ddd;
     border-radius: 4px;
     text-align: center;
     font-size: 0.9rem;
+    box-sizing: border-box;
 }
 
 .temperature-input:focus {
@@ -5860,11 +5897,17 @@ button.btn,
     border-color: #d45a2a;
 }
 
+.temperature-input[readonly] {
+    background: #f5f5f5;
+    cursor: not-allowed;
+}
+
 .temp-unit {
     color: #666;
     font-size: 0.9rem;
     -webkit-user-select: none;
     user-select: none;
+    white-space: nowrap;
 }
 
 .temperature-cell.out-of-range {
@@ -5885,6 +5928,9 @@ button.btn,
     border: 1px solid #ddd;
     border-radius: 4px;
     font-size: 0.85rem;
+    box-sizing: border-box;
+    resize: vertical;
+    font-family: inherit;
     resize: vertical;
     font-family: inherit;
 }
@@ -5896,18 +5942,26 @@ button.btn,
 
 /* Initial Input */
 .initial-input {
-    width: 80px;
+    width: 100%;
+    min-width: 80px;
+    max-width: 120px;
     padding: 8px;
     border: 1px solid #ddd;
     border-radius: 4px;
     text-align: center;
     font-size: 0.9rem;
     text-transform: uppercase;
+    box-sizing: border-box;
 }
 
 .initial-input:focus {
     outline: none;
     border-color: #d45a2a;
+}
+
+.initial-input[readonly] {
+    background: #f5f5f5;
+    cursor: not-allowed;
 }
 
 /* Supervisor Verification */
