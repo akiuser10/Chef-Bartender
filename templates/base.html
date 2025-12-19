@@ -63,13 +63,10 @@
             <span class="nav-link checklist-dropdown-trigger" id="checklistDropdownTrigger">CHECKLIST</span>
             <div class="nav-dropdown-menu" id="checklistDropdownMenu">
                 {% if current_user.user_role in ['Manager', 'Bartender'] %}
-                <div style="padding: 8px 16px; font-weight: 600; color: #666; font-size: 0.85em; text-transform: uppercase; border-bottom: 1px solid #eee; margin-bottom: 4px;">Bar Operations</div>
-                <a href="{{ url_for('checklist.bar_checklist') }}" class="nav-dropdown-item">Bar Checklist</a>
-                <a href="{{ url_for('checklist.temperature_log_index') }}" class="nav-dropdown-item">Temperature Log (HACCP)</a>
+                <a href="{{ url_for('checklist.bar_checklist') }}" class="nav-dropdown-item">Bar</a>
                 {% endif %}
                 {% if current_user.user_role in ['Chef', 'Manager'] %}
-                <div style="padding: 8px 16px; font-weight: 600; color: #666; font-size: 0.85em; text-transform: uppercase; border-bottom: 1px solid #eee; margin: 8px 0 4px 0;">Kitchen Operations</div>
-                <a href="{{ url_for('checklist.kitchen_checklist') }}" class="nav-dropdown-item">Kitchen Checklist</a>
+                <a href="{{ url_for('checklist.kitchen_checklist') }}" class="nav-dropdown-item">Kitchen</a>
                 {% endif %}
             </div>
         </div>
