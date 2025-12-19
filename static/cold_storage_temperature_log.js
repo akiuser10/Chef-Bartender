@@ -599,6 +599,12 @@ async function handleUnitFormSubmit(event) {
             body: JSON.stringify(formData)
         });
         
+        // Check if response is ok
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({ error: `HTTP ${response.status}: ${response.statusText}` }));
+            throw new Error(errorData.error || `HTTP ${response.status}: ${response.statusText}`);
+        }
+        
         const data = await response.json();
         
         if (data.success) {
@@ -606,11 +612,14 @@ async function handleUnitFormSubmit(event) {
             await loadUnits();
             closeUnitForm();
         } else {
-            showNotification('Error saving unit: ' + (data.error || 'Unknown error'), 'error');
+            const errorMsg = data.error || 'Unknown error';
+            console.error('Error saving unit:', errorMsg);
+            showNotification('Error saving unit: ' + errorMsg, 'error');
         }
     } catch (error) {
         console.error('Error saving unit:', error);
-        showNotification('Error saving unit', 'error');
+        const errorMsg = error.message || 'Failed to save unit. Please check console for details.';
+        showNotification('Error saving unit: ' + errorMsg, 'error');
     }
 }
 

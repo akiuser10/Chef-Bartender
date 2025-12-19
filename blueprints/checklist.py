@@ -79,6 +79,10 @@ def cold_storage_temperature_log():
 @role_required(['Manager', 'Bartender'])
 def manage_cold_storage_units():
     """API endpoint for managing cold storage units"""
+    # Ensure schema is up to date before any operations
+    from utils.db_helpers import ensure_schema_updates
+    ensure_schema_updates()
+    
     if request.method == 'GET':
         try:
             org_filter = get_organization_filter(ColdStorageUnit)
@@ -106,6 +110,7 @@ def manage_cold_storage_units():
             if action == 'create':
                 # Only Managers can create units
                 if current_user.user_role != 'Manager':
+                    current_app.logger.warning(f"Non-Manager user {current_user.id} ({current_user.user_role}) attempted to create unit")
                     return jsonify({'success': False, 'error': 'Only Managers can create new units'}), 403
                 
                 # Validate required fields
@@ -113,6 +118,16 @@ def manage_cold_storage_units():
                     return jsonify({'success': False, 'error': 'Unit number, location, and unit type are required'}), 400
                 
                 try:
+                    # Check if unit number already exists in organization
+                    org_filter = get_organization_filter(ColdStorageUnit)
+                    existing_unit = ColdStorageUnit.query.filter(org_filter).filter_by(
+                        unit_number=data['unit_number'],
+                        is_active=True
+                    ).first()
+                    
+                    if existing_unit:
+                        return jsonify({'success': False, 'error': f'Unit number "{data["unit_number"]}" already exists'}), 400
+                    
                     # Handle temperature values - convert to float if provided, otherwise None
                     min_temp = None
                     max_temp = None
@@ -132,6 +147,9 @@ def manage_cold_storage_units():
                     )
                     db.session.add(unit)
                     db.session.commit()
+                    
+                    current_app.logger.info(f"Manager {current_user.id} created unit {unit.id} ({unit.unit_number})")
+                    
                     return jsonify({'success': True, 'unit': {
                         'id': unit.id,
                         'unit_number': unit.unit_number,
@@ -142,11 +160,16 @@ def manage_cold_storage_units():
                     }})
                 except ValueError as e:
                     db.session.rollback()
+                    current_app.logger.error(f"ValueError creating unit: {str(e)}")
                     return jsonify({'success': False, 'error': f'Invalid temperature value: {str(e)}'}), 400
                 except Exception as e:
                     db.session.rollback()
-                    current_app.logger.error(f"Error creating unit: {str(e)}", exc_info=True)
-                    return jsonify({'success': False, 'error': f'Error creating unit: {str(e)}'}), 500
+                    error_msg = str(e)
+                    current_app.logger.error(f"Error creating unit: {error_msg}", exc_info=True)
+                    # Provide more user-friendly error message
+                    if 'duplicate' in error_msg.lower() or 'unique' in error_msg.lower():
+                        return jsonify({'success': False, 'error': f'Unit number "{data.get("unit_number")}" already exists'}), 400
+                    return jsonify({'success': False, 'error': f'Error creating unit: {error_msg}'}), 500
             
             elif action == 'update':
                 # Only Managers can update units
