@@ -5807,6 +5807,37 @@ button.btn,
     background: #f8f9fa;
 }
 
+/* Current time column highlighting */
+.temperature-log-table .current-time-column {
+    background: #e8f4f8 !important;
+    border-left: 3px solid #2196F3 !important;
+    border-right: 3px solid #2196F3 !important;
+}
+
+.temperature-log-table tbody tr:hover .current-time-column {
+    background: #d4e8f0 !important;
+}
+
+/* Time slot column styles */
+.temperature-log-table th[colspan] {
+    text-align: center;
+    font-weight: 600;
+    background: #e0e0e0;
+}
+
+.temperature-log-table .temperature-cell,
+.temperature-log-table .corrective-action-cell,
+.temperature-log-table .initial-cell {
+    min-width: 100px;
+    max-width: 150px;
+}
+
+.temperature-log-table .corrective-action-input {
+    width: 100%;
+    min-height: 40px;
+    resize: vertical;
+}
+
 /* Temperature Input */
 .temp-input-wrapper {
     display: flex;

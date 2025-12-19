@@ -30,20 +30,35 @@
 
     <!-- Temperature Log Table -->
     <div class="temperature-log-section">
-        <div id="date-display" class="date-display">
-            <strong>DATE:</strong> <span id="display-date">—</span>
-            <strong>TIME:</strong> <span id="display-time">—</span>
-        </div>
+    <div id="date-display" class="date-display">
+        <strong>DATE:</strong> <span id="display-date">—</span>
+        <strong>SELECTED TIME FOR ENTRY:</strong> <span id="display-time">—</span>
+    </div>
         
         <div class="temperature-log-table-wrapper">
             <table class="temperature-log-table" id="temperature-log-table">
                 <thead>
                     <tr>
-                        <th>UNIT NO</th>
-                        <th>LOCATION</th>
-                        <th>TYPE</th>
-                        <th>TEMPERATURE (°C)</th>
-                        <th>CORRECTIVE ACTION</th>
+                        <th rowspan="2">UNIT NO</th>
+                        <th rowspan="2">LOCATION</th>
+                        <th rowspan="2">TYPE</th>
+                        <th colspan="3">10:00 AM</th>
+                        <th colspan="3">02:00 PM</th>
+                        <th colspan="3">06:00 PM</th>
+                        <th colspan="3">10:00 PM</th>
+                    </tr>
+                    <tr>
+                        <th>TEMP (°C)</th>
+                        <th>ACTION</th>
+                        <th>INITIAL</th>
+                        <th>TEMP (°C)</th>
+                        <th>ACTION</th>
+                        <th>INITIAL</th>
+                        <th>TEMP (°C)</th>
+                        <th>ACTION</th>
+                        <th>INITIAL</th>
+                        <th>TEMP (°C)</th>
+                        <th>ACTION</th>
                         <th>INITIAL</th>
                     </tr>
                 </thead>
