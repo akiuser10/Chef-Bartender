@@ -357,6 +357,33 @@ def ensure_schema_updates():
                 # Temperature Log table updates
                 if table_exists(conn, 'temperature_log'):
                     temp_log_columns = get_table_columns(conn, 'temperature_log')
+                    if 'week_start_date' not in temp_log_columns:
+                        try:
+                            db_url = str(db.engine.url)
+                            is_postgres = 'postgresql' in db_url.lower() or 'postgres' in db_url.lower()
+                            
+                            if is_postgres:
+                                # For PostgreSQL: Add column, calculate week_start_date for existing rows, then set NOT NULL
+                                conn.execute(db.text("ALTER TABLE temperature_log ADD COLUMN week_start_date DATE"))
+                                # Calculate week_start_date for existing rows (Monday of the week)
+                                conn.execute(db.text("""
+                                    UPDATE temperature_log 
+                                    SET week_start_date = log_date - INTERVAL '1 day' * EXTRACT(DOW FROM log_date)::int
+                                    WHERE week_start_date IS NULL
+                                """))
+                                # Set NOT NULL constraint
+                                conn.execute(db.text("ALTER TABLE temperature_log ALTER COLUMN week_start_date SET NOT NULL"))
+                            else:
+                                # For SQLite: Add column with default (SQLite doesn't support NOT NULL on ALTER easily)
+                                conn.execute(db.text("ALTER TABLE temperature_log ADD COLUMN week_start_date DATE"))
+                                # Calculate week_start_date for existing rows
+                                conn.execute(db.text("""
+                                    UPDATE temperature_log 
+                                    SET week_start_date = date(log_date, '-' || (strftime('%w', log_date) || ' days'))
+                                    WHERE week_start_date IS NULL
+                                """))
+                        except Exception as e:
+                            current_app.logger.warning(f"Could not add week_start_date column to temperature_log: {str(e)}")
                     if 'supervisor_verified' not in temp_log_columns:
                         try:
                             db_url = str(db.engine.url)

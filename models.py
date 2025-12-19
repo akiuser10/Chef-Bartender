@@ -665,12 +665,22 @@ class TemperatureLog(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     unit_id = db.Column(db.Integer, db.ForeignKey('cold_storage_unit.id'), nullable=False)
     log_date = db.Column(db.Date, nullable=False)
+    week_start_date = db.Column(db.Date, nullable=False)  # Monday of the week for this log_date
     supervisor_verified = db.Column(db.Boolean, default=False)
     supervisor_name = db.Column(db.String(200))
     supervisor_verified_at = db.Column(db.DateTime)
     organisation = db.Column(db.String(200))  # Organization name for sharing
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    @staticmethod
+    def calculate_week_start(date):
+        """Calculate Monday of the week for a given date"""
+        # Get the day of the week (0 = Monday, 6 = Sunday)
+        days_since_monday = date.weekday()
+        # Subtract days to get to Monday
+        week_start = date - timedelta(days=days_since_monday)
+        return week_start
     
     # Relationships
     entries = db.relationship('TemperatureEntry', backref='log', cascade='all, delete-orphan', lazy='dynamic')

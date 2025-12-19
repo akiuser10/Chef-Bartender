@@ -307,9 +307,12 @@ def temperature_log_entry(unit_id, date_str):
             
             if not log:
                 # Create new log
+                # Calculate week_start_date (Monday of the week)
+                week_start = TemperatureLog.calculate_week_start(log_date)
                 log = TemperatureLog(
                     unit_id=unit_id,
                     log_date=log_date,
+                    week_start_date=week_start,
                     organisation=current_user.organisation or current_user.restaurant_bar_name
                 )
                 db.session.add(log)
@@ -371,9 +374,12 @@ def temperature_log_entry(unit_id, date_str):
                     # Get or create log
                     log = TemperatureLog.query.filter_by(unit_id=unit_id, log_date=log_date).first()
                     if not log:
+                        # Calculate week_start_date (Monday of the week)
+                        week_start = TemperatureLog.calculate_week_start(log_date)
                         log = TemperatureLog(
                             unit_id=unit_id,
                             log_date=log_date,
+                            week_start_date=week_start,
                             organisation=current_user.organisation or current_user.restaurant_bar_name
                         )
                         db.session.add(log)
