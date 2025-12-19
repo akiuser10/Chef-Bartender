@@ -5899,7 +5899,7 @@ button.btn,
 .modal {
     display: none;
     position: fixed;
-    z-index: 1000;
+    z-index: 10000;
     left: 0;
     top: 0;
     width: 100%;
@@ -5910,14 +5910,16 @@ button.btn,
 
 .modal-content {
     background: white;
-    margin: 50px auto;
+    margin: 80px auto 50px;
     padding: 0;
     border-radius: 8px;
     width: 90%;
     max-width: 600px;
-    max-height: 90vh;
+    max-height: calc(90vh - 100px);
     overflow-y: auto;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    position: relative;
+    z-index: 10001;
 }
 
 .modal-header {
