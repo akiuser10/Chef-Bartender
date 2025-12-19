@@ -5603,3 +5603,592 @@ button.btn,
 .panel-header-actions form button {
     opacity: 1 !important;
 }
+
+/* ============================================
+   COLD STORAGE TEMPERATURE LOG STYLES
+   ============================================ */
+
+/* Container */
+.cold-storage-container {
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+/* Unit Selection */
+.unit-selection-section {
+    margin-bottom: 30px;
+}
+
+.unit-controls {
+    display: flex;
+    gap: 15px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.unit-select-wrapper {
+    flex: 1;
+    min-width: 250px;
+}
+
+.unit-select-wrapper label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 500;
+    color: #2a2a2a;
+}
+
+.unit-select {
+    width: 100%;
+    padding: 12px 15px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 1rem;
+    background: white;
+    color: #2a2a2a;
+}
+
+.unit-select:focus {
+    outline: none;
+    border-color: #d45a2a;
+}
+
+/* Buttons */
+.btn-primary, .btn-secondary, .btn-icon {
+    padding: 12px 24px;
+    border: none;
+    border-radius: 4px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-primary {
+    background: #d45a2a;
+    color: white;
+}
+
+.btn-primary:hover {
+    background: #b8491f;
+}
+
+.btn-secondary {
+    background: #6c757d;
+    color: white;
+}
+
+.btn-secondary:hover {
+    background: #5a6268;
+}
+
+.btn-icon {
+    background: #f8f9fa;
+    color: #2a2a2a;
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+}
+
+.btn-icon:hover {
+    background: #e9ecef;
+}
+
+/* Unit Header */
+.unit-header {
+    background: #f8f9fa;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+.unit-header-row {
+    display: flex;
+    gap: 30px;
+    margin-bottom: 10px;
+    flex-wrap: wrap;
+}
+
+.unit-header-item {
+    flex: 1;
+    min-width: 200px;
+}
+
+.unit-header-item strong {
+    color: #2a2a2a;
+    margin-right: 8px;
+}
+
+/* Date Selection */
+.date-selection-section {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    margin-bottom: 15px;
+    flex-wrap: wrap;
+}
+
+.date-selection-section label {
+    font-weight: 500;
+    color: #2a2a2a;
+}
+
+.date-input {
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 0.9rem;
+}
+
+.date-display {
+    margin-bottom: 20px;
+    font-size: 1.1rem;
+    color: #2a2a2a;
+}
+
+.date-display strong {
+    margin-right: 8px;
+}
+
+/* Temperature Log Table */
+.temperature-log-table-wrapper {
+    overflow-x: auto;
+    margin-bottom: 20px;
+}
+
+.temperature-log-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: white;
+    border: 1px solid #ddd;
+}
+
+.temperature-log-table thead {
+    background: #f0f0f0;
+}
+
+.temperature-log-table th {
+    padding: 12px;
+    text-align: center;
+    font-weight: 600;
+    color: #2a2a2a;
+    border: 1px solid #ddd;
+    font-size: 0.9rem;
+}
+
+.temperature-log-table td {
+    padding: 12px;
+    border: 1px solid #ddd;
+    text-align: center;
+}
+
+.temperature-log-table tbody tr:hover {
+    background: #f8f9fa;
+}
+
+/* Temperature Input */
+.temp-input-wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+}
+
+.temperature-input {
+    width: 80px;
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    text-align: center;
+    font-size: 0.9rem;
+}
+
+.temperature-input:focus {
+    outline: none;
+    border-color: #d45a2a;
+}
+
+.temp-unit {
+    color: #666;
+    font-size: 0.9rem;
+    user-select: none;
+}
+
+.temperature-cell.out-of-range {
+    background: #ffe6e6;
+}
+
+.temperature-input.out-of-range {
+    color: #d32f2f;
+    font-weight: 600;
+    border-color: #d32f2f;
+}
+
+/* Corrective Action */
+.corrective-action-input {
+    width: 100%;
+    min-width: 200px;
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 0.85rem;
+    resize: vertical;
+    font-family: inherit;
+}
+
+.corrective-action-input:focus {
+    outline: none;
+    border-color: #d45a2a;
+}
+
+/* Initial Input */
+.initial-input {
+    width: 80px;
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    text-align: center;
+    font-size: 0.9rem;
+    text-transform: uppercase;
+}
+
+.initial-input:focus {
+    outline: none;
+    border-color: #d45a2a;
+}
+
+/* Supervisor Verification */
+.supervisor-verification {
+    background: #e8f5e9;
+    border: 1px solid #4caf50;
+    border-radius: 4px;
+    padding: 15px;
+    margin-bottom: 20px;
+}
+
+.verification-info {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+}
+
+.verification-info strong {
+    color: #2a2a2a;
+    margin-right: 8px;
+}
+
+/* Action Buttons */
+.action-buttons {
+    margin-top: 20px;
+    display: flex;
+    gap: 10px;
+}
+
+/* Empty State */
+.empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: #666;
+}
+
+/* Modal */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    overflow: auto;
+}
+
+.modal-content {
+    background: white;
+    margin: 50px auto;
+    padding: 0;
+    border-radius: 8px;
+    width: 90%;
+    max-width: 600px;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px;
+    border-bottom: 1px solid #ddd;
+}
+
+.modal-header h3 {
+    margin: 0;
+    color: #2a2a2a;
+}
+
+.modal-close {
+    background: none;
+    border: none;
+    font-size: 28px;
+    cursor: pointer;
+    color: #666;
+    padding: 0;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-close:hover {
+    color: #d45a2a;
+}
+
+.modal-body {
+    padding: 20px;
+}
+
+/* Form Groups */
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 500;
+    color: #2a2a2a;
+}
+
+.form-group input[type="text"],
+.form-group input[type="number"],
+.form-group input[type="date"],
+.form-group select,
+.form-group textarea {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 0.9rem;
+    font-family: inherit;
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+    outline: none;
+    border-color: #d45a2a;
+}
+
+.form-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+    margin-top: 20px;
+}
+
+/* Unit List */
+.unit-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    margin-bottom: 10px;
+    background: #f8f9fa;
+}
+
+.unit-item-info {
+    flex: 1;
+}
+
+.unit-item-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.btn-small {
+    padding: 6px 12px;
+    font-size: 0.85rem;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.edit-unit {
+    background: #007bff;
+    color: white;
+}
+
+.edit-unit:hover {
+    background: #0056b3;
+}
+
+.delete-unit {
+    background: #dc3545;
+    color: white;
+}
+
+.delete-unit:hover {
+    background: #c82333;
+}
+
+/* PDF Form */
+.radio-group {
+    display: flex;
+    gap: 20px;
+}
+
+.radio-group label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: normal;
+    cursor: pointer;
+}
+
+.checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 10px;
+    cursor: pointer;
+}
+
+#pdf-unit-checkboxes {
+    max-height: 200px;
+    overflow-y: auto;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 10px;
+}
+
+/* Checklist Modules */
+.checklist-modules {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 20px;
+}
+
+.checklist-module-card {
+    background: #f8f9fa;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 25px;
+}
+
+.checklist-module-card h3 {
+    margin-top: 0;
+    color: #2a2a2a;
+    font-size: 1.3rem;
+}
+
+.checklist-module-card p {
+    color: #666;
+    line-height: 1.6;
+    margin-bottom: 20px;
+}
+
+/* Notifications */
+.notification {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    padding: 15px 20px;
+    border-radius: 4px;
+    color: white;
+    font-weight: 500;
+    z-index: 10000;
+    opacity: 0;
+    transform: translateX(100%);
+    transition: all 0.3s ease;
+    max-width: 400px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.notification.show {
+    opacity: 1;
+    transform: translateX(0);
+}
+
+.notification-success {
+    background: #4caf50;
+}
+
+.notification-error {
+    background: #f44336;
+}
+
+.notification-warning {
+    background: #ff9800;
+}
+
+.notification-info {
+    background: #2196f3;
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+    .cold-storage-container {
+        padding: 10px;
+    }
+    
+    .unit-controls {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .unit-select-wrapper {
+        width: 100%;
+    }
+    
+    .unit-header-row {
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .date-selection-section {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .temperature-log-table {
+        font-size: 0.85rem;
+    }
+    
+    .temperature-log-table th,
+    .temperature-log-table td {
+        padding: 8px;
+    }
+    
+    .temp-input-wrapper {
+        flex-direction: column;
+        gap: 2px;
+    }
+    
+    .temperature-input {
+        width: 100%;
+    }
+    
+    .corrective-action-input {
+        min-width: 100%;
+    }
+    
+    .modal-content {
+        width: 95%;
+        margin: 20px auto;
+    }
+    
+    .notification {
+        right: 10px;
+        left: 10px;
+        max-width: none;
+    }
+}

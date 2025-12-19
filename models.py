@@ -629,3 +629,81 @@ class HeroSlide(db.Model):
     def __repr__(self):
         return f'<HeroSlide {self.id}: {self.title} (Slide {self.slide_number})>'
 
+# -------------------------
+# COLD STORAGE TEMPERATURE LOG MODELS
+# -------------------------
+class ColdStorageUnit(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    unit_number = db.Column(db.String(50), nullable=False)
+    location = db.Column(db.String(200), nullable=False)
+    unit_type = db.Column(db.String(50), nullable=False)  # Refrigerator, Freezer, Wine Chiller
+    min_temp = db.Column(db.Float)  # For Wine Chiller (user-defined)
+    max_temp = db.Column(db.Float)  # For Wine Chiller (user-defined)
+    organisation = db.Column(db.String(200))  # Organization name for sharing
+    created_by = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    creator = db.relationship('User', foreign_keys=[created_by], backref='created_cold_storage_units')
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    is_active = db.Column(db.Boolean, default=True)
+    
+    # Relationships
+    temperature_logs = db.relationship('TemperatureLog', backref='unit', cascade='all, delete-orphan', lazy='dynamic')
+    
+    def get_temperature_limits(self):
+        """Get min and max temperature limits based on unit type"""
+        if self.unit_type == 'Refrigerator':
+            return (0.0, 4.0)
+        elif self.unit_type == 'Freezer':
+            return (-22.0, -12.0)
+        elif self.unit_type == 'Wine Chiller':
+            return (self.min_temp or 0.0, self.max_temp or 20.0)
+        return (None, None)
+    
+    def __repr__(self):
+        return f'<ColdStorageUnit {self.id}: {self.unit_number} ({self.unit_type})>'
+
+class TemperatureLog(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    unit_id = db.Column(db.Integer, db.ForeignKey('cold_storage_unit.id'), nullable=False)
+    log_date = db.Column(db.Date, nullable=False)
+    supervisor_verified = db.Column(db.Boolean, default=False)
+    supervisor_name = db.Column(db.String(200))
+    supervisor_verified_at = db.Column(db.DateTime)
+    organisation = db.Column(db.String(200))  # Organization name for sharing
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # Relationships
+    entries = db.relationship('TemperatureEntry', backref='log', cascade='all, delete-orphan', lazy='dynamic', order_by='TemperatureEntry.scheduled_time')
+    
+    # Unique constraint: one log per unit per date
+    __table_args__ = (db.UniqueConstraint('unit_id', 'log_date', name='unique_unit_date'),)
+    
+    def __repr__(self):
+        return f'<TemperatureLog {self.id}: Unit {self.unit_id} - {self.log_date}>'
+
+class TemperatureEntry(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    log_id = db.Column(db.Integer, db.ForeignKey('temperature_log.id'), nullable=False)
+    scheduled_time = db.Column(db.String(10), nullable=False)  # '10:00 AM', '02:00 PM', etc.
+    temperature = db.Column(db.Float)  # Numeric value only
+    corrective_action = db.Column(db.Text)
+    action_time = db.Column(db.DateTime)  # Time when corrective action was taken
+    recheck_temperature = db.Column(db.Float)  # Recheck temperature after corrective action
+    initial = db.Column(db.String(10), nullable=False)  # User initials
+    is_late_entry = db.Column(db.Boolean, default=False)  # True if entered after scheduled time
+    entry_timestamp = db.Column(db.DateTime, default=datetime.utcnow)  # Actual time of entry
+    created_by = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    creator = db.relationship('User', foreign_keys=[created_by], backref='created_temperature_entries')
+    
+    def is_out_of_range(self, unit):
+        """Check if temperature is out of acceptable range"""
+        if self.temperature is None:
+            return False
+        min_temp, max_temp = unit.get_temperature_limits()
+        if min_temp is None or max_temp is None:
+            return False
+        return self.temperature < min_temp or self.temperature > max_temp
+    
+    def __repr__(self):
+        return f'<TemperatureEntry {self.id}: {self.scheduled_time} - {self.temperature}°C>'
+
