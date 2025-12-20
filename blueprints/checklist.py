@@ -314,6 +314,7 @@ def temperature_log_entry(unit_id, date_str):
                     log_date=log_date,
                     week_start_date=week_start,
                     time_slot='10:00 AM',  # Default time slot for the log
+                    temperature=None,  # Temperature should be in entries, but set None for compatibility
                     organisation=current_user.organisation or current_user.restaurant_bar_name
                 )
                 db.session.add(log)
