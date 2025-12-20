@@ -116,7 +116,11 @@ def kitchen_manage_cold_storage_units():
     if request.method == 'GET':
         try:
             org_filter = get_organization_filter(ColdStorageUnit)
-            units = ColdStorageUnit.query.filter(org_filter).filter_by(is_active=True).order_by(ColdStorageUnit.unit_number).all()
+            # Filter by kitchen context
+            units = ColdStorageUnit.query.filter(org_filter).filter_by(
+                is_active=True, 
+                context='kitchen'
+            ).order_by(ColdStorageUnit.unit_number).all()
             return jsonify([{
                 'id': unit.id,
                 'unit_number': unit.unit_number,
@@ -161,10 +165,11 @@ def kitchen_manage_cold_storage_units():
                     return jsonify({'success': False, 'error': f'Invalid unit type. Must be one of: {", ".join(valid_types)}'}), 400
                 
                 try:
-                    # Check if unit number already exists in organization
+                    # Check if unit number already exists in organization (within same context)
                     org_filter = get_organization_filter(ColdStorageUnit)
                     existing_unit = ColdStorageUnit.query.filter(org_filter).filter_by(
                         unit_number=unit_number,
+                        context='kitchen',  # Check within kitchen context
                         is_active=True
                     ).first()
                     
@@ -190,11 +195,12 @@ def kitchen_manage_cold_storage_units():
                         if min_temp is not None and max_temp is not None and min_temp >= max_temp:
                             return jsonify({'success': False, 'error': 'Minimum temperature must be less than maximum temperature'}), 400
                     
-                    # Create the unit
+                    # Create the unit with kitchen context
                     unit = ColdStorageUnit(
                         unit_number=unit_number,
                         location=location,
                         unit_type=unit_type,
+                        context='kitchen',  # Set context to kitchen
                         min_temp=min_temp,
                         max_temp=max_temp,
                         organisation=current_user.organisation or current_user.restaurant_bar_name,
@@ -731,8 +737,43 @@ def temperature_log_entry(unit_id, date_str):
 @role_required(['Chef', 'Manager'])
 def kitchen_generate_checklist_pdf():
     """Generate checklist PDF (Kitchen) - accessible only to Chef and Manager"""
-    # Use the same implementation as bar route
-    return generate_checklist_pdf()
+    try:
+        from utils.pdf_generator import generate_checklist_pdf
+        
+        data = request.get_json()
+        unit_ids = data.get('unit_ids', [])
+        start_date = datetime.strptime(data['start_date'], '%Y-%m-%d').date()
+        end_date = datetime.strptime(data['end_date'], '%Y-%m-%d').date()
+        times = data.get('times', [])
+        
+        if not unit_ids:
+            return jsonify({'success': False, 'error': 'No units selected'}), 400
+        if not times:
+            return jsonify({'success': False, 'error': 'No times selected'}), 400
+        
+        org_filter = get_organization_filter(ColdStorageUnit)
+        # Filter by kitchen context
+        units = ColdStorageUnit.query.filter(org_filter).filter(
+            ColdStorageUnit.id.in_(unit_ids),
+            ColdStorageUnit.is_active == True,
+            ColdStorageUnit.context == 'kitchen'  # Only kitchen units
+        ).all()
+        
+        if not units:
+            return jsonify({'success': False, 'error': 'No units found'}), 400
+        
+        # Generate PDF
+        pdf_buffer = generate_checklist_pdf(units, start_date, end_date, times)
+        
+        return send_file(
+            pdf_buffer,
+            mimetype='application/pdf',
+            as_attachment=True,
+            download_name=f'temperature_checklist_{start_date}_{end_date}.pdf'
+        )
+    except Exception as e:
+        current_app.logger.error(f"Error generating checklist PDF: {str(e)}", exc_info=True)
+        return jsonify({'success': False, 'error': str(e)}), 500
 
 
 @checklist_bp.route('/bar/cold-storage/checklist-pdf', methods=['POST'])
@@ -756,9 +797,11 @@ def generate_checklist_pdf():
             return jsonify({'success': False, 'error': 'No times selected'}), 400
         
         org_filter = get_organization_filter(ColdStorageUnit)
+        # Filter by bar context
         units = ColdStorageUnit.query.filter(org_filter).filter(
             ColdStorageUnit.id.in_(unit_ids),
-            ColdStorageUnit.is_active == True
+            ColdStorageUnit.is_active == True,
+            ColdStorageUnit.context == 'bar'  # Only bar units
         ).all()
         
         if not units:
@@ -783,8 +826,37 @@ def generate_checklist_pdf():
 @role_required(['Chef', 'Manager'])
 def kitchen_generate_temperature_log_pdf():
     """Generate PDF for temperature logs (Kitchen) - accessible only to Chef and Manager"""
-    # Use the same implementation as bar route
-    return generate_temperature_log_pdf()
+    try:
+        from utils.pdf_generator import generate_temperature_log_pdf
+        
+        data = request.get_json()
+        unit_ids = data.get('unit_ids', [])
+        start_date = datetime.strptime(data['start_date'], '%Y-%m-%d').date()
+        end_date = datetime.strptime(data['end_date'], '%Y-%m-%d').date()
+        
+        org_filter = get_organization_filter(ColdStorageUnit)
+        # Filter by kitchen context
+        units = ColdStorageUnit.query.filter(org_filter).filter(
+            ColdStorageUnit.id.in_(unit_ids),
+            ColdStorageUnit.is_active == True,
+            ColdStorageUnit.context == 'kitchen'  # Only kitchen units
+        ).all()
+        
+        if not units:
+            return jsonify({'success': False, 'error': 'No units selected'}), 400
+        
+        # Generate PDF
+        pdf_buffer = generate_temperature_log_pdf(units, start_date, end_date)
+        
+        return send_file(
+            pdf_buffer,
+            mimetype='application/pdf',
+            as_attachment=True,
+            download_name=f'temperature_log_{start_date}_{end_date}.pdf'
+        )
+    except Exception as e:
+        current_app.logger.error(f"Error generating PDF: {str(e)}", exc_info=True)
+        return jsonify({'success': False, 'error': str(e)}), 500
 
 
 @checklist_bp.route('/bar/cold-storage/pdf', methods=['POST'])
@@ -801,9 +873,11 @@ def generate_temperature_log_pdf():
         end_date = datetime.strptime(data['end_date'], '%Y-%m-%d').date()
         
         org_filter = get_organization_filter(ColdStorageUnit)
+        # Filter by bar context
         units = ColdStorageUnit.query.filter(org_filter).filter(
             ColdStorageUnit.id.in_(unit_ids),
-            ColdStorageUnit.is_active == True
+            ColdStorageUnit.is_active == True,
+            ColdStorageUnit.context == 'bar'  # Only bar units
         ).all()
         
         if not units:
