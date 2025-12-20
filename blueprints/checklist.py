@@ -314,7 +314,7 @@ def temperature_log_entry(unit_id, date_str):
                     log_date=log_date,
                     week_start_date=week_start,
                     time_slot='10:00 AM',  # Default time slot for the log
-                    temperature=None,  # Temperature should be in entries, but set None for compatibility
+                    temperature=0.0,  # Default temperature value for database compatibility (if NOT NULL required)
                     organisation=current_user.organisation or current_user.restaurant_bar_name
                 )
                 db.session.add(log)
@@ -381,7 +381,10 @@ def temperature_log_entry(unit_id, date_str):
                         # Get the scheduled_time from the entry being saved
                         scheduled_time = data.get('scheduled_time', '10:00 AM')
                         # Get temperature from the entry being saved (for database compatibility)
+                        # If temperature is None and database requires NOT NULL, use 0.0 as default
                         temperature = data.get('temperature')
+                        if temperature is None:
+                            temperature = 0.0  # Default value if database requires NOT NULL
                         log = TemperatureLog(
                             unit_id=unit_id,
                             log_date=log_date,
