@@ -136,7 +136,7 @@
             <form id="checklist-form">
                 <div class="form-group">
                     <label>Select Units *</label>
-                    <small class="form-help" style="display: block; margin-bottom: 10px; color: #666;">Select unit numbers and locations</small>
+                    <small class="form-help unit-selection-help">Select unit numbers and locations</small>
                     <div id="checklist-unit-checkboxes" class="checkbox-group">
                         <!-- Checkboxes will be populated by JavaScript -->
                     </div>
@@ -156,8 +156,8 @@
                     <small class="form-help">All dates between start and end date will be included</small>
                     
                     <!-- Times selection appears right after dates -->
-                    <div style="margin-top: 20px;">
-                        <label style="display: block; margin-bottom: 10px; font-weight: 600; color: #2a2a2a;">Select Times *</label>
+                    <div class="times-selection-container">
+                        <label class="times-selection-label">Select Times *</label>
                         <div id="checklist-time-checkboxes" class="checkbox-group">
                             <label>
                                 <input type="checkbox" name="times" value="10:00 AM" checked>
