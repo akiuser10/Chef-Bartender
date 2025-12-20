@@ -379,11 +379,14 @@ def temperature_log_entry(unit_id, date_str):
                         week_start = TemperatureLog.calculate_week_start(log_date)
                         # Get the scheduled_time from the entry being saved
                         scheduled_time = data.get('scheduled_time', '10:00 AM')
+                        # Get temperature from the entry being saved (for database compatibility)
+                        temperature = data.get('temperature')
                         log = TemperatureLog(
                             unit_id=unit_id,
                             log_date=log_date,
                             week_start_date=week_start,
                             time_slot=scheduled_time,  # Set time_slot from the entry being saved
+                            temperature=temperature,  # Set temperature for database compatibility
                             organisation=current_user.organisation or current_user.restaurant_bar_name
                         )
                         db.session.add(log)

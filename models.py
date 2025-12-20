@@ -667,6 +667,7 @@ class TemperatureLog(db.Model):
     log_date = db.Column(db.Date, nullable=False)
     week_start_date = db.Column(db.Date, nullable=False)  # Monday of the week for this log_date
     time_slot = db.Column(db.String(10))  # Time slot for this log (e.g., '10:00 AM') - nullable for backward compatibility
+    temperature = db.Column(db.Float)  # Temperature value - may be required by database schema
     supervisor_verified = db.Column(db.Boolean, default=False)
     supervisor_name = db.Column(db.String(200))
     supervisor_verified_at = db.Column(db.DateTime)

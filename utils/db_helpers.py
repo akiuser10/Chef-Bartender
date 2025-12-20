@@ -437,6 +437,57 @@ def ensure_schema_updates():
                         conn.execute(db.text("ALTER TABLE temperature_log ADD COLUMN created_at TIMESTAMP"))
                     if 'updated_at' not in temp_log_columns:
                         conn.execute(db.text("ALTER TABLE temperature_log ADD COLUMN updated_at TIMESTAMP"))
+                    # Handle temperature column - add if missing, or update NULL values if it exists with NOT NULL constraint
+                    if 'temperature' not in temp_log_columns:
+                        try:
+                            db_url = str(db.engine.url)
+                            is_postgres = 'postgresql' in db_url.lower() or 'postgres' in db_url.lower()
+                            
+                            if is_postgres:
+                                # For PostgreSQL: Add column as nullable first (temperature should be in entries, not log)
+                                conn.execute(db.text("ALTER TABLE temperature_log ADD COLUMN temperature FLOAT"))
+                            else:
+                                # For SQLite: Add column as nullable
+                                conn.execute(db.text("ALTER TABLE temperature_log ADD COLUMN temperature FLOAT"))
+                        except Exception as e:
+                            current_app.logger.warning(f"Could not add temperature column to temperature_log: {str(e)}")
+                    else:
+                        # Column exists - if it has NOT NULL constraint, we need to handle it
+                        # Since temperature should be in entries, we'll set a default or make it nullable
+                        try:
+                            db_url = str(db.engine.url)
+                            is_postgres = 'postgresql' in db_url.lower() or 'postgres' in db_url.lower()
+                            
+                            # Try to alter column to allow NULL if it's currently NOT NULL
+                            # This is a workaround for databases that have this constraint incorrectly
+                            try:
+                                if is_postgres:
+                                    # Check if column is NOT NULL and try to make it nullable
+                                    # Note: This may fail if constraint exists, but we'll try
+                                    conn.execute(db.text("""
+                                        DO $$ 
+                                        BEGIN
+                                            IF EXISTS (
+                                                SELECT 1 FROM information_schema.columns 
+                                                WHERE table_name = 'temperature_log' 
+                                                AND column_name = 'temperature' 
+                                                AND is_nullable = 'NO'
+                                            ) THEN
+                                                ALTER TABLE temperature_log ALTER COLUMN temperature DROP NOT NULL;
+                                            END IF;
+                                        END $$;
+                                    """))
+                            except Exception as alter_error:
+                                # If we can't alter, set default values for NULL rows
+                                current_app.logger.warning(f"Could not alter temperature column: {str(alter_error)}")
+                                # Set a default temperature for NULL values (0.0 as placeholder)
+                                conn.execute(db.text("""
+                                    UPDATE temperature_log 
+                                    SET temperature = 0.0
+                                    WHERE temperature IS NULL
+                                """))
+                        except Exception as e:
+                            current_app.logger.warning(f"Could not update temperature column in temperature_log: {str(e)}")
                     # Handle time_slot column - add if missing, or update NULL values if it exists
                     if 'time_slot' not in temp_log_columns:
                         try:
