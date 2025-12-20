@@ -2416,6 +2416,7 @@ footer {
     overflow: visible;
     margin-top: -20px; /* Allow background to overlap slightly */
     padding-top: 80px; /* Compensate for negative margin */
+    z-index: 1; /* Ensure footer is below modal but visible in normal flow */
 }
 
 footer::before {
@@ -6182,27 +6183,23 @@ button.btn,
     top: 0;
     width: 100%;
     height: 100%;
-    overflow: auto;
+    overflow-y: auto;
     background-color: rgba(0, 0, 0, 0.5);
+    padding-bottom: 200px; /* Add padding to ensure footer is visible below modal */
 }
 
 .modal:not(.hidden) {
     display: block;
 }
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.5);
-    overflow: auto;
-}
 
 .modal-content {
     background: white;
-    margin: 80px auto 50px;
+    margin: 80px auto 200px; /* Increased bottom margin to push content up and leave space for footer */
     padding: 0;
     border-radius: 8px;
     width: 90%;
     max-width: 600px;
-    max-height: calc(90vh - 100px);
+    max-height: calc(85vh - 100px); /* Reduced max-height to leave more space for footer */
     overflow-y: auto;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
     position: relative;
