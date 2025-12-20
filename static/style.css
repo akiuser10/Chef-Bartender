@@ -5819,7 +5819,7 @@ button.btn,
 .unit-table .unit-header {
     background: #e0e0e0;
     text-align: center;
-    padding: 15px;
+    padding: 10px 15px;
 }
 
 .unit-header-content {
@@ -5843,7 +5843,7 @@ button.btn,
 }
 
 .unit-table td {
-    padding: 12px;
+    padding: 6px 12px;
     border: 1px solid #ddd;
     text-align: left;
     vertical-align: middle;
