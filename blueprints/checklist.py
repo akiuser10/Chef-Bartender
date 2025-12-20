@@ -53,7 +53,7 @@ def kitchen_checklist():
 
 @checklist_bp.route('/bar/cold-storage')
 @login_required
-@role_required(['Manager', 'Bartender'])
+@role_required(['Manager', 'Bartender', 'Chef'])
 def cold_storage_temperature_log():
     """Main page for Cold Storage Temperature Log"""
     # Ensure schema is up to date (adds missing columns like 'location')
@@ -76,7 +76,7 @@ def cold_storage_temperature_log():
 
 @checklist_bp.route('/bar/cold-storage/units', methods=['GET', 'POST'])
 @login_required
-@role_required(['Manager', 'Bartender'])
+@role_required(['Manager', 'Bartender', 'Chef'])
 def manage_cold_storage_units():
     """API endpoint for managing cold storage units"""
     # Ensure schema is up to date before any operations
@@ -276,7 +276,7 @@ def manage_cold_storage_units():
 
 @checklist_bp.route('/bar/cold-storage/log/<int:unit_id>/<date_str>', methods=['GET', 'POST'])
 @login_required
-@role_required(['Manager', 'Bartender'])
+@role_required(['Manager', 'Bartender', 'Chef'])
 def temperature_log_entry(unit_id, date_str):
     """API endpoint for getting/creating temperature log entries"""
     try:
@@ -481,7 +481,7 @@ def temperature_log_entry(unit_id, date_str):
 
 @checklist_bp.route('/bar/cold-storage/checklist-pdf', methods=['POST'])
 @login_required
-@role_required(['Manager', 'Bartender'])
+@role_required(['Manager', 'Bartender', 'Chef'])
 def generate_checklist_pdf():
     """Generate checklist PDF organized by date/time with all selected units"""
     try:
@@ -524,7 +524,7 @@ def generate_checklist_pdf():
 
 @checklist_bp.route('/bar/cold-storage/pdf', methods=['POST'])
 @login_required
-@role_required(['Manager', 'Bartender'])
+@role_required(['Manager', 'Bartender', 'Chef'])
 def generate_temperature_log_pdf():
     """Generate PDF for temperature logs"""
     try:
