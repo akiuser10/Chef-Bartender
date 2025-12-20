@@ -6185,7 +6185,9 @@ button.btn,
     height: 100%;
     overflow-y: auto;
     background-color: rgba(0, 0, 0, 0.5);
-    padding-bottom: 200px; /* Add padding to ensure footer is visible below modal */
+    /* Padding to account for header and footer ribbons */
+    padding-top: 180px; /* Space for header ribbon (top-header + main-nav ~160px + 20px spacing) */
+    padding-bottom: 200px; /* Space for footer ribbon (~170px + 30px spacing) */
 }
 
 .modal:not(.hidden) {
@@ -6194,12 +6196,13 @@ button.btn,
 
 .modal-content {
     background: white;
-    margin: 80px auto 200px; /* Increased bottom margin to push content up and leave space for footer */
+    margin: 0 auto; /* Centered horizontally, vertical spacing handled by modal padding */
     padding: 0;
     border-radius: 8px;
     width: 90%;
     max-width: 600px;
-    max-height: calc(85vh - 100px); /* Reduced max-height to leave more space for footer */
+    /* Max height accounts for header (~160px) + footer (~170px) + spacing (~70px) = ~400px */
+    max-height: calc(100vh - 400px);
     overflow-y: auto;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
     position: relative;
