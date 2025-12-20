@@ -40,35 +40,50 @@ function initializeEventListeners() {
     document.getElementById('log-time')?.addEventListener('change', handleTimeChange);
     
     // Unit management (only for Managers)
-    // Use multiple approaches to ensure button works
+    // Use multiple approaches to ensure button works (Safari-compatible)
     const addUnitBtn = document.getElementById('add-unit-btn');
     if (addUnitBtn) {
         console.log('Add Unit button found, attaching event listener');
         
-        // Direct event listener
-        addUnitBtn.addEventListener('click', function(e) {
+        // Safari-compatible: Use both click and mousedown events
+        const handleButtonClick = function(e) {
             e.preventDefault();
             e.stopPropagation();
-            console.log('Add Unit button clicked (direct listener)');
-            openAddUnitForm();
-            return false;
-        });
-        
-        // Also use onclick as backup
-        addUnitBtn.onclick = function(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            console.log('Add Unit button clicked (onclick handler)');
+            e.stopImmediatePropagation();
+            console.log('Add Unit button clicked (handler)');
             openAddUnitForm();
             return false;
         };
+        
+        // Direct event listener with multiple event types for Safari
+        addUnitBtn.addEventListener('click', handleButtonClick, false);
+        addUnitBtn.addEventListener('mousedown', function(e) {
+            // Safari sometimes needs mousedown
+            if (e.button === 0) { // Left mouse button
+                e.preventDefault();
+                e.stopPropagation();
+                console.log('Add Unit button mousedown (Safari fallback)');
+                setTimeout(() => openAddUnitForm(), 10);
+            }
+        }, false);
+        
+        // Also use onclick as backup (works in Safari)
+        addUnitBtn.onclick = handleButtonClick;
+        
+        // Touch events for Safari on iOS
+        addUnitBtn.addEventListener('touchend', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            console.log('Add Unit button touched (Safari iOS)');
+            openAddUnitForm();
+        }, false);
     } else {
         console.warn('Add Unit button not found - may not be visible for this user role');
     }
     
-    // Event delegation as additional backup
-    document.body.addEventListener('click', function(e) {
-        if (e.target && e.target.id === 'add-unit-btn') {
+    // Event delegation as additional backup (Safari-compatible)
+    document.addEventListener('click', function(e) {
+        if (e.target && (e.target.id === 'add-unit-btn' || e.target.closest && e.target.closest('#add-unit-btn'))) {
             e.preventDefault();
             e.stopPropagation();
             console.log('Add Unit button clicked (delegation)');
@@ -851,13 +866,23 @@ function openAddUnitForm() {
     }
     if (wineChillerTemps) wineChillerTemps.classList.add('hidden');
     
-    // Show modal - remove hidden class and ensure display is set
+    // Show modal - remove hidden class and ensure display is set (Safari-compatible)
     modal.classList.remove('hidden');
     // Force display block with important to override any conflicting CSS
-    modal.style.setProperty('display', 'block', 'important');
-    modal.style.setProperty('visibility', 'visible', 'important');
-    modal.style.setProperty('opacity', '1', 'important');
-    modal.style.setProperty('z-index', '10000', 'important');
+    // Safari needs explicit style setting
+    modal.style.display = 'block';
+    modal.style.visibility = 'visible';
+    modal.style.opacity = '1';
+    modal.style.zIndex = '10000';
+    // Also use setProperty for browsers that support it
+    try {
+        modal.style.setProperty('display', 'block', 'important');
+        modal.style.setProperty('visibility', 'visible', 'important');
+        modal.style.setProperty('opacity', '1', 'important');
+        modal.style.setProperty('z-index', '10000', 'important');
+    } catch (e) {
+        console.log('setProperty with important not supported, using regular styles');
+    }
     console.log('Modal classes after show:', modal.className);
     console.log('Modal display style:', window.getComputedStyle(modal).display);
     console.log('Modal visibility:', window.getComputedStyle(modal).visibility);
@@ -865,8 +890,16 @@ function openAddUnitForm() {
     // Ensure modal content is also visible
     const modalContent = modal.querySelector('.modal-content');
     if (modalContent) {
-        modalContent.style.setProperty('display', 'block', 'important');
+        modalContent.style.display = 'block';
+        try {
+            modalContent.style.setProperty('display', 'block', 'important');
+        } catch (e) {
+            // Fallback for browsers that don't support setProperty with important
+        }
     }
+    
+    // Force a reflow in Safari to ensure modal is visible
+    void modal.offsetHeight;
     
     // Focus on first input
     const unitNumberInput = document.getElementById('unit-number');
