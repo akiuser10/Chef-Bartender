@@ -430,7 +430,7 @@ function createTimeRow(unitId, time) {
     actionTextarea.setAttribute('data-time', time);
     actionTextarea.placeholder = '—';
     actionTextarea.readOnly = true; // Will be editable only for current time
-    actionTextarea.rows = 2;
+    actionTextarea.rows = 1;
     actionCell.appendChild(actionTextarea);
     row.appendChild(actionCell);
     
