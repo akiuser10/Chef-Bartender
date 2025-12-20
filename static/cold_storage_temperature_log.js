@@ -182,7 +182,8 @@ function handleTimeChange() {
 // Load Units
 async function loadUnits() {
     try {
-        const response = await fetch('/checklist/bar/cold-storage/units');
+        const apiBasePath = window.apiBasePath || '/checklist/bar/cold-storage';
+        const response = await fetch(`${apiBasePath}/units`);
         if (!response.ok) {
             throw new Error(`HTTP ${response.status}: ${response.statusText}`);
         }
@@ -918,7 +919,8 @@ async function handleUnitFormSubmit(event) {
     }
     
     console.log('Submitting unit data:', formData);
-    console.log('API endpoint: /checklist/bar/cold-storage/units');
+    const apiBasePath = window.apiBasePath || '/checklist/bar/cold-storage';
+    console.log(`API endpoint: ${apiBasePath}/units`);
     
     // Disable submit button to prevent double submission
     const submitBtn = event.target.querySelector('button[type="submit"]');
@@ -1106,7 +1108,8 @@ async function openPDFModal() {
     const modal = document.getElementById('pdf-modal');
     
     try {
-        const response = await fetch('/checklist/bar/cold-storage/units');
+        const apiBasePath = window.apiBasePath || '/checklist/bar/cold-storage';
+        const response = await fetch(`${apiBasePath}/units`);
         const units = await response.json();
         
         const checkboxesContainer = document.getElementById('pdf-unit-checkboxes');
