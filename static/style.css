@@ -6210,7 +6210,11 @@ button.btn,
 }
 
 .modal:not(.hidden) {
-    display: block;
+    display: block !important;
+}
+
+.modal.hidden {
+    display: none !important;
 }
 
 .modal-content {

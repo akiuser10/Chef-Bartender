@@ -40,17 +40,42 @@ function initializeEventListeners() {
     document.getElementById('log-time')?.addEventListener('change', handleTimeChange);
     
     // Unit management (only for Managers)
+    // Use multiple approaches to ensure button works
     const addUnitBtn = document.getElementById('add-unit-btn');
     if (addUnitBtn) {
         console.log('Add Unit button found, attaching event listener');
+        
+        // Direct event listener
         addUnitBtn.addEventListener('click', function(e) {
             e.preventDefault();
-            console.log('Add Unit button clicked');
+            e.stopPropagation();
+            console.log('Add Unit button clicked (direct listener)');
             openAddUnitForm();
+            return false;
         });
+        
+        // Also use onclick as backup
+        addUnitBtn.onclick = function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            console.log('Add Unit button clicked (onclick handler)');
+            openAddUnitForm();
+            return false;
+        };
     } else {
         console.warn('Add Unit button not found - may not be visible for this user role');
     }
+    
+    // Event delegation as additional backup
+    document.body.addEventListener('click', function(e) {
+        if (e.target && e.target.id === 'add-unit-btn') {
+            e.preventDefault();
+            e.stopPropagation();
+            console.log('Add Unit button clicked (delegation)');
+            openAddUnitForm();
+            return false;
+        }
+    }, true);
     const manageAddUnitBtn = document.getElementById('manage-add-unit-btn');
     if (manageAddUnitBtn) {
         manageAddUnitBtn.addEventListener('click', function(e) {
@@ -828,11 +853,20 @@ function openAddUnitForm() {
     
     // Show modal - remove hidden class and ensure display is set
     modal.classList.remove('hidden');
-    // Force display block in case CSS is conflicting
-    modal.style.display = 'block';
+    // Force display block with important to override any conflicting CSS
+    modal.style.setProperty('display', 'block', 'important');
+    modal.style.setProperty('visibility', 'visible', 'important');
+    modal.style.setProperty('opacity', '1', 'important');
+    modal.style.setProperty('z-index', '10000', 'important');
     console.log('Modal classes after show:', modal.className);
     console.log('Modal display style:', window.getComputedStyle(modal).display);
     console.log('Modal visibility:', window.getComputedStyle(modal).visibility);
+    
+    // Ensure modal content is also visible
+    const modalContent = modal.querySelector('.modal-content');
+    if (modalContent) {
+        modalContent.style.setProperty('display', 'block', 'important');
+    }
     
     // Focus on first input
     const unitNumberInput = document.getElementById('unit-number');
