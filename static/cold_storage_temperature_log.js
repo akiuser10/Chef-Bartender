@@ -406,7 +406,8 @@ async function loadTemperatureEntries() {
     
     // Load entries for all units in parallel
     const promises = allUnits.map(unit => 
-        fetch(`/checklist/bar/cold-storage/log/${unit.id}/${dateStr}`)
+        const apiBasePath = window.apiBasePath || '/checklist/bar/cold-storage';
+        fetch(`${apiBasePath}/log/${unit.id}/${dateStr}`)
             .then(response => response.json())
             .then(data => ({ unitId: unit.id, data }))
             .catch(error => {
@@ -644,7 +645,8 @@ async function handleUpdateTemperature() {
             const now = new Date();
             const isLateEntry = now > scheduledTime;
             
-            const response = await fetch(`/checklist/bar/cold-storage/log/${unit.id}/${dateStr}`, {
+            const apiBasePath = window.apiBasePath || '/checklist/bar/cold-storage';
+            const response = await fetch(`${apiBasePath}/log/${unit.id}/${dateStr}`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -738,7 +740,8 @@ async function saveEntry(unitId) {
     const dateStr = formatDateForInput(currentDate);
     
     try {
-        const response = await fetch(`/checklist/bar/cold-storage/log/${unitId}/${dateStr}`, {
+        const apiBasePath = window.apiBasePath || '/checklist/bar/cold-storage';
+        const response = await fetch(`${apiBasePath}/log/${unitId}/${dateStr}`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -926,7 +929,8 @@ async function handleUnitFormSubmit(event) {
     }
     
     try {
-        const response = await fetch('/checklist/bar/cold-storage/units', {
+        const apiBasePath = window.apiBasePath || '/checklist/bar/cold-storage';
+        const response = await fetch(`${apiBasePath}/units`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -1060,7 +1064,8 @@ async function handleChecklistDownload(event) {
     }
     
     try {
-        const response = await fetch('/checklist/bar/cold-storage/checklist-pdf', {
+        const apiBasePath = window.apiBasePath || '/checklist/bar/cold-storage';
+        const response = await fetch(`${apiBasePath}/checklist-pdf`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -1159,7 +1164,8 @@ async function handlePDFGeneration(event) {
     }
     
     try {
-        const response = await fetch('/checklist/bar/cold-storage/pdf', {
+        const apiBasePath = window.apiBasePath || '/checklist/bar/cold-storage';
+        const response = await fetch(`${apiBasePath}/pdf`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'

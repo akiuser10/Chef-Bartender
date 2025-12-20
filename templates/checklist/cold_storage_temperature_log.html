@@ -1,6 +1,11 @@
 {% extends "base.html" %}
 {% block page_panel %}
 <script>
+    // Detect route context (kitchen or bar) from current URL
+    window.temperatureLogContext = window.location.pathname.includes('/kitchen/') ? 'kitchen' : 'bar';
+    window.apiBasePath = window.temperatureLogContext === 'kitchen' ? '/checklist/kitchen/cold-storage' : '/checklist/bar/cold-storage';
+</script>
+<script>
     // Pass user initials to JavaScript
     {% if current_user.is_authenticated %}
         {% set first_initial = current_user.first_name[0] if current_user.first_name else "" %}

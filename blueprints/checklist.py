@@ -51,6 +51,28 @@ def kitchen_checklist():
 # COLD STORAGE TEMPERATURE LOG ROUTES
 # ============================================
 
+@checklist_bp.route('/kitchen/cold-storage')
+@login_required
+@role_required(['Chef', 'Manager'])
+def kitchen_cold_storage_temperature_log():
+    """Kitchen Cold Storage Temperature Log page - accessible only to Chef and Manager"""
+    # Ensure schema is up to date (adds missing columns like 'location')
+    from utils.db_helpers import ensure_schema_updates
+    ensure_schema_updates()
+    
+    try:
+        org_filter = get_organization_filter(ColdStorageUnit)
+        units = ColdStorageUnit.query.filter(org_filter).filter_by(is_active=True).order_by(ColdStorageUnit.unit_number).all()
+    except Exception as e:
+        current_app.logger.error(f"Error loading cold storage units: {str(e)}", exc_info=True)
+        # If table doesn't exist yet, return empty list
+        units = []
+    
+    # Get today's date
+    today = date.today()
+    
+    return render_template('checklist/cold_storage_temperature_log.html', units=units, today=today)
+
 @checklist_bp.route('/bar/cold-storage')
 @login_required
 @role_required(['Manager', 'Bartender', 'Chef'])
@@ -72,6 +94,206 @@ def cold_storage_temperature_log():
     today = date.today()
     
     return render_template('checklist/cold_storage_temperature_log.html', units=units, today=today)
+
+
+@checklist_bp.route('/kitchen/cold-storage/units', methods=['GET', 'POST'])
+@login_required
+@role_required(['Chef', 'Manager'])
+def kitchen_manage_cold_storage_units():
+    """API endpoint for managing cold storage units (Kitchen) - accessible only to Chef and Manager"""
+    # Ensure schema is up to date before any operations
+    from utils.db_helpers import ensure_schema_updates
+    ensure_schema_updates()
+    
+    if request.method == 'GET':
+        try:
+            org_filter = get_organization_filter(ColdStorageUnit)
+            units = ColdStorageUnit.query.filter(org_filter).filter_by(is_active=True).order_by(ColdStorageUnit.unit_number).all()
+            return jsonify([{
+                'id': unit.id,
+                'unit_number': unit.unit_number,
+                'location': unit.location,
+                'unit_type': unit.unit_type,
+                'min_temp': unit.min_temp,
+                'max_temp': unit.max_temp
+            } for unit in units])
+        except Exception as e:
+            current_app.logger.error(f"Error loading units: {str(e)}", exc_info=True)
+            return jsonify([])  # Return empty list if error
+    
+    elif request.method == 'POST':
+        try:
+            data = request.get_json()
+            if not data:
+                return jsonify({'success': False, 'error': 'No data provided'}), 400
+            
+            action = data.get('action')
+            
+            if action == 'create':
+                # Only Managers can create units
+                if current_user.user_role != 'Manager':
+                    current_app.logger.warning(f"Non-Manager user {current_user.id} ({current_user.user_role}) attempted to create unit")
+                    return jsonify({'success': False, 'error': 'Only Managers can create new units'}), 403
+                
+                # Validate required fields
+                unit_number = data.get('unit_number', '').strip()
+                location = data.get('location', '').strip()
+                unit_type = data.get('unit_type', '').strip()
+                
+                if not unit_number:
+                    return jsonify({'success': False, 'error': 'Unit number is required'}), 400
+                if not location:
+                    return jsonify({'success': False, 'error': 'Location is required'}), 400
+                if not unit_type:
+                    return jsonify({'success': False, 'error': 'Unit type is required'}), 400
+                
+                # Validate unit type
+                valid_types = ['Refrigerator', 'Freezer', 'Wine Chiller']
+                if unit_type not in valid_types:
+                    return jsonify({'success': False, 'error': f'Invalid unit type. Must be one of: {", ".join(valid_types)}'}), 400
+                
+                try:
+                    # Check if unit number already exists in organization
+                    org_filter = get_organization_filter(ColdStorageUnit)
+                    existing_unit = ColdStorageUnit.query.filter(org_filter).filter_by(
+                        unit_number=unit_number,
+                        is_active=True
+                    ).first()
+                    
+                    if existing_unit:
+                        return jsonify({'success': False, 'error': f'Unit number "{unit_number}" already exists in your organization'}), 400
+                    
+                    # Handle temperature values - convert to float if provided, otherwise None
+                    min_temp = None
+                    max_temp = None
+                    if data.get('min_temp') and str(data.get('min_temp')).strip():
+                        try:
+                            min_temp = float(data['min_temp'])
+                        except (ValueError, TypeError):
+                            return jsonify({'success': False, 'error': 'Invalid minimum temperature value'}), 400
+                    if data.get('max_temp') and str(data.get('max_temp')).strip():
+                        try:
+                            max_temp = float(data['max_temp'])
+                        except (ValueError, TypeError):
+                            return jsonify({'success': False, 'error': 'Invalid maximum temperature value'}), 400
+                    
+                    # Validate temperature range for Wine Chiller
+                    if unit_type == 'Wine Chiller':
+                        if min_temp is not None and max_temp is not None and min_temp >= max_temp:
+                            return jsonify({'success': False, 'error': 'Minimum temperature must be less than maximum temperature'}), 400
+                    
+                    # Create the unit
+                    unit = ColdStorageUnit(
+                        unit_number=unit_number,
+                        location=location,
+                        unit_type=unit_type,
+                        min_temp=min_temp,
+                        max_temp=max_temp,
+                        organisation=current_user.organisation or current_user.restaurant_bar_name,
+                        created_by=current_user.id,
+                        is_active=True
+                    )
+                    db.session.add(unit)
+                    db.session.commit()
+                    
+                    current_app.logger.info(f"Manager {current_user.id} created unit {unit.id} ({unit.unit_number})")
+                    
+                    return jsonify({'success': True, 'unit': {
+                        'id': unit.id,
+                        'unit_number': unit.unit_number,
+                        'location': unit.location,
+                        'unit_type': unit.unit_type,
+                        'min_temp': unit.min_temp,
+                        'max_temp': unit.max_temp
+                    }})
+                except ValueError as e:
+                    db.session.rollback()
+                    current_app.logger.error(f"ValueError creating unit: {str(e)}")
+                    return jsonify({'success': False, 'error': f'Invalid input value: {str(e)}'}), 400
+                except Exception as e:
+                    db.session.rollback()
+                    error_msg = str(e)
+                    current_app.logger.error(f"Error creating unit: {error_msg}", exc_info=True)
+                    # Provide more user-friendly error message
+                    if 'duplicate' in error_msg.lower() or 'unique' in error_msg.lower() or 'already exists' in error_msg.lower():
+                        return jsonify({'success': False, 'error': f'Unit number "{unit_number}" already exists'}), 400
+                    if 'foreign key' in error_msg.lower() or 'constraint' in error_msg.lower():
+                        return jsonify({'success': False, 'error': 'Database constraint error. Please contact support.'}), 500
+                    return jsonify({'success': False, 'error': f'Error creating unit: {error_msg}'}), 500
+            
+            elif action == 'update':
+                # Only Managers can update units
+                if current_user.user_role != 'Manager':
+                    return jsonify({'success': False, 'error': 'Only Managers can update units'}), 403
+                
+                if not data.get('id'):
+                    return jsonify({'success': False, 'error': 'Unit ID is required'}), 400
+                
+                try:
+                    unit = ColdStorageUnit.query.get(data['id'])
+                    if not unit:
+                        return jsonify({'success': False, 'error': 'Unit not found'}), 404
+                    
+                    org_filter = get_organization_filter(ColdStorageUnit)
+                    if not ColdStorageUnit.query.filter(org_filter).filter_by(id=unit.id).first():
+                        return jsonify({'success': False, 'error': 'Unauthorized'}), 403
+                    
+                    # Validate required fields
+                    if not data.get('unit_number') or not data.get('location') or not data.get('unit_type'):
+                        return jsonify({'success': False, 'error': 'Unit number, location, and unit type are required'}), 400
+                    
+                    # Handle temperature values - convert to float if provided, otherwise None
+                    min_temp = None
+                    max_temp = None
+                    if data.get('min_temp') and str(data.get('min_temp')).strip():
+                        min_temp = float(data['min_temp'])
+                    if data.get('max_temp') and str(data.get('max_temp')).strip():
+                        max_temp = float(data['max_temp'])
+                    
+                    unit.unit_number = data['unit_number']
+                    unit.location = data['location']
+                    unit.unit_type = data['unit_type']
+                    unit.min_temp = min_temp
+                    unit.max_temp = max_temp
+                    db.session.commit()
+                    return jsonify({'success': True})
+                except ValueError as e:
+                    db.session.rollback()
+                    return jsonify({'success': False, 'error': f'Invalid temperature value: {str(e)}'}), 400
+                except Exception as e:
+                    db.session.rollback()
+                    current_app.logger.error(f"Error updating unit: {str(e)}", exc_info=True)
+                    return jsonify({'success': False, 'error': f'Error updating unit: {str(e)}'}), 500
+            
+            elif action == 'delete':
+                # Only Managers can delete units
+                if current_user.user_role != 'Manager':
+                    return jsonify({'success': False, 'error': 'Only Managers can delete units'}), 403
+                
+                if not data.get('id'):
+                    return jsonify({'success': False, 'error': 'Unit ID is required'}), 400
+                
+                try:
+                    unit = ColdStorageUnit.query.get(data['id'])
+                    if not unit:
+                        return jsonify({'success': False, 'error': 'Unit not found'}), 404
+                    
+                    org_filter = get_organization_filter(ColdStorageUnit)
+                    if not ColdStorageUnit.query.filter(org_filter).filter_by(id=unit.id).first():
+                        return jsonify({'success': False, 'error': 'Unauthorized'}), 403
+                    
+                    unit.is_active = False
+                    db.session.commit()
+                    return jsonify({'success': True})
+                except Exception as e:
+                    db.session.rollback()
+                    current_app.logger.error(f"Error deleting unit: {str(e)}", exc_info=True)
+                    return jsonify({'success': False, 'error': f'Error deleting unit: {str(e)}'}), 500
+            
+            return jsonify({'success': False, 'error': 'Invalid action'}), 400
+        except Exception as e:
+            current_app.logger.error(f"Unexpected error in kitchen_manage_cold_storage_units: {str(e)}", exc_info=True)
+            return jsonify({'success': False, 'error': f'Unexpected error: {str(e)}'}), 500
 
 
 @checklist_bp.route('/bar/cold-storage/units', methods=['GET', 'POST'])
@@ -272,6 +494,17 @@ def manage_cold_storage_units():
         except Exception as e:
             current_app.logger.error(f"Unexpected error in manage_cold_storage_units: {str(e)}", exc_info=True)
             return jsonify({'success': False, 'error': f'Unexpected error: {str(e)}'}), 500
+
+
+@checklist_bp.route('/kitchen/cold-storage/log/<int:unit_id>/<date_str>', methods=['GET', 'POST'])
+@login_required
+@role_required(['Chef', 'Manager'])
+def kitchen_temperature_log_entry(unit_id, date_str):
+    """API endpoint for getting/creating temperature log entries (Kitchen) - accessible only to Chef and Manager"""
+    # Forward to the bar route which has the same implementation
+    # The access control is already handled by the decorator
+    from flask import redirect, url_for
+    return temperature_log_entry(unit_id, date_str)
 
 
 @checklist_bp.route('/bar/cold-storage/log/<int:unit_id>/<date_str>', methods=['GET', 'POST'])
@@ -479,6 +712,15 @@ def temperature_log_entry(unit_id, date_str):
             return jsonify({'success': False, 'error': f'Unexpected error: {str(e)}'}), 500
 
 
+@checklist_bp.route('/kitchen/cold-storage/checklist-pdf', methods=['POST'])
+@login_required
+@role_required(['Chef', 'Manager'])
+def kitchen_generate_checklist_pdf():
+    """Generate checklist PDF (Kitchen) - accessible only to Chef and Manager"""
+    # Use the same implementation as bar route
+    return generate_checklist_pdf()
+
+
 @checklist_bp.route('/bar/cold-storage/checklist-pdf', methods=['POST'])
 @login_required
 @role_required(['Manager', 'Bartender', 'Chef'])
@@ -520,6 +762,15 @@ def generate_checklist_pdf():
     except Exception as e:
         current_app.logger.error(f"Error generating checklist PDF: {str(e)}", exc_info=True)
         return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@checklist_bp.route('/kitchen/cold-storage/pdf', methods=['POST'])
+@login_required
+@role_required(['Chef', 'Manager'])
+def kitchen_generate_temperature_log_pdf():
+    """Generate PDF for temperature logs (Kitchen) - accessible only to Chef and Manager"""
+    # Use the same implementation as bar route
+    return generate_temperature_log_pdf()
 
 
 @checklist_bp.route('/bar/cold-storage/pdf', methods=['POST'])
