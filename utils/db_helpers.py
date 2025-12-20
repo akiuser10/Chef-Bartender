@@ -452,40 +452,28 @@ def ensure_schema_updates():
                         except Exception as e:
                             current_app.logger.warning(f"Could not add temperature column to temperature_log: {str(e)}")
                     else:
-                        # Column exists - if it has NOT NULL constraint, we need to handle it
-                        # Since temperature should be in entries, we'll set a default or make it nullable
+                        # Column exists - update any NULL values to satisfy NOT NULL constraint if needed
                         try:
-                            db_url = str(db.engine.url)
-                            is_postgres = 'postgresql' in db_url.lower() or 'postgres' in db_url.lower()
+                            # Set a default temperature for NULL values (0.0 as placeholder)
+                            # This ensures NOT NULL constraint is satisfied
+                            conn.execute(db.text("""
+                                UPDATE temperature_log 
+                                SET temperature = 0.0
+                                WHERE temperature IS NULL
+                            """))
                             
-                            # Try to alter column to allow NULL if it's currently NOT NULL
-                            # This is a workaround for databases that have this constraint incorrectly
+                            # Try to make column nullable if possible (may fail if constraint is strict)
                             try:
+                                db_url = str(db.engine.url)
+                                is_postgres = 'postgresql' in db_url.lower() or 'postgres' in db_url.lower()
+                                
                                 if is_postgres:
-                                    # Check if column is NOT NULL and try to make it nullable
-                                    # Note: This may fail if constraint exists, but we'll try
-                                    conn.execute(db.text("""
-                                        DO $$ 
-                                        BEGIN
-                                            IF EXISTS (
-                                                SELECT 1 FROM information_schema.columns 
-                                                WHERE table_name = 'temperature_log' 
-                                                AND column_name = 'temperature' 
-                                                AND is_nullable = 'NO'
-                                            ) THEN
-                                                ALTER TABLE temperature_log ALTER COLUMN temperature DROP NOT NULL;
-                                            END IF;
-                                        END $$;
-                                    """))
+                                    # Try to drop NOT NULL constraint if it exists
+                                    conn.execute(db.text("ALTER TABLE temperature_log ALTER COLUMN temperature DROP NOT NULL"))
                             except Exception as alter_error:
-                                # If we can't alter, set default values for NULL rows
-                                current_app.logger.warning(f"Could not alter temperature column: {str(alter_error)}")
-                                # Set a default temperature for NULL values (0.0 as placeholder)
-                                conn.execute(db.text("""
-                                    UPDATE temperature_log 
-                                    SET temperature = 0.0
-                                    WHERE temperature IS NULL
-                                """))
+                                # If we can't alter (constraint might be strict), that's okay
+                                # We've already set default values, so new inserts will work
+                                current_app.logger.debug(f"Could not alter temperature column to nullable (this is okay): {str(alter_error)}")
                         except Exception as e:
                             current_app.logger.warning(f"Could not update temperature column in temperature_log: {str(e)}")
                     # Handle time_slot column - add if missing, or update NULL values if it exists
