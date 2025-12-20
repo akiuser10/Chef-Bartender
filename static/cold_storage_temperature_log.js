@@ -47,11 +47,29 @@ function initializeEventListeners() {
         
         // Safari-compatible: Use both click and mousedown events
         const handleButtonClick = function(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            e.stopImmediatePropagation();
-            console.log('Add Unit button clicked (handler)');
-            openAddUnitForm();
+            console.log('=== Button Click Handler Triggered ===');
+            console.log('Event:', e);
+            console.log('Event type:', e.type);
+            console.log('Event target:', e.target);
+            
+            try {
+                e.preventDefault();
+                e.stopPropagation();
+                e.stopImmediatePropagation();
+                console.log('Add Unit button clicked (handler)');
+                
+                // Verify function exists
+                if (typeof openAddUnitForm === 'function') {
+                    console.log('Calling openAddUnitForm function...');
+                    openAddUnitForm();
+                } else {
+                    console.error('openAddUnitForm is not a function!', typeof openAddUnitForm);
+                    alert('Error: openAddUnitForm function not found. Please refresh the page.');
+                }
+            } catch (error) {
+                console.error('Error in handleButtonClick:', error);
+                alert('Error: ' + error.message);
+            }
             return false;
         };
         
@@ -446,8 +464,8 @@ async function loadTemperatureEntries() {
     const dateStr = formatDateForInput(currentDate);
     
     // Load entries for all units in parallel
-    const promises = allUnits.map(unit => 
-        const apiBasePath = window.apiBasePath || '/checklist/bar/cold-storage';
+    const apiBasePath = window.apiBasePath || '/checklist/bar/cold-storage';
+    const promises = allUnits.map(unit =>
         fetch(`${apiBasePath}/log/${unit.id}/${dateStr}`)
             .then(response => response.json())
             .then(data => ({ unitId: unit.id, data }))
@@ -836,14 +854,27 @@ function getScheduledTimeForSlot(date, timeSlot) {
 // Unit Management
 function openAddUnitForm() {
     console.log('=== Opening Add Unit Form ===');
-    const modal = document.getElementById('unit-form-modal');
-    if (!modal) {
-        console.error('Unit form modal not found!');
-        showNotification('Error: Unit form modal not found. Please refresh the page.', 'error');
+    console.log('openAddUnitForm function called');
+    
+    try {
+        const modal = document.getElementById('unit-form-modal');
+        if (!modal) {
+            console.error('Unit form modal not found!');
+            console.error('Available modals:', document.querySelectorAll('.modal'));
+            showNotification('Error: Unit form modal not found. Please refresh the page.', 'error');
+            return;
+        }
+        
+        console.log('Modal element found:', modal);
+        console.log('Modal current classes:', modal.className);
+        console.log('Modal current display:', window.getComputedStyle(modal).display);
+    } catch (error) {
+        console.error('Error in openAddUnitForm:', error);
+        showNotification('Error opening unit form: ' + error.message, 'error');
         return;
     }
     
-    console.log('Modal element found:', modal);
+    const modal = document.getElementById('unit-form-modal');
     
     // Reset form
     const formTitle = document.getElementById('unit-form-title');
