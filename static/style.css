@@ -6095,6 +6095,25 @@ button.btn,
     font-style: italic;
 }
 
+/* Form help with bottom margin for unit selection */
+.form-help.unit-selection-help {
+    margin-top: 0;
+    margin-bottom: 10px;
+}
+
+/* Times selection container within date form group */
+.times-selection-container {
+    margin-top: 20px;
+}
+
+/* Times selection label */
+.times-selection-label {
+    display: block;
+    margin-bottom: 10px;
+    font-weight: 600;
+    color: #2a2a2a;
+}
+
 .checklist-modal-content {
     max-width: 800px;
 }
