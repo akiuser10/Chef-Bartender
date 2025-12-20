@@ -1013,7 +1013,8 @@ function openChecklistDownloadModal() {
         checkbox.checked = true;
         
         const labelText = document.createElement('span');
-        labelText.textContent = `${unit.unit_number} - ${unit.location} (${unit.unit_type})`;
+        // Display format: Unit Number - Location
+        labelText.textContent = `${unit.unit_number} - ${unit.location}`;
         labelText.style.color = '#2a2a2a';
         labelText.style.fontSize = '0.9rem';
         
@@ -1117,7 +1118,8 @@ async function openPDFModal() {
             checkbox.checked = true;
             
             const labelText = document.createElement('span');
-            labelText.textContent = `${unit.unit_number} - ${unit.location} (${unit.unit_type})`;
+            // Display format: Unit Number - Location
+            labelText.textContent = `${unit.unit_number} - ${unit.location}`;
             labelText.style.color = '#2a2a2a';
             labelText.style.fontSize = '0.9rem';
             

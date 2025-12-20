@@ -135,7 +135,8 @@
         <div class="modal-body">
             <form id="checklist-form">
                 <div class="form-group">
-                    <label>Select Unit Numbers *</label>
+                    <label>Select Units *</label>
+                    <small class="form-help" style="display: block; margin-bottom: 10px; color: #666;">Select unit numbers and locations</small>
                     <div id="checklist-unit-checkboxes" class="checkbox-group">
                         <!-- Checkboxes will be populated by JavaScript -->
                     </div>
@@ -153,26 +154,28 @@
                         </div>
                     </div>
                     <small class="form-help">All dates between start and end date will be included</small>
-                </div>
-                <div class="form-group">
-                    <label>Select Times *</label>
-                    <div id="checklist-time-checkboxes" class="checkbox-group">
-                        <label>
-                            <input type="checkbox" name="times" value="10:00 AM" checked>
-                            <span>10:00 AM</span>
-                        </label>
-                        <label>
-                            <input type="checkbox" name="times" value="02:00 PM" checked>
-                            <span>02:00 PM</span>
-                        </label>
-                        <label>
-                            <input type="checkbox" name="times" value="06:00 PM" checked>
-                            <span>06:00 PM</span>
-                        </label>
-                        <label>
-                            <input type="checkbox" name="times" value="10:00 PM" checked>
-                            <span>10:00 PM</span>
-                        </label>
+                    
+                    <!-- Times selection appears right after dates -->
+                    <div style="margin-top: 20px;">
+                        <label style="display: block; margin-bottom: 10px; font-weight: 600; color: #2a2a2a;">Select Times *</label>
+                        <div id="checklist-time-checkboxes" class="checkbox-group">
+                            <label>
+                                <input type="checkbox" name="times" value="10:00 AM" checked>
+                                <span>10:00 AM</span>
+                            </label>
+                            <label>
+                                <input type="checkbox" name="times" value="02:00 PM" checked>
+                                <span>02:00 PM</span>
+                            </label>
+                            <label>
+                                <input type="checkbox" name="times" value="06:00 PM" checked>
+                                <span>06:00 PM</span>
+                            </label>
+                            <label>
+                                <input type="checkbox" name="times" value="10:00 PM" checked>
+                                <span>10:00 PM</span>
+                            </label>
+                        </div>
                     </div>
                 </div>
                 <div class="form-actions">
