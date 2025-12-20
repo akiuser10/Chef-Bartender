@@ -1005,10 +1005,20 @@ function openChecklistDownloadModal() {
     allUnits.forEach(unit => {
         const label = document.createElement('label');
         label.className = 'checkbox-label';
-        label.innerHTML = `
-            <input type="checkbox" name="units" value="${unit.id}" checked>
-            ${unit.unit_number} - ${unit.location} (${unit.unit_type})
-        `;
+        
+        const checkbox = document.createElement('input');
+        checkbox.type = 'checkbox';
+        checkbox.name = 'units';
+        checkbox.value = unit.id;
+        checkbox.checked = true;
+        
+        const labelText = document.createElement('span');
+        labelText.textContent = `${unit.unit_number} - ${unit.location} (${unit.unit_type})`;
+        labelText.style.color = '#2a2a2a';
+        labelText.style.fontSize = '0.9rem';
+        
+        label.appendChild(checkbox);
+        label.appendChild(labelText);
         checkboxesContainer.appendChild(label);
     });
     
