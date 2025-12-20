@@ -861,7 +861,12 @@ function openAddUnitForm() {
         if (!modal) {
             console.error('Unit form modal not found!');
             console.error('Available modals:', document.querySelectorAll('.modal'));
-            showNotification('Error: Unit form modal not found. Please refresh the page.', 'error');
+            console.error('All elements with id containing modal:', document.querySelectorAll('[id*="modal"]'));
+            if (typeof showNotification === 'function') {
+                showNotification('Error: Unit form modal not found. Please refresh the page.', 'error');
+            } else {
+                alert('Error: Unit form modal not found. Please refresh the page.');
+            }
             return;
         }
         
@@ -869,8 +874,12 @@ function openAddUnitForm() {
         console.log('Modal current classes:', modal.className);
         console.log('Modal current display:', window.getComputedStyle(modal).display);
     } catch (error) {
-        console.error('Error in openAddUnitForm:', error);
-        showNotification('Error opening unit form: ' + error.message, 'error');
+        console.error('Error in openAddUnitForm (initial check):', error);
+        if (typeof showNotification === 'function') {
+            showNotification('Error opening unit form: ' + error.message, 'error');
+        } else {
+            alert('Error opening unit form: ' + error.message);
+        }
         return;
     }
     
