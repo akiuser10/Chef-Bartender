@@ -637,6 +637,7 @@ class ColdStorageUnit(db.Model):
     unit_number = db.Column(db.String(50), nullable=False)
     location = db.Column(db.String(200), nullable=False)
     unit_type = db.Column(db.String(50), nullable=False)  # Refrigerator, Freezer, Wine Chiller
+    context = db.Column(db.String(20), nullable=False, default='bar')  # 'bar' or 'kitchen' - separates Bar and Kitchen temperature logs
     min_temp = db.Column(db.Float)  # For Wine Chiller (user-defined)
     max_temp = db.Column(db.Float)  # For Wine Chiller (user-defined)
     organisation = db.Column(db.String(200))  # Organization name for sharing

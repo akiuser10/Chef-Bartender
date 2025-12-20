@@ -353,6 +353,30 @@ def ensure_schema_updates():
                         conn.execute(db.text("ALTER TABLE cold_storage_unit ADD COLUMN created_at TIMESTAMP"))
                     if 'is_active' not in cold_storage_columns:
                         conn.execute(db.text("ALTER TABLE cold_storage_unit ADD COLUMN is_active BOOLEAN DEFAULT TRUE"))
+                    # Add context column to separate Bar and Kitchen units
+                    if 'context' not in cold_storage_columns:
+                        try:
+                            db_url = str(db.engine.url)
+                            is_postgres = 'postgresql' in db_url.lower() or 'postgres' in db_url.lower()
+                            
+                            if is_postgres:
+                                # For PostgreSQL: Add column with default, update existing rows, then set NOT NULL
+                                conn.execute(db.text("ALTER TABLE cold_storage_unit ADD COLUMN context VARCHAR(20) DEFAULT 'bar'"))
+                                conn.execute(db.text("UPDATE cold_storage_unit SET context = 'bar' WHERE context IS NULL"))
+                                # Now make it NOT NULL
+                                conn.execute(db.text("ALTER TABLE cold_storage_unit ALTER COLUMN context SET NOT NULL"))
+                            else:
+                                # For SQLite: Add column with default (SQLite doesn't support NOT NULL on ALTER)
+                                conn.execute(db.text("ALTER TABLE cold_storage_unit ADD COLUMN context VARCHAR(20) DEFAULT 'bar'"))
+                                conn.execute(db.text("UPDATE cold_storage_unit SET context = 'bar' WHERE context IS NULL"))
+                        except Exception as e:
+                            current_app.logger.warning(f"Could not add context column to cold_storage_unit: {str(e)}")
+                    else:
+                        # Column exists, but update any NULL values to 'bar' (default for existing units)
+                        try:
+                            conn.execute(db.text("UPDATE cold_storage_unit SET context = 'bar' WHERE context IS NULL"))
+                        except Exception as e:
+                            current_app.logger.warning(f"Could not update context values in cold_storage_unit: {str(e)}")
                 
                 # Temperature Log table updates
                 if table_exists(conn, 'temperature_log'):

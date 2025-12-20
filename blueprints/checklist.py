@@ -62,7 +62,11 @@ def kitchen_cold_storage_temperature_log():
     
     try:
         org_filter = get_organization_filter(ColdStorageUnit)
-        units = ColdStorageUnit.query.filter(org_filter).filter_by(is_active=True).order_by(ColdStorageUnit.unit_number).all()
+        # Filter by kitchen context
+        units = ColdStorageUnit.query.filter(org_filter).filter_by(
+            is_active=True, 
+            context='kitchen'
+        ).order_by(ColdStorageUnit.unit_number).all()
     except Exception as e:
         current_app.logger.error(f"Error loading cold storage units: {str(e)}", exc_info=True)
         # If table doesn't exist yet, return empty list
@@ -84,7 +88,11 @@ def cold_storage_temperature_log():
     
     try:
         org_filter = get_organization_filter(ColdStorageUnit)
-        units = ColdStorageUnit.query.filter(org_filter).filter_by(is_active=True).order_by(ColdStorageUnit.unit_number).all()
+        # Filter by bar context
+        units = ColdStorageUnit.query.filter(org_filter).filter_by(
+            is_active=True, 
+            context='bar'
+        ).order_by(ColdStorageUnit.unit_number).all()
     except Exception as e:
         current_app.logger.error(f"Error loading cold storage units: {str(e)}", exc_info=True)
         # If table doesn't exist yet, return empty list
@@ -308,7 +316,11 @@ def manage_cold_storage_units():
     if request.method == 'GET':
         try:
             org_filter = get_organization_filter(ColdStorageUnit)
-            units = ColdStorageUnit.query.filter(org_filter).filter_by(is_active=True).order_by(ColdStorageUnit.unit_number).all()
+            # Filter by bar context
+            units = ColdStorageUnit.query.filter(org_filter).filter_by(
+                is_active=True, 
+                context='bar'
+            ).order_by(ColdStorageUnit.unit_number).all()
             return jsonify([{
                 'id': unit.id,
                 'unit_number': unit.unit_number,
@@ -353,10 +365,11 @@ def manage_cold_storage_units():
                     return jsonify({'success': False, 'error': f'Invalid unit type. Must be one of: {", ".join(valid_types)}'}), 400
                 
                 try:
-                    # Check if unit number already exists in organization
+                    # Check if unit number already exists in organization (within same context)
                     org_filter = get_organization_filter(ColdStorageUnit)
                     existing_unit = ColdStorageUnit.query.filter(org_filter).filter_by(
                         unit_number=unit_number,
+                        context='bar',  # Check within bar context
                         is_active=True
                     ).first()
                     
@@ -382,11 +395,12 @@ def manage_cold_storage_units():
                         if min_temp is not None and max_temp is not None and min_temp >= max_temp:
                             return jsonify({'success': False, 'error': 'Minimum temperature must be less than maximum temperature'}), 400
                     
-                    # Create the unit
+                    # Create the unit with bar context
                     unit = ColdStorageUnit(
                         unit_number=unit_number,
                         location=location,
                         unit_type=unit_type,
+                        context='bar',  # Set context to bar
                         min_temp=min_temp,
                         max_temp=max_temp,
                         organisation=current_user.organisation or current_user.restaurant_bar_name,
