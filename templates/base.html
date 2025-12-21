@@ -64,6 +64,8 @@
             <div class="nav-dropdown-menu" id="checklistDropdownMenu">
                 {% if current_user.user_role in ['Manager', 'Bartender'] %}
                 <a href="{{ url_for('checklist.bar_checklist') }}" class="nav-dropdown-item">Bar</a>
+                <a href="{{ url_for('checklist.bar_opening_checklist') }}" class="nav-dropdown-item">Opening Checklist</a>
+                <a href="{{ url_for('checklist.bar_shift_closing_checklist') }}" class="nav-dropdown-item">Closing Checklist</a>
                 <a href="{{ url_for('checklist.bar_closing_checklist') }}" class="nav-dropdown-item">Coffee Machine</a>
                 <a href="{{ url_for('checklist.chopping_board_checklist') }}" class="nav-dropdown-item">Chopping Board</a>
                 <a href="{{ url_for('checklist.bar_glass_washer_checklist') }}" class="nav-dropdown-item">Glass Washer Checklist</a>

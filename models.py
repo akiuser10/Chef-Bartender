@@ -1093,3 +1093,149 @@ class KitchenChoppingBoardChecklistItem(db.Model):
     def __repr__(self):
         return f'<KitchenChoppingBoardChecklistItem {self.id}: Entry {self.entry_id} - Point {self.checklist_point_id} - {"✓" if self.is_completed else "☐"}>'
 
+
+# ============================================
+# BAR OPENING & CLOSING CHECKLIST MODELS
+# ============================================
+
+class BarOpeningChecklistUnit(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    unit_name = db.Column(db.String(100), nullable=False, default='BAR')
+    description = db.Column(db.String(255))
+    organisation = db.Column(db.String(200))  # Organization name for sharing
+    created_by = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    creator = db.relationship('User', foreign_keys=[created_by], backref='created_bar_opening_units')
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    is_active = db.Column(db.Boolean, default=True)
+    
+    # Relationships
+    checklist_points = db.relationship('BarOpeningChecklistPoint', backref='unit', cascade='all, delete-orphan', lazy='dynamic', order_by='BarOpeningChecklistPoint.display_order')
+    entries = db.relationship('BarOpeningChecklistEntry', backref='unit', cascade='all, delete-orphan', lazy='dynamic')
+    
+    def __repr__(self):
+        return f'<BarOpeningChecklistUnit {self.id}: {self.unit_name}>'
+
+class BarOpeningChecklistPoint(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    unit_id = db.Column(db.Integer, db.ForeignKey('bar_opening_checklist_unit.id'), nullable=False)
+    group_name = db.Column(db.String(100), nullable=False)  # Not used in display but kept for compatibility
+    point_text = db.Column(db.String(500), nullable=False)  # e.g., "Bar counter, work surfaces, floors cleaned"
+    display_order = db.Column(db.Integer, nullable=False)  # Order within the checklist
+    organisation = db.Column(db.String(200))  # Organization name for sharing
+    created_by = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    creator = db.relationship('User', foreign_keys=[created_by], backref='created_bar_opening_checklist_points')
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    is_active = db.Column(db.Boolean, default=True)
+    
+    # Relationships
+    items = db.relationship('BarOpeningChecklistItem', backref='checklist_point', cascade='all, delete-orphan', lazy='dynamic')
+    
+    def __repr__(self):
+        return f'<BarOpeningChecklistPoint {self.id}: {self.point_text}>'
+
+class BarOpeningChecklistEntry(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    unit_id = db.Column(db.Integer, db.ForeignKey('bar_opening_checklist_unit.id'), nullable=False)
+    entry_date = db.Column(db.Date, nullable=False)
+    organisation = db.Column(db.String(200))  # Organization name for sharing
+    created_by = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    creator = db.relationship('User', foreign_keys=[created_by], backref='created_bar_opening_checklist_entries')
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # Relationships
+    items = db.relationship('BarOpeningChecklistItem', backref='entry', cascade='all, delete-orphan', lazy='dynamic')
+    
+    # Unique constraint: one entry per unit per date
+    __table_args__ = (db.UniqueConstraint('unit_id', 'entry_date', name='unique_bar_opening_unit_date'),)
+    
+    def __repr__(self):
+        return f'<BarOpeningChecklistEntry {self.id}: Unit {self.unit_id} - {self.entry_date}>'
+
+class BarOpeningChecklistItem(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    entry_id = db.Column(db.Integer, db.ForeignKey('bar_opening_checklist_entry.id'), nullable=False)
+    checklist_point_id = db.Column(db.Integer, db.ForeignKey('bar_opening_checklist_point.id'), nullable=False)
+    is_completed = db.Column(db.Boolean, default=False)
+    staff_initials = db.Column(db.String(10))  # Staff initials
+    organisation = db.Column(db.String(200))  # Organization name for sharing
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # Unique constraint: one item per entry per checklist point
+    __table_args__ = (db.UniqueConstraint('entry_id', 'checklist_point_id', name='unique_bar_opening_entry_point'),)
+    
+    def __repr__(self):
+        return f'<BarOpeningChecklistItem {self.id}: Entry {self.entry_id} - Point {self.checklist_point_id} - {"✓" if self.is_completed else "☐"}>'
+
+
+class BarShiftClosingChecklistUnit(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    unit_name = db.Column(db.String(100), nullable=False, default='BAR')
+    description = db.Column(db.String(255))
+    organisation = db.Column(db.String(200))  # Organization name for sharing
+    created_by = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    creator = db.relationship('User', foreign_keys=[created_by], backref='created_bar_shift_closing_units')
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    is_active = db.Column(db.Boolean, default=True)
+    
+    # Relationships
+    checklist_points = db.relationship('BarShiftClosingChecklistPoint', backref='unit', cascade='all, delete-orphan', lazy='dynamic', order_by='BarShiftClosingChecklistPoint.display_order')
+    entries = db.relationship('BarShiftClosingChecklistEntry', backref='unit', cascade='all, delete-orphan', lazy='dynamic')
+    
+    def __repr__(self):
+        return f'<BarShiftClosingChecklistUnit {self.id}: {self.unit_name}>'
+
+class BarShiftClosingChecklistPoint(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    unit_id = db.Column(db.Integer, db.ForeignKey('bar_shift_closing_checklist_unit.id'), nullable=False)
+    group_name = db.Column(db.String(100), nullable=False)  # Not used in display but kept for compatibility
+    point_text = db.Column(db.String(500), nullable=False)  # e.g., "Stop service and clear bar area"
+    display_order = db.Column(db.Integer, nullable=False)  # Order within the checklist
+    organisation = db.Column(db.String(200))  # Organization name for sharing
+    created_by = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    creator = db.relationship('User', foreign_keys=[created_by], backref='created_bar_shift_closing_checklist_points')
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    is_active = db.Column(db.Boolean, default=True)
+    
+    # Relationships
+    items = db.relationship('BarShiftClosingChecklistItem', backref='checklist_point', cascade='all, delete-orphan', lazy='dynamic')
+    
+    def __repr__(self):
+        return f'<BarShiftClosingChecklistPoint {self.id}: {self.point_text}>'
+
+class BarShiftClosingChecklistEntry(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    unit_id = db.Column(db.Integer, db.ForeignKey('bar_shift_closing_checklist_unit.id'), nullable=False)
+    entry_date = db.Column(db.Date, nullable=False)
+    organisation = db.Column(db.String(200))  # Organization name for sharing
+    created_by = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    creator = db.relationship('User', foreign_keys=[created_by], backref='created_bar_shift_closing_checklist_entries')
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # Relationships
+    items = db.relationship('BarShiftClosingChecklistItem', backref='entry', cascade='all, delete-orphan', lazy='dynamic')
+    
+    # Unique constraint: one entry per unit per date
+    __table_args__ = (db.UniqueConstraint('unit_id', 'entry_date', name='unique_bar_shift_closing_unit_date'),)
+    
+    def __repr__(self):
+        return f'<BarShiftClosingChecklistEntry {self.id}: Unit {self.unit_id} - {self.entry_date}>'
+
+class BarShiftClosingChecklistItem(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    entry_id = db.Column(db.Integer, db.ForeignKey('bar_shift_closing_checklist_entry.id'), nullable=False)
+    checklist_point_id = db.Column(db.Integer, db.ForeignKey('bar_shift_closing_checklist_point.id'), nullable=False)
+    is_completed = db.Column(db.Boolean, default=False)
+    staff_initials = db.Column(db.String(10))  # Staff initials
+    organisation = db.Column(db.String(200))  # Organization name for sharing
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # Unique constraint: one item per entry per checklist point
+    __table_args__ = (db.UniqueConstraint('entry_id', 'checklist_point_id', name='unique_bar_shift_closing_entry_point'),)
+    
+    def __repr__(self):
+        return f'<BarShiftClosingChecklistItem {self.id}: Entry {self.entry_id} - Point {self.checklist_point_id} - {"✓" if self.is_completed else "☐"}>'
+
