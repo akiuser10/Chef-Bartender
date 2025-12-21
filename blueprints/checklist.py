@@ -2807,6 +2807,13 @@ def generate_chopping_board_checklist_pdf():
 # KITCHEN CHOPPING BOARD CHECKLIST ROUTES
 # ============================================
 
+@checklist_bp.route('/kitchen/chopping-board', methods=['GET'])
+@login_required
+@role_required(['Chef', 'Manager'])
+def kitchen_chopping_board_checklist():
+    """Kitchen Chopping Board Cleaning & Sanitisation Checklist page - accessible to Chef and Manager"""
+    today = date.today()
+    return render_template('checklist/kitchen_chopping_board_checklist.html', today=today)
 
 
 @checklist_bp.route('/kitchen/chopping-board/units', methods=['GET', 'POST'])
