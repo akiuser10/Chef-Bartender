@@ -18,6 +18,8 @@ document.addEventListener('DOMContentLoaded', function() {
     const staffInitialsField = document.getElementById('staff-initials');
     if (staffInitialsField && window.userInitials) {
         staffInitialsField.value = window.userInitials;
+        // Make it readonly or keep it editable? User requirement says it should be auto-filled
+        // But since they want it automatic, let's make it readonly or auto-populated but still editable if needed
     }
 });
 
@@ -542,4 +544,6 @@ async function handleVerifySubmit(e) {
 window.editUnit = editUnit;
 window.deleteUnit = deleteUnit;
 window.openVerifyModal = openVerifyModal;
+
+
 
