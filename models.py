@@ -943,3 +943,153 @@ class BarClosingChecklistItem(db.Model):
     def __repr__(self):
         return f'<BarClosingChecklistItem {self.id}: Entry {self.entry_id} - Point {self.checklist_point_id} - {"✓" if self.is_completed else "☐"}>'
 
+
+# ============================================
+# CHOPPING BOARD CHECKLIST MODELS
+# ============================================
+
+class ChoppingBoardChecklistUnit(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    unit_name = db.Column(db.String(100), nullable=False, default='BAR')
+    description = db.Column(db.String(255))
+    organisation = db.Column(db.String(200))  # Organization name for sharing
+    created_by = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    creator = db.relationship('User', foreign_keys=[created_by], backref='created_chopping_board_units')
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    is_active = db.Column(db.Boolean, default=True)
+    
+    # Relationships
+    checklist_points = db.relationship('ChoppingBoardChecklistPoint', backref='unit', cascade='all, delete-orphan', lazy='dynamic', order_by='ChoppingBoardChecklistPoint.display_order')
+    entries = db.relationship('ChoppingBoardChecklistEntry', backref='unit', cascade='all, delete-orphan', lazy='dynamic')
+    
+    def __repr__(self):
+        return f'<ChoppingBoardChecklistUnit {self.id}: {self.unit_name}>'
+
+class ChoppingBoardChecklistPoint(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    unit_id = db.Column(db.Integer, db.ForeignKey('chopping_board_checklist_unit.id'), nullable=False)
+    group_name = db.Column(db.String(100), nullable=False)  # Not used in display but kept for compatibility
+    point_text = db.Column(db.String(500), nullable=False)  # e.g., "Washed with food-safe detergent"
+    display_order = db.Column(db.Integer, nullable=False)  # Order within the checklist
+    organisation = db.Column(db.String(200))  # Organization name for sharing
+    created_by = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    creator = db.relationship('User', foreign_keys=[created_by], backref='created_chopping_board_checklist_points')
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    is_active = db.Column(db.Boolean, default=True)
+    
+    # Relationships
+    items = db.relationship('ChoppingBoardChecklistItem', backref='checklist_point', cascade='all, delete-orphan', lazy='dynamic')
+    
+    def __repr__(self):
+        return f'<ChoppingBoardChecklistPoint {self.id}: {self.point_text}>'
+
+class ChoppingBoardChecklistEntry(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    unit_id = db.Column(db.Integer, db.ForeignKey('chopping_board_checklist_unit.id'), nullable=False)
+    entry_date = db.Column(db.Date, nullable=False)
+    organisation = db.Column(db.String(200))  # Organization name for sharing
+    created_by = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    creator = db.relationship('User', foreign_keys=[created_by], backref='created_chopping_board_checklist_entries')
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # Relationships
+    items = db.relationship('ChoppingBoardChecklistItem', backref='entry', cascade='all, delete-orphan', lazy='dynamic')
+    
+    # Unique constraint: one entry per unit per date
+    __table_args__ = (db.UniqueConstraint('unit_id', 'entry_date', name='unique_chopping_board_unit_date'),)
+    
+    def __repr__(self):
+        return f'<ChoppingBoardChecklistEntry {self.id}: Unit {self.unit_id} - {self.entry_date}>'
+
+class ChoppingBoardChecklistItem(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    entry_id = db.Column(db.Integer, db.ForeignKey('chopping_board_checklist_entry.id'), nullable=False)
+    checklist_point_id = db.Column(db.Integer, db.ForeignKey('chopping_board_checklist_point.id'), nullable=False)
+    is_completed = db.Column(db.Boolean, default=False)
+    staff_initials = db.Column(db.String(10))  # Staff initials
+    organisation = db.Column(db.String(200))  # Organization name for sharing
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # Unique constraint: one item per entry per checklist point
+    __table_args__ = (db.UniqueConstraint('entry_id', 'checklist_point_id', name='unique_chopping_board_entry_point'),)
+    
+    def __repr__(self):
+        return f'<ChoppingBoardChecklistItem {self.id}: Entry {self.entry_id} - Point {self.checklist_point_id} - {"✓" if self.is_completed else "☐"}>'
+
+
+# ============================================
+# KITCHEN CHOPPING BOARD CHECKLIST MODELS
+# ============================================
+
+class KitchenChoppingBoardChecklistUnit(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    unit_name = db.Column(db.String(100), nullable=False, default='KITCHEN')
+    description = db.Column(db.String(255))
+    organisation = db.Column(db.String(200))  # Organization name for sharing
+    created_by = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    creator = db.relationship('User', foreign_keys=[created_by], backref='created_kitchen_chopping_board_units')
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    is_active = db.Column(db.Boolean, default=True)
+    
+    # Relationships
+    checklist_points = db.relationship('KitchenChoppingBoardChecklistPoint', backref='unit', cascade='all, delete-orphan', lazy='dynamic', order_by='KitchenChoppingBoardChecklistPoint.display_order')
+    entries = db.relationship('KitchenChoppingBoardChecklistEntry', backref='unit', cascade='all, delete-orphan', lazy='dynamic')
+    
+    def __repr__(self):
+        return f'<KitchenChoppingBoardChecklistUnit {self.id}: {self.unit_name}>'
+
+class KitchenChoppingBoardChecklistPoint(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    unit_id = db.Column(db.Integer, db.ForeignKey('kitchen_chopping_board_checklist_unit.id'), nullable=False)
+    group_name = db.Column(db.String(100), nullable=False)  # Not used in display but kept for compatibility
+    point_text = db.Column(db.String(500), nullable=False)  # e.g., "Washed with food-safe detergent"
+    display_order = db.Column(db.Integer, nullable=False)  # Order within the checklist
+    organisation = db.Column(db.String(200))  # Organization name for sharing
+    created_by = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    creator = db.relationship('User', foreign_keys=[created_by], backref='created_kitchen_chopping_board_checklist_points')
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    is_active = db.Column(db.Boolean, default=True)
+    
+    # Relationships
+    items = db.relationship('KitchenChoppingBoardChecklistItem', backref='checklist_point', cascade='all, delete-orphan', lazy='dynamic')
+    
+    def __repr__(self):
+        return f'<KitchenChoppingBoardChecklistPoint {self.id}: {self.point_text}>'
+
+class KitchenChoppingBoardChecklistEntry(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    unit_id = db.Column(db.Integer, db.ForeignKey('kitchen_chopping_board_checklist_unit.id'), nullable=False)
+    entry_date = db.Column(db.Date, nullable=False)
+    organisation = db.Column(db.String(200))  # Organization name for sharing
+    created_by = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    creator = db.relationship('User', foreign_keys=[created_by], backref='created_kitchen_chopping_board_checklist_entries')
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # Relationships
+    items = db.relationship('KitchenChoppingBoardChecklistItem', backref='entry', cascade='all, delete-orphan', lazy='dynamic')
+    
+    # Unique constraint: one entry per unit per date
+    __table_args__ = (db.UniqueConstraint('unit_id', 'entry_date', name='unique_kitchen_chopping_board_unit_date'),)
+    
+    def __repr__(self):
+        return f'<KitchenChoppingBoardChecklistEntry {self.id}: Unit {self.unit_id} - {self.entry_date}>'
+
+class KitchenChoppingBoardChecklistItem(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    entry_id = db.Column(db.Integer, db.ForeignKey('kitchen_chopping_board_checklist_entry.id'), nullable=False)
+    checklist_point_id = db.Column(db.Integer, db.ForeignKey('kitchen_chopping_board_checklist_point.id'), nullable=False)
+    is_completed = db.Column(db.Boolean, default=False)
+    staff_initials = db.Column(db.String(10))  # Staff initials
+    organisation = db.Column(db.String(200))  # Organization name for sharing
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # Unique constraint: one item per entry per checklist point
+    __table_args__ = (db.UniqueConstraint('entry_id', 'checklist_point_id', name='unique_kitchen_chopping_board_entry_point'),)
+    
+    def __repr__(self):
+        return f'<KitchenChoppingBoardChecklistItem {self.id}: Entry {self.entry_id} - Point {self.checklist_point_id} - {"✓" if self.is_completed else "☐"}>'
+
