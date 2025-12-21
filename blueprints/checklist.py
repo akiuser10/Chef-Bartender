@@ -268,9 +268,14 @@ def kitchen_manage_cold_storage_units():
                     if data.get('max_temp') and str(data.get('max_temp')).strip():
                         max_temp = float(data['max_temp'])
                     
+                    # Normalize "Chiller" to "Wine Chiller" for database storage
+                    normalized_unit_type = data['unit_type']
+                    if normalized_unit_type == 'Chiller':
+                        normalized_unit_type = 'Wine Chiller'
+                    
                     unit.unit_number = data['unit_number']
                     unit.location = data['location']
-                    unit.unit_type = data['unit_type']
+                    unit.unit_type = normalized_unit_type
                     unit.min_temp = min_temp
                     unit.max_temp = max_temp
                     db.session.commit()
@@ -478,9 +483,14 @@ def manage_cold_storage_units():
                     if data.get('max_temp') and str(data.get('max_temp')).strip():
                         max_temp = float(data['max_temp'])
                     
+                    # Normalize "Chiller" to "Wine Chiller" for database storage
+                    normalized_unit_type = data['unit_type']
+                    if normalized_unit_type == 'Chiller':
+                        normalized_unit_type = 'Wine Chiller'
+                    
                     unit.unit_number = data['unit_number']
                     unit.location = data['location']
-                    unit.unit_type = data['unit_type']
+                    unit.unit_type = normalized_unit_type
                     unit.min_temp = min_temp
                     unit.max_temp = max_temp
                     db.session.commit()
