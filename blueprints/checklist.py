@@ -3305,7 +3305,7 @@ def bar_opening_checklist():
 @checklist_bp.route('/bar/opening/units', methods=['GET', 'POST'])
 @login_required
 @role_required(['Manager', 'Bartender'])
-def manage_chopping_board_units():
+def manage_bar_opening_units():
     """API endpoint for managing opening checklist units - Manager only for create/update/delete"""
     if request.method == 'GET':
         try:
@@ -3440,7 +3440,7 @@ def manage_chopping_board_units():
 @checklist_bp.route('/bar/opening/points', methods=['GET', 'POST'])
 @login_required
 @role_required(['Manager', 'Bartender'])
-def manage_chopping_board_points():
+def manage_bar_opening_points():
     """API endpoint for managing opening checklist points - Manager only for create/update/delete"""
     if request.method == 'GET':
         try:
@@ -3800,7 +3800,7 @@ def bar_shift_closing_checklist():
 @checklist_bp.route('/bar/shift-closing/units', methods=['GET', 'POST'])
 @login_required
 @role_required(['Manager', 'Bartender'])
-def manage_chopping_board_units():
+def manage_bar_shift_closing_units():
     """API endpoint for managing closing checklist units - Manager only for create/update/delete"""
     if request.method == 'GET':
         try:
@@ -3935,7 +3935,7 @@ def manage_chopping_board_units():
 @checklist_bp.route('/bar/shift-closing/points', methods=['GET', 'POST'])
 @login_required
 @role_required(['Manager', 'Bartender'])
-def manage_chopping_board_points():
+def manage_bar_shift_closing_points():
     """API endpoint for managing closing checklist points - Manager only for create/update/delete"""
     if request.method == 'GET':
         try:
