@@ -5,8 +5,23 @@
 </div>
 
 <div class="checklist-container">
-    <p>Kitchen checklist content will be displayed here.</p>
-    <!-- Add your checklist items here -->
+    <div class="checklist-modules">
+        <div class="checklist-module-card">
+            <h3>Glass Washer Checklist (HACCP)</h3>
+            <p>HACCP-compliant checklist for kitchen glass washers. Track wash and rinse temperatures, sanitizing methods, and ensure compliance with food safety standards.</p>
+            <a href="{{ url_for('checklist.kitchen_glass_washer_checklist') }}" class="btn-primary">Open Checklist</a>
+        </div>
+        <div class="checklist-module-card">
+            <h3>Dish Washer Checklist (HACCP)</h3>
+            <p>HACCP-compliant checklist for kitchen dish washers. Track wash and final rinse temperatures to ensure compliance with food safety standards.</p>
+            <a href="{{ url_for('checklist.kitchen_dish_washer_checklist') }}" class="btn-primary">Open Checklist</a>
+        </div>
+        <div class="checklist-module-card">
+            <h3>Cold Storage Temperature Log – Unit Wise (HACCP)</h3>
+            <p>Maintain individual daily temperature logs for each cold storage unit with four mandatory temperature entries per day, notifications, alerts, corrective actions, and PDF generation.</p>
+            <a href="{{ url_for('checklist.kitchen_cold_storage_temperature_log') }}" class="btn-primary">Open Module</a>
+        </div>
+    </div>
 </div>
 {% endblock %}
 

@@ -720,3 +720,153 @@ class TemperatureEntry(db.Model):
     def __repr__(self):
         return f'<TemperatureEntry {self.id}: {self.scheduled_time} - {self.temperature}°C>'
 
+# -------------------------
+# WASHING UNIT MODEL (for Glass Washers and Dish Washers)
+# -------------------------
+class WashingUnit(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    unit_name = db.Column(db.String(100), nullable=False)
+    unit_type = db.Column(db.String(20), nullable=False)  # 'bar_glass_washer', 'kitchen_dish_washer', or 'kitchen_glass_washer'
+    description = db.Column(db.String(255))
+    organisation = db.Column(db.String(200))  # Organization name for sharing
+    created_by = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    creator = db.relationship('User', foreign_keys=[created_by], backref='created_washing_units')
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    is_active = db.Column(db.Boolean, default=True)
+    
+    # Relationships
+    bar_glass_washer_entries = db.relationship('BarGlassWasherChecklist', backref='unit', cascade='all, delete-orphan', lazy='dynamic')
+    kitchen_dish_washer_entries = db.relationship('KitchenDishWasherChecklist', backref='unit', cascade='all, delete-orphan', lazy='dynamic')
+    kitchen_glass_washer_entries = db.relationship('KitchenGlassWasherChecklist', backref='unit', cascade='all, delete-orphan', lazy='dynamic')
+    
+    def __repr__(self):
+        return f'<WashingUnit {self.id}: {self.unit_name} ({self.unit_type})>'
+
+# -------------------------
+# BAR GLASS WASHER CHECKLIST MODEL
+# -------------------------
+class BarGlassWasherChecklist(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    unit_id = db.Column(db.Integer, db.ForeignKey('washing_unit.id'), nullable=False)
+    entry_date = db.Column(db.Date, nullable=False)
+    entry_time = db.Column(db.String(10), nullable=False)  # 12-hour format with AM/PM (e.g., '10:30 AM')
+    staff_name = db.Column(db.String(100), nullable=False)  # First Name + Last Name
+    wash_temperature = db.Column(db.Float, nullable=False)  # °C
+    rinse_sanitising_temperature = db.Column(db.Float)  # °C (optional if chemical sanitising)
+    sanitising_method = db.Column(db.String(20), nullable=False)  # 'Thermal' or 'Chemical'
+    pass_fail = db.Column(db.String(10), nullable=False)  # 'Pass' or 'Fail' (auto-calculated)
+    corrective_action = db.Column(db.Text)  # Mandatory if Fail
+    staff_initials = db.Column(db.String(10), nullable=False)
+    manager_verification_initials = db.Column(db.String(10))  # Manager only, required to close
+    manager_verified = db.Column(db.Boolean, default=False)
+    manager_verified_at = db.Column(db.DateTime)
+    verified_by = db.Column(db.Integer, db.ForeignKey('user.id'))
+    verifier = db.relationship('User', foreign_keys=[verified_by], backref='verified_bar_glass_washer_entries')
+    created_by = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    creator = db.relationship('User', foreign_keys=[created_by], backref='created_bar_glass_washer_entries')
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    organisation = db.Column(db.String(200))  # Organization name for sharing
+    
+    def calculate_pass_fail(self):
+        """Calculate Pass/Fail based on HACCP rules"""
+        # Wash temperature ≥ 55°C
+        if self.wash_temperature < 55:
+            return 'Fail'
+        
+        # If Thermal sanitising: Rinse/Sanitising temperature ≥ 82°C
+        if self.sanitising_method == 'Thermal':
+            if not self.rinse_sanitising_temperature or self.rinse_sanitising_temperature < 82:
+                return 'Fail'
+        # If Chemical sanitising: Rinse temperature optional, compliance required per chemical spec
+        # For now, we assume compliance if chemical is selected and rinse temp is provided
+        
+        return 'Pass'
+    
+    def __repr__(self):
+        return f'<BarGlassWasherChecklist {self.id}: Unit {self.unit_id} - {self.entry_date} {self.entry_time}>'
+
+# -------------------------
+# KITCHEN DISH WASHER CHECKLIST MODEL
+# -------------------------
+class KitchenDishWasherChecklist(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    unit_id = db.Column(db.Integer, db.ForeignKey('washing_unit.id'), nullable=False)
+    entry_date = db.Column(db.Date, nullable=False)
+    entry_time = db.Column(db.String(10), nullable=False)  # 12-hour format with AM/PM (e.g., '10:30 AM')
+    staff_name = db.Column(db.String(100), nullable=False)  # First Name + Last Name
+    wash_temperature = db.Column(db.Float, nullable=False)  # °C
+    final_rinse_temperature = db.Column(db.Float, nullable=False)  # °C
+    pass_fail = db.Column(db.String(10), nullable=False)  # 'Pass' or 'Fail' (auto-calculated)
+    corrective_action = db.Column(db.Text)  # Mandatory if Fail
+    staff_initials = db.Column(db.String(10), nullable=False)
+    manager_verification_initials = db.Column(db.String(10))  # Manager only, required to close
+    manager_verified = db.Column(db.Boolean, default=False)
+    manager_verified_at = db.Column(db.DateTime)
+    verified_by = db.Column(db.Integer, db.ForeignKey('user.id'))
+    verifier = db.relationship('User', foreign_keys=[verified_by], backref='verified_kitchen_dish_washer_entries')
+    created_by = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    creator = db.relationship('User', foreign_keys=[created_by], backref='created_kitchen_dish_washer_entries')
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    organisation = db.Column(db.String(200))  # Organization name for sharing
+    
+    def calculate_pass_fail(self):
+        """Calculate Pass/Fail based on HACCP rules"""
+        # Wash temperature ≥ 60°C
+        if self.wash_temperature < 60:
+            return 'Fail'
+        
+        # Final rinse ≥ 82°C
+        if self.final_rinse_temperature < 82:
+            return 'Fail'
+        
+        return 'Pass'
+    
+    def __repr__(self):
+        return f'<KitchenDishWasherChecklist {self.id}: Unit {self.unit_id} - {self.entry_date} {self.entry_time}>'
+
+# -------------------------
+# KITCHEN GLASS WASHER CHECKLIST MODEL
+# -------------------------
+class KitchenGlassWasherChecklist(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    unit_id = db.Column(db.Integer, db.ForeignKey('washing_unit.id'), nullable=False)
+    entry_date = db.Column(db.Date, nullable=False)
+    entry_time = db.Column(db.String(10), nullable=False)  # 12-hour format with AM/PM (e.g., '10:30 AM')
+    staff_name = db.Column(db.String(100), nullable=False)  # First Name + Last Name
+    wash_temperature = db.Column(db.Float, nullable=False)  # °C
+    rinse_sanitising_temperature = db.Column(db.Float)  # °C (optional if chemical sanitising)
+    sanitising_method = db.Column(db.String(20), nullable=False)  # 'Thermal' or 'Chemical'
+    pass_fail = db.Column(db.String(10), nullable=False)  # 'Pass' or 'Fail' (auto-calculated)
+    corrective_action = db.Column(db.Text)  # Mandatory if Fail
+    staff_initials = db.Column(db.String(10), nullable=False)
+    manager_verification_initials = db.Column(db.String(10))  # Manager only, required to close
+    manager_verified = db.Column(db.Boolean, default=False)
+    manager_verified_at = db.Column(db.DateTime)
+    verified_by = db.Column(db.Integer, db.ForeignKey('user.id'))
+    verifier = db.relationship('User', foreign_keys=[verified_by], backref='verified_kitchen_glass_washer_entries')
+    created_by = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    creator = db.relationship('User', foreign_keys=[created_by], backref='created_kitchen_glass_washer_entries')
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    organisation = db.Column(db.String(200))  # Organization name for sharing
+    
+    def calculate_pass_fail(self):
+        """Calculate Pass/Fail based on HACCP rules (same as Bar Glass Washer)"""
+        # Wash temperature ≥ 55°C
+        if self.wash_temperature < 55:
+            return 'Fail'
+        
+        # If Thermal sanitising: Rinse/Sanitising temperature ≥ 82°C
+        if self.sanitising_method == 'Thermal':
+            if not self.rinse_sanitising_temperature or self.rinse_sanitising_temperature < 82:
+                return 'Fail'
+        # If Chemical sanitising: Rinse temperature optional, compliance required per chemical spec
+        # For now, we assume compliance if chemical is selected and rinse temp is provided
+        
+        return 'Pass'
+    
+    def __repr__(self):
+        return f'<KitchenGlassWasherChecklist {self.id}: Unit {self.unit_id} - {self.entry_date} {self.entry_time}>'
+

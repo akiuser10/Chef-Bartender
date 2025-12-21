@@ -10,9 +10,9 @@ from sqlalchemy import and_, or_
 import json
 import io
 
-from models import ColdStorageUnit, TemperatureLog, TemperatureEntry
+from models import ColdStorageUnit, TemperatureLog, TemperatureEntry, WashingUnit, BarGlassWasherChecklist, KitchenDishWasherChecklist, KitchenGlassWasherChecklist
 from extensions import db
-from utils.helpers import get_organization_filter
+from utils.helpers import get_organization_filter, get_user_display_name
 
 checklist_bp = Blueprint('checklist', __name__, url_prefix='/checklist')
 
@@ -904,5 +904,918 @@ def generate_temperature_log_pdf():
         current_app.logger.error(f"Error generating PDF: {str(e)}", exc_info=True)
         return jsonify({'success': False, 'error': str(e)}), 500
 
+# ============================================
+# WASHING UNIT MANAGEMENT ROUTES
+# ============================================
+
+@checklist_bp.route('/bar/glass-washer/units', methods=['GET', 'POST'])
+@login_required
+@role_required(['Manager', 'Bartender'])
+def manage_bar_glass_washer_units():
+    """API endpoint for managing bar glass washer units - Manager only for create/update/delete"""
+    if request.method == 'GET':
+        try:
+            org_filter = get_organization_filter(WashingUnit)
+            units = WashingUnit.query.filter(org_filter).filter_by(
+                is_active=True,
+                unit_type='bar_glass_washer'
+            ).order_by(WashingUnit.unit_name).all()
+            return jsonify([{
+                'id': unit.id,
+                'unit_name': unit.unit_name,
+                'description': unit.description,
+                'unit_type': unit.unit_type
+            } for unit in units])
+        except Exception as e:
+            current_app.logger.error(f"Error loading units: {str(e)}", exc_info=True)
+            return jsonify([])
+    
+    elif request.method == 'POST':
+        try:
+            data = request.get_json()
+            if not data:
+                return jsonify({'success': False, 'error': 'No data provided'}), 400
+            
+            action = data.get('action')
+            
+            if action == 'create':
+                if current_user.user_role != 'Manager':
+                    return jsonify({'success': False, 'error': 'Only Managers can create new units'}), 403
+                
+                unit_name = data.get('unit_name', '').strip()
+                description = data.get('description', '').strip()
+                
+                if not unit_name:
+                    return jsonify({'success': False, 'error': 'Unit name is required'}), 400
+                
+                try:
+                    org_filter = get_organization_filter(WashingUnit)
+                    existing_unit = WashingUnit.query.filter(org_filter).filter_by(
+                        unit_name=unit_name,
+                        unit_type='bar_glass_washer',
+                        is_active=True
+                    ).first()
+                    
+                    if existing_unit:
+                        return jsonify({'success': False, 'error': f'Unit name "{unit_name}" already exists'}), 400
+                    
+                    unit = WashingUnit(
+                        unit_name=unit_name,
+                        unit_type='bar_glass_washer',
+                        description=description,
+                        organisation=current_user.organisation or current_user.restaurant_bar_name,
+                        created_by=current_user.id,
+                        is_active=True
+                    )
+                    db.session.add(unit)
+                    db.session.commit()
+                    
+                    return jsonify({'success': True, 'unit': {
+                        'id': unit.id,
+                        'unit_name': unit.unit_name,
+                        'description': unit.description,
+                        'unit_type': unit.unit_type
+                    }})
+                except Exception as e:
+                    db.session.rollback()
+                    current_app.logger.error(f"Error creating unit: {str(e)}", exc_info=True)
+                    return jsonify({'success': False, 'error': f'Error creating unit: {str(e)}'}), 500
+            
+            elif action == 'update':
+                if current_user.user_role != 'Manager':
+                    return jsonify({'success': False, 'error': 'Only Managers can update units'}), 403
+                
+                if not data.get('id'):
+                    return jsonify({'success': False, 'error': 'Unit ID is required'}), 400
+                
+                try:
+                    unit = WashingUnit.query.get(data['id'])
+                    if not unit:
+                        return jsonify({'success': False, 'error': 'Unit not found'}), 404
+                    
+                    org_filter = get_organization_filter(WashingUnit)
+                    if not WashingUnit.query.filter(org_filter).filter_by(id=unit.id).first():
+                        return jsonify({'success': False, 'error': 'Unauthorized'}), 403
+                    
+                    unit.unit_name = data.get('unit_name', unit.unit_name)
+                    unit.description = data.get('description', unit.description)
+                    db.session.commit()
+                    return jsonify({'success': True})
+                except Exception as e:
+                    db.session.rollback()
+                    current_app.logger.error(f"Error updating unit: {str(e)}", exc_info=True)
+                    return jsonify({'success': False, 'error': f'Error updating unit: {str(e)}'}), 500
+            
+            elif action == 'delete':
+                if current_user.user_role != 'Manager':
+                    return jsonify({'success': False, 'error': 'Only Managers can delete units'}), 403
+                
+                if not data.get('id'):
+                    return jsonify({'success': False, 'error': 'Unit ID is required'}), 400
+                
+                try:
+                    unit = WashingUnit.query.get(data['id'])
+                    if not unit:
+                        return jsonify({'success': False, 'error': 'Unit not found'}), 404
+                    
+                    org_filter = get_organization_filter(WashingUnit)
+                    if not WashingUnit.query.filter(org_filter).filter_by(id=unit.id).first():
+                        return jsonify({'success': False, 'error': 'Unauthorized'}), 403
+                    
+                    # Soft delete - set is_active to False (historical records remain)
+                    unit.is_active = False
+                    db.session.commit()
+                    return jsonify({'success': True})
+                except Exception as e:
+                    db.session.rollback()
+                    current_app.logger.error(f"Error deleting unit: {str(e)}", exc_info=True)
+                    return jsonify({'success': False, 'error': f'Error deleting unit: {str(e)}'}), 500
+            
+            return jsonify({'success': False, 'error': 'Invalid action'}), 400
+        except Exception as e:
+            current_app.logger.error(f"Unexpected error: {str(e)}", exc_info=True)
+            return jsonify({'success': False, 'error': f'Unexpected error: {str(e)}'}), 500
+
+
+@checklist_bp.route('/kitchen/dish-washer/units', methods=['GET', 'POST'])
+@login_required
+@role_required(['Chef', 'Manager'])
+def manage_kitchen_dish_washer_units():
+    """API endpoint for managing kitchen dish washer units - Manager only for create/update/delete"""
+    if request.method == 'GET':
+        try:
+            org_filter = get_organization_filter(WashingUnit)
+            units = WashingUnit.query.filter(org_filter).filter_by(
+                is_active=True,
+                unit_type='kitchen_dish_washer'
+            ).order_by(WashingUnit.unit_name).all()
+            return jsonify([{
+                'id': unit.id,
+                'unit_name': unit.unit_name,
+                'description': unit.description,
+                'unit_type': unit.unit_type
+            } for unit in units])
+        except Exception as e:
+            current_app.logger.error(f"Error loading units: {str(e)}", exc_info=True)
+            return jsonify([])
+    
+    elif request.method == 'POST':
+        try:
+            data = request.get_json()
+            if not data:
+                return jsonify({'success': False, 'error': 'No data provided'}), 400
+            
+            action = data.get('action')
+            
+            if action == 'create':
+                if current_user.user_role != 'Manager':
+                    return jsonify({'success': False, 'error': 'Only Managers can create new units'}), 403
+                
+                unit_name = data.get('unit_name', '').strip()
+                description = data.get('description', '').strip()
+                
+                if not unit_name:
+                    return jsonify({'success': False, 'error': 'Unit name is required'}), 400
+                
+                try:
+                    org_filter = get_organization_filter(WashingUnit)
+                    existing_unit = WashingUnit.query.filter(org_filter).filter_by(
+                        unit_name=unit_name,
+                        unit_type='kitchen_dish_washer',
+                        is_active=True
+                    ).first()
+                    
+                    if existing_unit:
+                        return jsonify({'success': False, 'error': f'Unit name "{unit_name}" already exists'}), 400
+                    
+                    unit = WashingUnit(
+                        unit_name=unit_name,
+                        unit_type='kitchen_dish_washer',
+                        description=description,
+                        organisation=current_user.organisation or current_user.restaurant_bar_name,
+                        created_by=current_user.id,
+                        is_active=True
+                    )
+                    db.session.add(unit)
+                    db.session.commit()
+                    
+                    return jsonify({'success': True, 'unit': {
+                        'id': unit.id,
+                        'unit_name': unit.unit_name,
+                        'description': unit.description,
+                        'unit_type': unit.unit_type
+                    }})
+                except Exception as e:
+                    db.session.rollback()
+                    current_app.logger.error(f"Error creating unit: {str(e)}", exc_info=True)
+                    return jsonify({'success': False, 'error': f'Error creating unit: {str(e)}'}), 500
+            
+            elif action == 'update':
+                if current_user.user_role != 'Manager':
+                    return jsonify({'success': False, 'error': 'Only Managers can update units'}), 403
+                
+                if not data.get('id'):
+                    return jsonify({'success': False, 'error': 'Unit ID is required'}), 400
+                
+                try:
+                    unit = WashingUnit.query.get(data['id'])
+                    if not unit:
+                        return jsonify({'success': False, 'error': 'Unit not found'}), 404
+                    
+                    org_filter = get_organization_filter(WashingUnit)
+                    if not WashingUnit.query.filter(org_filter).filter_by(id=unit.id).first():
+                        return jsonify({'success': False, 'error': 'Unauthorized'}), 403
+                    
+                    unit.unit_name = data.get('unit_name', unit.unit_name)
+                    unit.description = data.get('description', unit.description)
+                    db.session.commit()
+                    return jsonify({'success': True})
+                except Exception as e:
+                    db.session.rollback()
+                    current_app.logger.error(f"Error updating unit: {str(e)}", exc_info=True)
+                    return jsonify({'success': False, 'error': f'Error updating unit: {str(e)}'}), 500
+            
+            elif action == 'delete':
+                if current_user.user_role != 'Manager':
+                    return jsonify({'success': False, 'error': 'Only Managers can delete units'}), 403
+                
+                if not data.get('id'):
+                    return jsonify({'success': False, 'error': 'Unit ID is required'}), 400
+                
+                try:
+                    unit = WashingUnit.query.get(data['id'])
+                    if not unit:
+                        return jsonify({'success': False, 'error': 'Unit not found'}), 404
+                    
+                    org_filter = get_organization_filter(WashingUnit)
+                    if not WashingUnit.query.filter(org_filter).filter_by(id=unit.id).first():
+                        return jsonify({'success': False, 'error': 'Unauthorized'}), 403
+                    
+                    # Soft delete - set is_active to False (historical records remain)
+                    unit.is_active = False
+                    db.session.commit()
+                    return jsonify({'success': True})
+                except Exception as e:
+                    db.session.rollback()
+                    current_app.logger.error(f"Error deleting unit: {str(e)}", exc_info=True)
+                    return jsonify({'success': False, 'error': f'Error deleting unit: {str(e)}'}), 500
+            
+            return jsonify({'success': False, 'error': 'Invalid action'}), 400
+        except Exception as e:
+            current_app.logger.error(f"Unexpected error: {str(e)}", exc_info=True)
+            return jsonify({'success': False, 'error': f'Unexpected error: {str(e)}'}), 500
+
+# ============================================
+# BAR GLASS WASHER CHECKLIST ROUTES
+# ============================================
+
+@checklist_bp.route('/bar/glass-washer', methods=['GET'])
+@login_required
+@role_required(['Manager', 'Bartender'])
+def bar_glass_washer_checklist():
+    """Bar Glass Washer Checklist page"""
+    today = date.today()
+    return render_template('checklist/bar_glass_washer_checklist.html', today=today)
+
+
+@checklist_bp.route('/bar/glass-washer/entries', methods=['GET', 'POST'])
+@login_required
+@role_required(['Manager', 'Bartender'])
+def bar_glass_washer_entries():
+    """API endpoint for bar glass washer checklist entries"""
+    if request.method == 'GET':
+        try:
+            unit_id = request.args.get('unit_id', type=int)
+            start_date = request.args.get('start_date')
+            end_date = request.args.get('end_date')
+            
+            org_filter = get_organization_filter(BarGlassWasherChecklist)
+            query = BarGlassWasherChecklist.query.filter(org_filter)
+            
+            if unit_id:
+                query = query.filter_by(unit_id=unit_id)
+            if start_date:
+                query = query.filter(BarGlassWasherChecklist.entry_date >= datetime.strptime(start_date, '%Y-%m-%d').date())
+            if end_date:
+                query = query.filter(BarGlassWasherChecklist.entry_date <= datetime.strptime(end_date, '%Y-%m-%d').date())
+            
+            entries = query.order_by(BarGlassWasherChecklist.entry_date.desc(), BarGlassWasherChecklist.entry_time.desc()).all()
+            
+            return jsonify([{
+                'id': entry.id,
+                'unit_id': entry.unit_id,
+                'unit_name': entry.unit.unit_name if entry.unit else 'Unknown',
+                'entry_date': entry.entry_date.isoformat(),
+                'entry_time': entry.entry_time,
+                'staff_name': entry.staff_name,
+                'wash_temperature': entry.wash_temperature,
+                'rinse_sanitising_temperature': entry.rinse_sanitising_temperature,
+                'sanitising_method': entry.sanitising_method,
+                'pass_fail': entry.pass_fail,
+                'corrective_action': entry.corrective_action,
+                'staff_initials': entry.staff_initials,
+                'manager_verification_initials': entry.manager_verification_initials,
+                'manager_verified': entry.manager_verified,
+                'manager_verified_at': entry.manager_verified_at.isoformat() if entry.manager_verified_at else None,
+                'created_at': entry.created_at.isoformat() if entry.created_at else None
+            } for entry in entries])
+        except Exception as e:
+            current_app.logger.error(f"Error loading entries: {str(e)}", exc_info=True)
+            return jsonify({'success': False, 'error': str(e)}), 500
+    
+    elif request.method == 'POST':
+        try:
+            data = request.get_json()
+            if not data:
+                return jsonify({'success': False, 'error': 'No data provided'}), 400
+            
+            action = data.get('action')
+            
+            if action == 'create':
+                # Validate required fields
+                unit_id = data.get('unit_id')
+                entry_date_str = data.get('entry_date')
+                entry_time = data.get('entry_time', '').strip()
+                wash_temperature = data.get('wash_temperature')
+                rinse_sanitising_temperature = data.get('rinse_sanitising_temperature')
+                sanitising_method = data.get('sanitising_method')
+                staff_initials = data.get('staff_initials', '').strip()
+                corrective_action = data.get('corrective_action', '').strip()
+                
+                if not unit_id:
+                    return jsonify({'success': False, 'error': 'Unit is required'}), 400
+                if not entry_date_str:
+                    return jsonify({'success': False, 'error': 'Date is required'}), 400
+                if not entry_time:
+                    return jsonify({'success': False, 'error': 'Time is required'}), 400
+                if wash_temperature is None:
+                    return jsonify({'success': False, 'error': 'Wash temperature is required'}), 400
+                if not sanitising_method:
+                    return jsonify({'success': False, 'error': 'Sanitising method is required'}), 400
+                if not staff_initials:
+                    return jsonify({'success': False, 'error': 'Staff initials are required'}), 400
+                
+                # Check if unit exists and user has access
+                org_filter = get_organization_filter(WashingUnit)
+                unit = WashingUnit.query.filter(org_filter).filter_by(id=unit_id, is_active=True).first()
+                if not unit:
+                    return jsonify({'success': False, 'error': 'Unit not found or unauthorized'}), 404
+                
+                # Parse date
+                entry_date = datetime.strptime(entry_date_str, '%Y-%m-%d').date()
+                
+                # Convert temperatures to float
+                try:
+                    wash_temperature = float(wash_temperature)
+                    rinse_sanitising_temperature = float(rinse_sanitising_temperature) if rinse_sanitising_temperature else None
+                except (ValueError, TypeError):
+                    return jsonify({'success': False, 'error': 'Invalid temperature values'}), 400
+                
+                # Get staff name from current user
+                staff_name = get_user_display_name(current_user)
+                
+                # Create entry
+                entry = BarGlassWasherChecklist(
+                    unit_id=unit_id,
+                    entry_date=entry_date,
+                    entry_time=entry_time,
+                    staff_name=staff_name,
+                    wash_temperature=wash_temperature,
+                    rinse_sanitising_temperature=rinse_sanitising_temperature,
+                    sanitising_method=sanitising_method,
+                    staff_initials=staff_initials,
+                    corrective_action=corrective_action if corrective_action else None,
+                    organisation=current_user.organisation or current_user.restaurant_bar_name,
+                    created_by=current_user.id
+                )
+                
+                # Calculate pass/fail
+                entry.pass_fail = entry.calculate_pass_fail()
+                
+                # Validate: if fail, corrective action is mandatory
+                if entry.pass_fail == 'Fail' and not corrective_action:
+                    return jsonify({'success': False, 'error': 'Corrective action is required when result is Fail'}), 400
+                
+                db.session.add(entry)
+                db.session.commit()
+                
+                return jsonify({'success': True, 'entry': {
+                    'id': entry.id,
+                    'pass_fail': entry.pass_fail
+                }})
+            
+            elif action == 'verify':
+                # Only managers can verify
+                if current_user.user_role != 'Manager':
+                    return jsonify({'success': False, 'error': 'Only Managers can verify entries'}), 403
+                
+                entry_id = data.get('entry_id')
+                manager_initials = data.get('manager_initials', '').strip()
+                
+                if not entry_id:
+                    return jsonify({'success': False, 'error': 'Entry ID is required'}), 400
+                if not manager_initials:
+                    return jsonify({'success': False, 'error': 'Manager verification initials are required'}), 400
+                
+                org_filter = get_organization_filter(BarGlassWasherChecklist)
+                entry = BarGlassWasherChecklist.query.filter(org_filter).filter_by(id=entry_id).first()
+                if not entry:
+                    return jsonify({'success': False, 'error': 'Entry not found or unauthorized'}), 404
+                
+                if entry.manager_verified:
+                    return jsonify({'success': False, 'error': 'Entry already verified'}), 400
+                
+                entry.manager_verification_initials = manager_initials
+                entry.manager_verified = True
+                entry.manager_verified_at = datetime.utcnow()
+                entry.verified_by = current_user.id
+                
+                db.session.commit()
+                
+                return jsonify({'success': True})
+            
+            return jsonify({'success': False, 'error': 'Invalid action'}), 400
+        except Exception as e:
+            db.session.rollback()
+            current_app.logger.error(f"Error in bar_glass_washer_entries: {str(e)}", exc_info=True)
+            return jsonify({'success': False, 'error': str(e)}), 500
+
+
+# ============================================
+# KITCHEN DISH WASHER CHECKLIST ROUTES
+# ============================================
+
+@checklist_bp.route('/kitchen/dish-washer', methods=['GET'])
+@login_required
+@role_required(['Chef', 'Manager'])
+def kitchen_dish_washer_checklist():
+    """Kitchen Dish Washer Checklist page"""
+    today = date.today()
+    return render_template('checklist/kitchen_dish_washer_checklist.html', today=today)
+
+
+@checklist_bp.route('/kitchen/dish-washer/entries', methods=['GET', 'POST'])
+@login_required
+@role_required(['Chef', 'Manager'])
+def kitchen_dish_washer_entries():
+    """API endpoint for kitchen dish washer checklist entries"""
+    if request.method == 'GET':
+        try:
+            unit_id = request.args.get('unit_id', type=int)
+            start_date = request.args.get('start_date')
+            end_date = request.args.get('end_date')
+            
+            org_filter = get_organization_filter(KitchenDishWasherChecklist)
+            query = KitchenDishWasherChecklist.query.filter(org_filter)
+            
+            if unit_id:
+                query = query.filter_by(unit_id=unit_id)
+            if start_date:
+                query = query.filter(KitchenDishWasherChecklist.entry_date >= datetime.strptime(start_date, '%Y-%m-%d').date())
+            if end_date:
+                query = query.filter(KitchenDishWasherChecklist.entry_date <= datetime.strptime(end_date, '%Y-%m-%d').date())
+            
+            entries = query.order_by(KitchenDishWasherChecklist.entry_date.desc(), KitchenDishWasherChecklist.entry_time.desc()).all()
+            
+            return jsonify([{
+                'id': entry.id,
+                'unit_id': entry.unit_id,
+                'unit_name': entry.unit.unit_name if entry.unit else 'Unknown',
+                'entry_date': entry.entry_date.isoformat(),
+                'entry_time': entry.entry_time,
+                'staff_name': entry.staff_name,
+                'wash_temperature': entry.wash_temperature,
+                'final_rinse_temperature': entry.final_rinse_temperature,
+                'pass_fail': entry.pass_fail,
+                'corrective_action': entry.corrective_action,
+                'staff_initials': entry.staff_initials,
+                'manager_verification_initials': entry.manager_verification_initials,
+                'manager_verified': entry.manager_verified,
+                'manager_verified_at': entry.manager_verified_at.isoformat() if entry.manager_verified_at else None,
+                'created_at': entry.created_at.isoformat() if entry.created_at else None
+            } for entry in entries])
+        except Exception as e:
+            current_app.logger.error(f"Error loading entries: {str(e)}", exc_info=True)
+            return jsonify({'success': False, 'error': str(e)}), 500
+    
+    elif request.method == 'POST':
+        try:
+            data = request.get_json()
+            if not data:
+                return jsonify({'success': False, 'error': 'No data provided'}), 400
+            
+            action = data.get('action')
+            
+            if action == 'create':
+                # Validate required fields
+                unit_id = data.get('unit_id')
+                entry_date_str = data.get('entry_date')
+                entry_time = data.get('entry_time', '').strip()
+                wash_temperature = data.get('wash_temperature')
+                final_rinse_temperature = data.get('final_rinse_temperature')
+                staff_initials = data.get('staff_initials', '').strip()
+                corrective_action = data.get('corrective_action', '').strip()
+                
+                if not unit_id:
+                    return jsonify({'success': False, 'error': 'Unit is required'}), 400
+                if not entry_date_str:
+                    return jsonify({'success': False, 'error': 'Date is required'}), 400
+                if not entry_time:
+                    return jsonify({'success': False, 'error': 'Time is required'}), 400
+                if wash_temperature is None:
+                    return jsonify({'success': False, 'error': 'Wash temperature is required'}), 400
+                if final_rinse_temperature is None:
+                    return jsonify({'success': False, 'error': 'Final rinse temperature is required'}), 400
+                if not staff_initials:
+                    return jsonify({'success': False, 'error': 'Staff initials are required'}), 400
+                
+                # Check if unit exists and user has access
+                org_filter = get_organization_filter(WashingUnit)
+                unit = WashingUnit.query.filter(org_filter).filter_by(id=unit_id, is_active=True).first()
+                if not unit:
+                    return jsonify({'success': False, 'error': 'Unit not found or unauthorized'}), 404
+                
+                # Parse date
+                entry_date = datetime.strptime(entry_date_str, '%Y-%m-%d').date()
+                
+                # Convert temperatures to float
+                try:
+                    wash_temperature = float(wash_temperature)
+                    final_rinse_temperature = float(final_rinse_temperature)
+                except (ValueError, TypeError):
+                    return jsonify({'success': False, 'error': 'Invalid temperature values'}), 400
+                
+                # Get staff name from current user
+                staff_name = get_user_display_name(current_user)
+                
+                # Create entry
+                entry = KitchenDishWasherChecklist(
+                    unit_id=unit_id,
+                    entry_date=entry_date,
+                    entry_time=entry_time,
+                    staff_name=staff_name,
+                    wash_temperature=wash_temperature,
+                    final_rinse_temperature=final_rinse_temperature,
+                    staff_initials=staff_initials,
+                    corrective_action=corrective_action if corrective_action else None,
+                    organisation=current_user.organisation or current_user.restaurant_bar_name,
+                    created_by=current_user.id
+                )
+                
+                # Calculate pass/fail
+                entry.pass_fail = entry.calculate_pass_fail()
+                
+                # Validate: if fail, corrective action is mandatory
+                if entry.pass_fail == 'Fail' and not corrective_action:
+                    return jsonify({'success': False, 'error': 'Corrective action is required when result is Fail'}), 400
+                
+                db.session.add(entry)
+                db.session.commit()
+                
+                return jsonify({'success': True, 'entry': {
+                    'id': entry.id,
+                    'pass_fail': entry.pass_fail
+                }})
+            
+            elif action == 'verify':
+                # Only managers can verify
+                if current_user.user_role != 'Manager':
+                    return jsonify({'success': False, 'error': 'Only Managers can verify entries'}), 403
+                
+                entry_id = data.get('entry_id')
+                manager_initials = data.get('manager_initials', '').strip()
+                
+                if not entry_id:
+                    return jsonify({'success': False, 'error': 'Entry ID is required'}), 400
+                if not manager_initials:
+                    return jsonify({'success': False, 'error': 'Manager verification initials are required'}), 400
+                
+                org_filter = get_organization_filter(KitchenDishWasherChecklist)
+                entry = KitchenDishWasherChecklist.query.filter(org_filter).filter_by(id=entry_id).first()
+                if not entry:
+                    return jsonify({'success': False, 'error': 'Entry not found or unauthorized'}), 404
+                
+                if entry.manager_verified:
+                    return jsonify({'success': False, 'error': 'Entry already verified'}), 400
+                
+                entry.manager_verification_initials = manager_initials
+                entry.manager_verified = True
+                entry.manager_verified_at = datetime.utcnow()
+                entry.verified_by = current_user.id
+                
+                db.session.commit()
+                
+                return jsonify({'success': True})
+            
+            return jsonify({'success': False, 'error': 'Invalid action'}), 400
+        except Exception as e:
+            db.session.rollback()
+            current_app.logger.error(f"Error in kitchen_dish_washer_entries: {str(e)}", exc_info=True)
+            return jsonify({'success': False, 'error': str(e)}), 500
+
+
+# ============================================
+# KITCHEN GLASS WASHER CHECKLIST ROUTES
+# ============================================
+
+@checklist_bp.route('/kitchen/glass-washer', methods=['GET'])
+@login_required
+@role_required(['Chef', 'Manager'])
+def kitchen_glass_washer_checklist():
+    """Kitchen Glass Washer Checklist page"""
+    today = date.today()
+    return render_template('checklist/kitchen_glass_washer_checklist.html', today=today)
+
+
+@checklist_bp.route('/kitchen/glass-washer/units', methods=['GET', 'POST'])
+@login_required
+@role_required(['Chef', 'Manager'])
+def manage_kitchen_glass_washer_units():
+    """API endpoint for managing kitchen glass washer units - Manager only for create/update/delete"""
+    if request.method == 'GET':
+        try:
+            org_filter = get_organization_filter(WashingUnit)
+            units = WashingUnit.query.filter(org_filter).filter_by(
+                is_active=True,
+                unit_type='kitchen_glass_washer'
+            ).order_by(WashingUnit.unit_name).all()
+            return jsonify([{
+                'id': unit.id,
+                'unit_name': unit.unit_name,
+                'description': unit.description,
+                'unit_type': unit.unit_type
+            } for unit in units])
+        except Exception as e:
+            current_app.logger.error(f"Error loading units: {str(e)}", exc_info=True)
+            return jsonify([])
+    
+    elif request.method == 'POST':
+        try:
+            data = request.get_json()
+            if not data:
+                return jsonify({'success': False, 'error': 'No data provided'}), 400
+            
+            action = data.get('action')
+            
+            if action == 'create':
+                if current_user.user_role != 'Manager':
+                    return jsonify({'success': False, 'error': 'Only Managers can create new units'}), 403
+                
+                unit_name = data.get('unit_name', '').strip()
+                description = data.get('description', '').strip()
+                
+                if not unit_name:
+                    return jsonify({'success': False, 'error': 'Unit name is required'}), 400
+                
+                try:
+                    org_filter = get_organization_filter(WashingUnit)
+                    existing_unit = WashingUnit.query.filter(org_filter).filter_by(
+                        unit_name=unit_name,
+                        unit_type='kitchen_glass_washer',
+                        is_active=True
+                    ).first()
+                    
+                    if existing_unit:
+                        return jsonify({'success': False, 'error': f'Unit name "{unit_name}" already exists'}), 400
+                    
+                    unit = WashingUnit(
+                        unit_name=unit_name,
+                        unit_type='kitchen_glass_washer',
+                        description=description,
+                        organisation=current_user.organisation or current_user.restaurant_bar_name,
+                        created_by=current_user.id,
+                        is_active=True
+                    )
+                    db.session.add(unit)
+                    db.session.commit()
+                    
+                    return jsonify({'success': True, 'unit': {
+                        'id': unit.id,
+                        'unit_name': unit.unit_name,
+                        'description': unit.description,
+                        'unit_type': unit.unit_type
+                    }})
+                except Exception as e:
+                    db.session.rollback()
+                    current_app.logger.error(f"Error creating unit: {str(e)}", exc_info=True)
+                    return jsonify({'success': False, 'error': f'Error creating unit: {str(e)}'}), 500
+            
+            elif action == 'update':
+                if current_user.user_role != 'Manager':
+                    return jsonify({'success': False, 'error': 'Only Managers can update units'}), 403
+                
+                if not data.get('id'):
+                    return jsonify({'success': False, 'error': 'Unit ID is required'}), 400
+                
+                try:
+                    unit = WashingUnit.query.get(data['id'])
+                    if not unit:
+                        return jsonify({'success': False, 'error': 'Unit not found'}), 404
+                    
+                    org_filter = get_organization_filter(WashingUnit)
+                    if not WashingUnit.query.filter(org_filter).filter_by(id=unit.id).first():
+                        return jsonify({'success': False, 'error': 'Unauthorized'}), 403
+                    
+                    unit.unit_name = data.get('unit_name', unit.unit_name)
+                    unit.description = data.get('description', unit.description)
+                    db.session.commit()
+                    return jsonify({'success': True})
+                except Exception as e:
+                    db.session.rollback()
+                    current_app.logger.error(f"Error updating unit: {str(e)}", exc_info=True)
+                    return jsonify({'success': False, 'error': f'Error updating unit: {str(e)}'}), 500
+            
+            elif action == 'delete':
+                if current_user.user_role != 'Manager':
+                    return jsonify({'success': False, 'error': 'Only Managers can delete units'}), 403
+                
+                if not data.get('id'):
+                    return jsonify({'success': False, 'error': 'Unit ID is required'}), 400
+                
+                try:
+                    unit = WashingUnit.query.get(data['id'])
+                    if not unit:
+                        return jsonify({'success': False, 'error': 'Unit not found'}), 404
+                    
+                    org_filter = get_organization_filter(WashingUnit)
+                    if not WashingUnit.query.filter(org_filter).filter_by(id=unit.id).first():
+                        return jsonify({'success': False, 'error': 'Unauthorized'}), 403
+                    
+                    # Soft delete - set is_active to False (historical records remain)
+                    unit.is_active = False
+                    db.session.commit()
+                    return jsonify({'success': True})
+                except Exception as e:
+                    db.session.rollback()
+                    current_app.logger.error(f"Error deleting unit: {str(e)}", exc_info=True)
+                    return jsonify({'success': False, 'error': f'Error deleting unit: {str(e)}'}), 500
+            
+            return jsonify({'success': False, 'error': 'Invalid action'}), 400
+        except Exception as e:
+            current_app.logger.error(f"Unexpected error: {str(e)}", exc_info=True)
+            return jsonify({'success': False, 'error': f'Unexpected error: {str(e)}'}), 500
+
+
+@checklist_bp.route('/kitchen/glass-washer/entries', methods=['GET', 'POST'])
+@login_required
+@role_required(['Chef', 'Manager'])
+def kitchen_glass_washer_entries():
+    """API endpoint for kitchen glass washer checklist entries"""
+    if request.method == 'GET':
+        try:
+            unit_id = request.args.get('unit_id', type=int)
+            start_date = request.args.get('start_date')
+            end_date = request.args.get('end_date')
+            
+            org_filter = get_organization_filter(KitchenGlassWasherChecklist)
+            query = KitchenGlassWasherChecklist.query.filter(org_filter)
+            
+            if unit_id:
+                query = query.filter_by(unit_id=unit_id)
+            if start_date:
+                query = query.filter(KitchenGlassWasherChecklist.entry_date >= datetime.strptime(start_date, '%Y-%m-%d').date())
+            if end_date:
+                query = query.filter(KitchenGlassWasherChecklist.entry_date <= datetime.strptime(end_date, '%Y-%m-%d').date())
+            
+            entries = query.order_by(KitchenGlassWasherChecklist.entry_date.desc(), KitchenGlassWasherChecklist.entry_time.desc()).all()
+            
+            return jsonify([{
+                'id': entry.id,
+                'unit_id': entry.unit_id,
+                'unit_name': entry.unit.unit_name if entry.unit else 'Unknown',
+                'entry_date': entry.entry_date.isoformat(),
+                'entry_time': entry.entry_time,
+                'staff_name': entry.staff_name,
+                'wash_temperature': entry.wash_temperature,
+                'rinse_sanitising_temperature': entry.rinse_sanitising_temperature,
+                'sanitising_method': entry.sanitising_method,
+                'pass_fail': entry.pass_fail,
+                'corrective_action': entry.corrective_action,
+                'staff_initials': entry.staff_initials,
+                'manager_verification_initials': entry.manager_verification_initials,
+                'manager_verified': entry.manager_verified,
+                'manager_verified_at': entry.manager_verified_at.isoformat() if entry.manager_verified_at else None,
+                'created_at': entry.created_at.isoformat() if entry.created_at else None
+            } for entry in entries])
+        except Exception as e:
+            current_app.logger.error(f"Error loading entries: {str(e)}", exc_info=True)
+            return jsonify({'success': False, 'error': str(e)}), 500
+    
+    elif request.method == 'POST':
+        try:
+            data = request.get_json()
+            if not data:
+                return jsonify({'success': False, 'error': 'No data provided'}), 400
+            
+            action = data.get('action')
+            
+            if action == 'create':
+                # Validate required fields
+                unit_id = data.get('unit_id')
+                entry_date_str = data.get('entry_date')
+                entry_time = data.get('entry_time', '').strip()
+                wash_temperature = data.get('wash_temperature')
+                rinse_sanitising_temperature = data.get('rinse_sanitising_temperature')
+                sanitising_method = data.get('sanitising_method')
+                staff_initials = data.get('staff_initials', '').strip()
+                corrective_action = data.get('corrective_action', '').strip()
+                
+                if not unit_id:
+                    return jsonify({'success': False, 'error': 'Unit is required'}), 400
+                if not entry_date_str:
+                    return jsonify({'success': False, 'error': 'Date is required'}), 400
+                if not entry_time:
+                    return jsonify({'success': False, 'error': 'Time is required'}), 400
+                if wash_temperature is None:
+                    return jsonify({'success': False, 'error': 'Wash temperature is required'}), 400
+                if not sanitising_method:
+                    return jsonify({'success': False, 'error': 'Sanitising method is required'}), 400
+                if not staff_initials:
+                    return jsonify({'success': False, 'error': 'Staff initials are required'}), 400
+                
+                # Check if unit exists and user has access
+                org_filter = get_organization_filter(WashingUnit)
+                unit = WashingUnit.query.filter(org_filter).filter_by(id=unit_id, is_active=True).first()
+                if not unit:
+                    return jsonify({'success': False, 'error': 'Unit not found or unauthorized'}), 404
+                
+                # Parse date
+                entry_date = datetime.strptime(entry_date_str, '%Y-%m-%d').date()
+                
+                # Convert temperatures to float
+                try:
+                    wash_temperature = float(wash_temperature)
+                    rinse_sanitising_temperature = float(rinse_sanitising_temperature) if rinse_sanitising_temperature else None
+                except (ValueError, TypeError):
+                    return jsonify({'success': False, 'error': 'Invalid temperature values'}), 400
+                
+                # Get staff name from current user
+                staff_name = get_user_display_name(current_user)
+                
+                # Create entry
+                entry = KitchenGlassWasherChecklist(
+                    unit_id=unit_id,
+                    entry_date=entry_date,
+                    entry_time=entry_time,
+                    staff_name=staff_name,
+                    wash_temperature=wash_temperature,
+                    rinse_sanitising_temperature=rinse_sanitising_temperature,
+                    sanitising_method=sanitising_method,
+                    staff_initials=staff_initials,
+                    corrective_action=corrective_action if corrective_action else None,
+                    organisation=current_user.organisation or current_user.restaurant_bar_name,
+                    created_by=current_user.id
+                )
+                
+                # Calculate pass/fail
+                entry.pass_fail = entry.calculate_pass_fail()
+                
+                # Validate: if fail, corrective action is mandatory
+                if entry.pass_fail == 'Fail' and not corrective_action:
+                    return jsonify({'success': False, 'error': 'Corrective action is required when result is Fail'}), 400
+                
+                db.session.add(entry)
+                db.session.commit()
+                
+                return jsonify({'success': True, 'entry': {
+                    'id': entry.id,
+                    'pass_fail': entry.pass_fail
+                }})
+            
+            elif action == 'verify':
+                # Only managers can verify
+                if current_user.user_role != 'Manager':
+                    return jsonify({'success': False, 'error': 'Only Managers can verify entries'}), 403
+                
+                entry_id = data.get('entry_id')
+                manager_initials = data.get('manager_initials', '').strip()
+                
+                if not entry_id:
+                    return jsonify({'success': False, 'error': 'Entry ID is required'}), 400
+                if not manager_initials:
+                    return jsonify({'success': False, 'error': 'Manager verification initials are required'}), 400
+                
+                org_filter = get_organization_filter(KitchenGlassWasherChecklist)
+                entry = KitchenGlassWasherChecklist.query.filter(org_filter).filter_by(id=entry_id).first()
+                if not entry:
+                    return jsonify({'success': False, 'error': 'Entry not found or unauthorized'}), 404
+                
+                if entry.manager_verified:
+                    return jsonify({'success': False, 'error': 'Entry already verified'}), 400
+                
+                entry.manager_verification_initials = manager_initials
+                entry.manager_verified = True
+                entry.manager_verified_at = datetime.utcnow()
+                entry.verified_by = current_user.id
+                
+                db.session.commit()
+                
+                return jsonify({'success': True})
+            
+            return jsonify({'success': False, 'error': 'Invalid action'}), 400
+        except Exception as e:
+            db.session.rollback()
+            current_app.logger.error(f"Error in kitchen_glass_washer_entries: {str(e)}", exc_info=True)
+            return jsonify({'success': False, 'error': str(e)}), 500
 
 

@@ -64,10 +64,13 @@
             <div class="nav-dropdown-menu" id="checklistDropdownMenu">
                 {% if current_user.user_role in ['Manager', 'Bartender'] %}
                 <a href="{{ url_for('checklist.bar_checklist') }}" class="nav-dropdown-item">Bar</a>
+                <a href="{{ url_for('checklist.bar_glass_washer_checklist') }}" class="nav-dropdown-item">Glass Washer Checklist</a>
                 <a href="{{ url_for('checklist.cold_storage_temperature_log') }}" class="nav-dropdown-item">Temperature Log</a>
                 {% endif %}
                 {% if current_user.user_role in ['Chef', 'Manager'] %}
                 <a href="{{ url_for('checklist.kitchen_checklist') }}" class="nav-dropdown-item">Kitchen</a>
+                <a href="{{ url_for('checklist.kitchen_glass_washer_checklist') }}" class="nav-dropdown-item">Glass Washer Checklist</a>
+                <a href="{{ url_for('checklist.kitchen_dish_washer_checklist') }}" class="nav-dropdown-item">Dish Washer Checklist</a>
                 <a href="{{ url_for('checklist.kitchen_cold_storage_temperature_log') }}" class="nav-dropdown-item">Temperature Log</a>
                 {% endif %}
             </div>

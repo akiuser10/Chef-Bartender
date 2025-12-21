@@ -1,0 +1,190 @@
+{% extends "base.html" %}
+{% block page_panel %}
+<script>
+    // Pass user info to JavaScript
+    {% if current_user.is_authenticated %}
+        {% set first_initial = current_user.first_name[0] if current_user.first_name else "" %}
+        {% set last_initial = current_user.last_name[0] if current_user.last_name else "" %}
+        {% if first_initial or last_initial %}
+            window.userInitials = '{{ (first_initial + last_initial).upper() }}';
+        {% elif current_user.username %}
+            window.userInitials = '{{ current_user.username[0].upper() }}';
+        {% else %}
+            window.userInitials = '';
+        {% endif %}
+        window.userRole = '{{ current_user.user_role }}';
+        window.userDisplayName = '{{ get_user_display_name(current_user) }}';
+    {% else %}
+        window.userInitials = '';
+        window.userRole = '';
+        window.userDisplayName = '';
+    {% endif %}
+</script>
+
+<div class="panel-header">
+    <h2>Kitchen Dish Washer Checklist (HACCP)</h2>
+</div>
+
+<div class="checklist-container">
+    <!-- Unit Management Section (Manager Only) -->
+    {% if current_user.user_role == 'Manager' %}
+    <div class="unit-management-section" style="margin-bottom: 20px; padding: 15px; background: #f5f5f5; border-radius: 8px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+            <h3 style="margin: 0;">Manage Units</h3>
+            <button type="button" id="add-unit-btn" class="btn-primary">Add New Unit</button>
+        </div>
+        <div id="units-list" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px;">
+            <!-- Units will be populated by JavaScript -->
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Checklist Entry Form -->
+    <div class="checklist-entry-section" style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+        <h3 style="margin-top: 0;">New Checklist Entry</h3>
+        <form id="checklist-form">
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px;">
+                <div class="form-group">
+                    <label for="unit-select">Unit Name *</label>
+                    <select id="unit-select" name="unit_id" required>
+                        <option value="">-- Select Unit --</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="entry-date">Date *</label>
+                    <input type="date" id="entry-date" name="entry_date" required value="{{ today.isoformat() if today else '' }}">
+                </div>
+
+                <div class="form-group">
+                    <label for="entry-time">Time * (12-hour format)</label>
+                    <div style="display: flex; gap: 10px; align-items: center;">
+                        <input type="time" id="entry-time-input" style="flex: 1;" required>
+                        <select id="time-period" required>
+                            <option value="AM">AM</option>
+                            <option value="PM">PM</option>
+                        </select>
+                    </div>
+                    <input type="hidden" id="entry-time" name="entry_time">
+                </div>
+
+                <div class="form-group">
+                    <label for="staff-name">Staff Name</label>
+                    <input type="text" id="staff-name" name="staff_name" readonly value="{{ get_user_display_name(current_user) if current_user.is_authenticated else '' }}">
+                </div>
+
+                <div class="form-group">
+                    <label for="wash-temperature">Wash Temperature (°C) *</label>
+                    <input type="number" id="wash-temperature" name="wash_temperature" step="0.1" min="0" max="100" required>
+                    <small style="color: #666;">Minimum: 60°C (HACCP)</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="final-rinse-temperature">Final Rinse Temperature (°C) *</label>
+                    <input type="number" id="final-rinse-temperature" name="final_rinse_temperature" step="0.1" min="0" max="100" required>
+                    <small style="color: #666;">Minimum: 82°C (HACCP)</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="staff-initials">Staff Initials *</label>
+                    {% if current_user.is_authenticated %}
+                        {% set first_initial = current_user.first_name[0] if current_user.first_name else "" %}
+                        {% set last_initial = current_user.last_name[0] if current_user.last_name else "" %}
+                        {% if first_initial or last_initial %}
+                            {% set user_initials = (first_initial + last_initial).upper() %}
+                        {% elif current_user.username %}
+                            {% set user_initials = current_user.username[0].upper() %}
+                        {% else %}
+                            {% set user_initials = "" %}
+                        {% endif %}
+                    {% else %}
+                        {% set user_initials = "" %}
+                    {% endif %}
+                    <input type="text" id="staff-initials" name="staff_initials" maxlength="10" required value="{{ user_initials }}">
+                    <small style="color: #666;">Auto-filled from your profile</small>
+                </div>
+            </div>
+
+            <!-- Pass/Fail Display -->
+            <div id="pass-fail-display" style="margin: 20px 0; padding: 15px; border-radius: 8px; display: none;">
+                <strong>Status: </strong><span id="pass-fail-text"></span>
+            </div>
+
+            <!-- Corrective Action (Required if Fail) -->
+            <div class="form-group" id="corrective-action-group" style="display: none;">
+                <label for="corrective-action">Corrective Action *</label>
+                <textarea id="corrective-action" name="corrective_action" rows="3" style="width: 100%;"></textarea>
+                <small style="color: #666;">Required when result is Fail</small>
+            </div>
+
+            <div style="margin-top: 20px;">
+                <button type="submit" id="submit-btn" class="btn-primary">Submit Entry</button>
+                <button type="button" id="reset-btn" class="btn-secondary">Reset Form</button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Entries List -->
+    <div class="entries-list-section" style="margin-top: 30px;">
+        <h3>Recent Entries</h3>
+        <div id="entries-list" style="margin-top: 15px;">
+            <!-- Entries will be populated by JavaScript -->
+        </div>
+    </div>
+</div>
+
+<!-- Add/Edit Unit Modal (Manager Only) -->
+{% if current_user.user_role == 'Manager' %}
+<div id="unit-modal" class="modal hidden" style="display: none;">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 id="unit-modal-title">Add Unit</h3>
+            <button class="modal-close" id="unit-modal-close">&times;</button>
+        </div>
+        <div class="modal-body">
+            <form id="unit-form">
+                <input type="hidden" id="unit-id" name="unit_id">
+                <div class="form-group">
+                    <label for="unit-name">Unit Name *</label>
+                    <input type="text" id="unit-name" name="unit_name" required placeholder="e.g., Undercounter Washer">
+                </div>
+                <div class="form-group">
+                    <label for="unit-description">Description</label>
+                    <textarea id="unit-description" name="description" rows="2"></textarea>
+                </div>
+                <div style="margin-top: 20px;">
+                    <button type="submit" class="btn-primary">Save</button>
+                    <button type="button" id="unit-form-cancel" class="btn-secondary">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Manager Verification Modal -->
+<div id="verify-modal" class="modal hidden" style="display: none;">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>Manager Verification</h3>
+            <button class="modal-close" id="verify-modal-close">&times;</button>
+        </div>
+        <div class="modal-body">
+            <form id="verify-form">
+                <input type="hidden" id="verify-entry-id" name="entry_id">
+                <div class="form-group">
+                    <label for="manager-initials">Manager Verification Initials *</label>
+                    <input type="text" id="manager-initials" name="manager_initials" maxlength="10" required>
+                </div>
+                <div style="margin-top: 20px;">
+                    <button type="submit" class="btn-primary">Verify Entry</button>
+                    <button type="button" id="verify-form-cancel" class="btn-secondary">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<script src="{{ url_for('static', filename='kitchen_dish_washer_checklist.js') }}"></script>
+{% endblock %}
+

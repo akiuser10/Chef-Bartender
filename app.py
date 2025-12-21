@@ -11,7 +11,7 @@ from extensions import db, login_manager, mail
 
 # Import models (must import after extensions to avoid circular imports)
 # Models import db from extensions
-from models import User, Product, HomemadeIngredient, HomemadeIngredientItem, Recipe, RecipeIngredient, PurchaseRequest, PurchaseItem, Book, HeroSlide, ColdStorageUnit, TemperatureLog, TemperatureEntry
+from models import User, Product, HomemadeIngredient, HomemadeIngredientItem, Recipe, RecipeIngredient, PurchaseRequest, PurchaseItem, Book, HeroSlide, ColdStorageUnit, TemperatureLog, TemperatureEntry, WashingUnit, BarGlassWasherChecklist, KitchenDishWasherChecklist, KitchenGlassWasherChecklist
 
 # Import blueprints
 from blueprints.main import main_bp
