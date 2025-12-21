@@ -1101,6 +1101,9 @@ def generate_bar_shift_closing_checklist_pdf(unit, year, month_num):
                         cell_value = f"✓ {item.staff_initials}"
                     else:
                         cell_value = "✓"
+                else:
+                    cell_value = ""
+            else:
                 cell_value = ""
             row.append(cell_value)
         table_data.append(row)
