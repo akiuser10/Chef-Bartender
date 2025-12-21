@@ -17,8 +17,11 @@
         {% else %}
             window.userInitials = '';
         {% endif %}
+        // Pass user role to JavaScript
+        window.userRole = '{{ current_user.user_role }}';
     {% else %}
         window.userInitials = '';
+        window.userRole = '';
     {% endif %}
 </script>
 <div class="panel-header">

@@ -9,6 +9,7 @@ let currentDate = new Date();
 let currentTime = '10:00 AM';
 let scheduledTimes = ['10:00 AM', '02:00 PM', '06:00 PM', '10:00 PM'];
 let userInitials = window.userInitials || ''; // Get user initials from template
+let userRole = window.userRole || ''; // Get user role from template
 
 // Initialize on page load
 document.addEventListener('DOMContentLoaded', function() {
@@ -31,6 +32,28 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         }
     }, 500);
+    
+    // Event delegation for edit/delete buttons (they're created dynamically)
+    document.addEventListener('click', function(e) {
+        // Edit button
+        if (e.target && e.target.classList.contains('btn-edit-unit')) {
+            e.preventDefault();
+            e.stopPropagation();
+            const unitId = parseInt(e.target.getAttribute('data-unit-id'));
+            if (unitId) {
+                editUnit(unitId);
+            }
+        }
+        // Delete button
+        if (e.target && e.target.classList.contains('btn-delete-unit')) {
+            e.preventDefault();
+            e.stopPropagation();
+            const unitId = parseInt(e.target.getAttribute('data-unit-id'));
+            if (unitId) {
+                deleteUnit(unitId);
+            }
+        }
+    });
 });
 
 // Event Listeners
@@ -336,11 +359,23 @@ function createUnitTable(unit) {
     const unitHeader = document.createElement('th');
     unitHeader.colSpan = 4;
     unitHeader.className = 'unit-header';
+    // Add edit/delete buttons for Managers
+    let actionButtons = '';
+    if (userRole === 'Manager') {
+        actionButtons = `
+            <div class="unit-actions">
+                <button class="btn-edit-unit" data-unit-id="${unit.id}" title="Edit Unit">Edit</button>
+                <button class="btn-delete-unit" data-unit-id="${unit.id}" title="Delete Unit">Delete</button>
+            </div>
+        `;
+    }
+    
     unitHeader.innerHTML = `
         <div class="unit-header-content">
             <span class="unit-number">UNIT NO: ${unit.unit_number}</span>
             <span class="unit-location">Location: ${unit.location || '—'}</span>
             <span class="unit-type">Type: ${unit.unit_type === 'Wine Chiller' ? 'Chiller' : unit.unit_type}</span>
+            ${actionButtons}
         </div>
     `;
     headerRow.appendChild(unitHeader);
@@ -961,6 +996,99 @@ function closeUnitForm() {
     if (modal) {
         modal.classList.add('hidden');
         modal.style.display = 'none';
+    }
+}
+
+// Edit unit function
+function editUnit(unitId) {
+    console.log('=== Editing Unit ===', unitId);
+    
+    // Find the unit in allUnits
+    const unit = allUnits.find(u => u.id === unitId);
+    if (!unit) {
+        showNotification('Unit not found', 'error');
+        return;
+    }
+    
+    // Populate form with unit data
+    const unitIdInput = document.getElementById('unit-id');
+    const unitNumberInput = document.getElementById('unit-number');
+    const locationInput = document.getElementById('unit-location');
+    const unitTypeInput = document.getElementById('unit-type');
+    const minTempInput = document.getElementById('min-temp');
+    const maxTempInput = document.getElementById('max-temp');
+    const formTitle = document.getElementById('unit-form-title');
+    const wineChillerTemps = document.getElementById('wine-chiller-temps');
+    
+    if (unitIdInput) unitIdInput.value = unit.id;
+    if (unitNumberInput) unitNumberInput.value = unit.unit_number;
+    if (locationInput) locationInput.value = unit.location || '';
+    if (unitTypeInput) {
+        // Handle both "Wine Chiller" (legacy) and "Chiller" (new)
+        const unitType = unit.unit_type === 'Wine Chiller' ? 'Chiller' : unit.unit_type;
+        unitTypeInput.value = unitType;
+        // Show/hide temperature fields for Chiller
+        if (wineChillerTemps) {
+            if (unitType === 'Chiller') {
+                wineChillerTemps.classList.remove('hidden');
+            } else {
+                wineChillerTemps.classList.add('hidden');
+            }
+        }
+    }
+    if (minTempInput) minTempInput.value = unit.min_temp || '';
+    if (maxTempInput) maxTempInput.value = unit.max_temp || '';
+    if (formTitle) formTitle.textContent = 'Edit Unit';
+    
+    // Open the form modal
+    openAddUnitForm();
+}
+
+// Delete unit function
+async function deleteUnit(unitId) {
+    console.log('=== Deleting Unit ===', unitId);
+    
+    // Find the unit in allUnits
+    const unit = allUnits.find(u => u.id === unitId);
+    if (!unit) {
+        showNotification('Unit not found', 'error');
+        return;
+    }
+    
+    // Confirm deletion
+    const confirmMessage = `Are you sure you want to delete Unit ${unit.unit_number} (${unit.location})?\n\nThis will also delete all temperature log entries for this unit.`;
+    if (!confirm(confirmMessage)) {
+        return;
+    }
+    
+    try {
+        const apiBasePath = window.apiBasePath || '/checklist/bar/cold-storage';
+        const response = await fetch(`${apiBasePath}/units`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                action: 'delete',
+                id: unitId
+            })
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            showNotification(`Unit ${unit.unit_number} deleted successfully`, 'success');
+            // Remove from allUnits array
+            allUnits = allUnits.filter(u => u.id !== unitId);
+            // Reload units and tables
+            await loadUnits();
+            await loadTemperatureEntries();
+        } else {
+            showNotification(result.error || 'Error deleting unit', 'error');
+        }
+    } catch (error) {
+        console.error('Error deleting unit:', error);
+        showNotification('Error deleting unit: ' + error.message, 'error');
     }
 }
 
