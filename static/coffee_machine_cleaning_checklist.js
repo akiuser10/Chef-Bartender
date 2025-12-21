@@ -39,10 +39,17 @@ function initializeEventListeners() {
     }
     
     // Unit management (Manager only)
-    if (window.userRole === 'Manager') {
+    // Normalize role check - strip whitespace
+    const userRole = (window.userRole || '').trim();
+    if (userRole === 'Manager') {
         const addUnitBtn = document.getElementById('add-unit-btn');
         if (addUnitBtn) {
-            addUnitBtn.addEventListener('click', () => openUnitModal());
+            addUnitBtn.addEventListener('click', () => {
+                console.log('Add unit button clicked');
+                openUnitModal();
+            });
+        } else {
+            console.error('Add unit button not found');
         }
         
         const unitForm = document.getElementById('unit-form');
@@ -101,7 +108,8 @@ function loadUnits() {
 
 // Render Units (Manager only)
 function renderUnits() {
-    if (window.userRole !== 'Manager') return;
+    const userRole = (window.userRole || '').trim();
+    if (userRole !== 'Manager') return;
     
     const unitsList = document.getElementById('units-list');
     if (!unitsList) return;
@@ -153,7 +161,8 @@ function loadChecklistEntry() {
                 document.getElementById('checklist-items-container').style.display = 'block';
                 
                 // Load checklist points for manager
-                if (window.userRole === 'Manager') {
+                const userRole = (window.userRole || '').trim();
+                if (userRole === 'Manager') {
                     loadChecklistPoints(unitId);
                 }
             } else {
@@ -181,7 +190,8 @@ function loadChecklistPoints(unitId) {
 
 // Render Checklist Points (Manager only)
 function renderChecklistPoints() {
-    if (window.userRole !== 'Manager') return;
+    const userRole = (window.userRole || '').trim();
+    if (userRole !== 'Manager') return;
     
     const pointsList = document.getElementById('points-list');
     const addPointBtn = document.getElementById('add-point-btn');
@@ -348,7 +358,10 @@ function openUnitModal(unitId = null) {
     const form = document.getElementById('unit-form');
     const title = document.getElementById('unit-modal-title');
     
-    if (!modal || !form || !title) return;
+    if (!modal || !form || !title) {
+        console.error('Modal elements not found');
+        return;
+    }
     
     if (unitId) {
         const unit = units.find(u => u.id === unitId);
@@ -364,12 +377,16 @@ function openUnitModal(unitId = null) {
         title.textContent = 'Add Unit';
     }
     
-    modal.style.display = 'block';
+    // Remove hidden class to show modal (CSS uses !important on .modal.hidden)
+    modal.classList.remove('hidden');
 }
 
 function closeUnitModal() {
     const modal = document.getElementById('unit-modal');
-    if (modal) modal.style.display = 'none';
+    if (modal) {
+        // Add hidden class to hide modal
+        modal.classList.add('hidden');
+    }
 }
 
 function handleUnitFormSubmit(e) {
@@ -451,7 +468,10 @@ function openPointModal(pointId = null) {
     const form = document.getElementById('point-form');
     const title = document.getElementById('point-modal-title');
     
-    if (!modal || !form || !title) return;
+    if (!modal || !form || !title) {
+        console.error('Point modal elements not found');
+        return;
+    }
     
     document.getElementById('point-unit-id').value = currentUnitId;
     
@@ -476,12 +496,16 @@ function openPointModal(pointId = null) {
         title.textContent = 'Add Checklist Point';
     }
     
-    modal.style.display = 'block';
+    // Remove hidden class to show modal (CSS uses !important on .modal.hidden)
+    modal.classList.remove('hidden');
 }
 
 function closePointModal() {
     const modal = document.getElementById('point-modal');
-    if (modal) modal.style.display = 'none';
+    if (modal) {
+        // Add hidden class to hide modal
+        modal.classList.add('hidden');
+    }
 }
 
 function handlePointFormSubmit(e) {
