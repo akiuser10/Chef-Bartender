@@ -139,7 +139,7 @@ function initializeEventListeners() {
     // Unit type change - show/hide wine chiller temps
     document.getElementById('unit-type')?.addEventListener('change', function() {
         const wineChillerTemps = document.getElementById('wine-chiller-temps');
-        if (this.value === 'Wine Chiller') {
+        if (this.value === 'Chiller') {
             wineChillerTemps.classList.remove('hidden');
         } else {
             wineChillerTemps.classList.add('hidden');
@@ -340,7 +340,7 @@ function createUnitTable(unit) {
         <div class="unit-header-content">
             <span class="unit-number">UNIT NO: ${unit.unit_number}</span>
             <span class="unit-location">Location: ${unit.location || '—'}</span>
-            <span class="unit-type">Type: ${unit.unit_type}</span>
+            <span class="unit-type">Type: ${unit.unit_type === 'Wine Chiller' ? 'Chiller' : unit.unit_type}</span>
         </div>
     `;
     headerRow.appendChild(unitHeader);
@@ -597,7 +597,8 @@ function getTemperatureLimits(unitId) {
         return { min: 0, max: 4 };
     } else if (unit.unit_type === 'Freezer') {
         return { min: -22, max: -12 };
-    } else if (unit.unit_type === 'Wine Chiller') {
+    } else if (unit.unit_type === 'Wine Chiller' || unit.unit_type === 'Chiller') {
+        // Support both "Wine Chiller" (legacy) and "Chiller" (new)
         return { 
             min: parseFloat(unit.min_temp) || 0, 
             max: parseFloat(unit.max_temp) || 20 

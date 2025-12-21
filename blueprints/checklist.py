@@ -159,10 +159,14 @@ def kitchen_manage_cold_storage_units():
                 if not unit_type:
                     return jsonify({'success': False, 'error': 'Unit type is required'}), 400
                 
-                # Validate unit type
-                valid_types = ['Refrigerator', 'Freezer', 'Wine Chiller']
+                # Validate unit type (accept both "Chiller" and "Wine Chiller" for backward compatibility)
+                valid_types = ['Refrigerator', 'Freezer', 'Chiller', 'Wine Chiller']
                 if unit_type not in valid_types:
-                    return jsonify({'success': False, 'error': f'Invalid unit type. Must be one of: {", ".join(valid_types)}'}), 400
+                    return jsonify({'success': False, 'error': f'Invalid unit type. Must be one of: Refrigerator, Freezer, Chiller'}), 400
+                
+                # Normalize "Chiller" to "Wine Chiller" for database storage (backward compatibility)
+                if unit_type == 'Chiller':
+                    unit_type = 'Wine Chiller'
                 
                 try:
                     # Check if unit number already exists in organization (within same context)
@@ -190,7 +194,7 @@ def kitchen_manage_cold_storage_units():
                         except (ValueError, TypeError):
                             return jsonify({'success': False, 'error': 'Invalid maximum temperature value'}), 400
                     
-                    # Validate temperature range for Wine Chiller
+                    # Validate temperature range for Chiller (stored as "Wine Chiller" in DB)
                     if unit_type == 'Wine Chiller':
                         if min_temp is not None and max_temp is not None and min_temp >= max_temp:
                             return jsonify({'success': False, 'error': 'Minimum temperature must be less than maximum temperature'}), 400
@@ -365,10 +369,14 @@ def manage_cold_storage_units():
                 if not unit_type:
                     return jsonify({'success': False, 'error': 'Unit type is required'}), 400
                 
-                # Validate unit type
-                valid_types = ['Refrigerator', 'Freezer', 'Wine Chiller']
+                # Validate unit type (accept both "Chiller" and "Wine Chiller" for backward compatibility)
+                valid_types = ['Refrigerator', 'Freezer', 'Chiller', 'Wine Chiller']
                 if unit_type not in valid_types:
-                    return jsonify({'success': False, 'error': f'Invalid unit type. Must be one of: {", ".join(valid_types)}'}), 400
+                    return jsonify({'success': False, 'error': f'Invalid unit type. Must be one of: Refrigerator, Freezer, Chiller'}), 400
+                
+                # Normalize "Chiller" to "Wine Chiller" for database storage (backward compatibility)
+                if unit_type == 'Chiller':
+                    unit_type = 'Wine Chiller'
                 
                 try:
                     # Check if unit number already exists in organization (within same context)
@@ -396,7 +404,7 @@ def manage_cold_storage_units():
                         except (ValueError, TypeError):
                             return jsonify({'success': False, 'error': 'Invalid maximum temperature value'}), 400
                     
-                    # Validate temperature range for Wine Chiller
+                    # Validate temperature range for Chiller (stored as "Wine Chiller" in DB)
                     if unit_type == 'Wine Chiller':
                         if min_temp is not None and max_temp is not None and min_temp >= max_temp:
                             return jsonify({'success': False, 'error': 'Minimum temperature must be less than maximum temperature'}), 400
