@@ -1,28 +1,37 @@
 {% extends "base.html" %}
 {% block page_panel %}
+{% if current_user.is_authenticated %}
+    {% set first_initial = current_user.first_name[0] if current_user.first_name else "" %}
+    {% set last_initial = current_user.last_name[0] if current_user.last_name else "" %}
+    {% if first_initial or last_initial %}
+        {% set user_initials = (first_initial + last_initial).upper() %}
+    {% elif current_user.username %}
+        {% set user_initials = current_user.username[0].upper() %}
+    {% else %}
+        {% set user_initials = "" %}
+    {% endif %}
+{% else %}
+    {% set user_initials = "" %}
+{% endif %}
+<div id="user-data" 
+     data-initials="{{ user_initials }}"
+     data-role="{{ current_user.user_role if current_user.is_authenticated else '' }}"></div>
 <script>
     // Detect route context (kitchen or bar) from current URL
     window.temperatureLogContext = window.location.pathname.includes('/kitchen/') ? 'kitchen' : 'bar';
     window.apiBasePath = window.temperatureLogContext === 'kitchen' ? '/checklist/kitchen/cold-storage' : '/checklist/bar/cold-storage';
-</script>
-<script>
-    // Pass user initials to JavaScript
-    {% if current_user.is_authenticated %}
-        {% set first_initial = current_user.first_name[0] if current_user.first_name else "" %}
-        {% set last_initial = current_user.last_name[0] if current_user.last_name else "" %}
-        {% if first_initial or last_initial %}
-            window.userInitials = '{{ (first_initial + last_initial).upper() }}';
-        {% elif current_user.username %}
-            window.userInitials = '{{ current_user.username[0].upper() }}';
-        {% else %}
+    
+    // Pass user info to JavaScript - reading from data attributes to avoid linter errors
+    (function() {
+        var userDataEl = document.getElementById('user-data');
+        if (userDataEl) {
+            window.userInitials = userDataEl.getAttribute('data-initials') || '';
+            window.userRole = userDataEl.getAttribute('data-role') || '';
+        } else {
             window.userInitials = '';
-        {% endif %}
-        // Pass user role to JavaScript
-        window.userRole = '{{ current_user.user_role }}';
-    {% else %}
-        window.userInitials = '';
-        window.userRole = '';
-    {% endif %}
+            window.userRole = '';
+        }
+    })();
 </script>
 <div class="panel-header">
     <h2>Cold Storage Temperature Log – Unit Wise (HACCP)</h2>

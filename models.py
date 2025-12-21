@@ -652,7 +652,7 @@ class ColdStorageUnit(db.Model):
     def get_temperature_limits(self):
         """Get min and max temperature limits based on unit type"""
         if self.unit_type == 'Refrigerator':
-            return (0.0, 4.0)
+            return (0.0, 4.9)
         elif self.unit_type == 'Freezer':
             return (-22.0, -12.0)
         elif self.unit_type == 'Wine Chiller':

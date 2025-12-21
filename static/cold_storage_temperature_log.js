@@ -629,7 +629,7 @@ function getTemperatureLimits(unitId) {
     if (!unit) return { min: null, max: null };
     
     if (unit.unit_type === 'Refrigerator') {
-        return { min: 0, max: 4 };
+        return { min: 0, max: 4.9 };
     } else if (unit.unit_type === 'Freezer') {
         return { min: -22, max: -12 };
     } else if (unit.unit_type === 'Wine Chiller' || unit.unit_type === 'Chiller') {

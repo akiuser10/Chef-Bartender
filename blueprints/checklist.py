@@ -1870,7 +1870,10 @@ def manage_bar_closing_units():
             action = data.get('action')
             
             if action == 'create':
-                if current_user.user_role != 'Manager':
+                # Normalize role check - strip whitespace and handle None
+                user_role = (current_user.user_role or '').strip()
+                if user_role != 'Manager':
+                    current_app.logger.warning(f"Non-Manager user {current_user.id} (role: '{current_user.user_role}') attempted to create unit")
                     return jsonify({'success': False, 'error': 'Only Managers can create new units'}), 403
                 
                 unit_name = data.get('unit_name', '').strip() or 'BAR'
@@ -1886,16 +1889,22 @@ def manage_bar_closing_units():
                     if existing_unit:
                         return jsonify({'success': False, 'error': f'Unit name "{unit_name}" already exists'}), 400
                     
+                    # Ensure organisation is not None or empty string
+                    organisation = (current_user.organisation or current_user.restaurant_bar_name or '').strip()
+                    if not organisation:
+                        return jsonify({'success': False, 'error': 'User organization is required to create units'}), 400
+                    
                     unit = BarClosingChecklistUnit(
                         unit_name=unit_name,
                         description=description,
-                        organisation=current_user.organisation or current_user.restaurant_bar_name,
+                        organisation=organisation,
                         created_by=current_user.id,
                         is_active=True
                     )
                     db.session.add(unit)
                     db.session.commit()
                     
+                    current_app.logger.info(f"Manager {current_user.id} created coffee machine unit {unit.id} ({unit.unit_name})")
                     return jsonify({'success': True, 'unit': {
                         'id': unit.id,
                         'unit_name': unit.unit_name,
@@ -1907,7 +1916,9 @@ def manage_bar_closing_units():
                     return jsonify({'success': False, 'error': f'Error creating unit: {str(e)}'}), 500
             
             elif action == 'update':
-                if current_user.user_role != 'Manager':
+                # Normalize role check - strip whitespace and handle None
+                user_role = (current_user.user_role or '').strip()
+                if user_role != 'Manager':
                     return jsonify({'success': False, 'error': 'Only Managers can update units'}), 403
                 
                 if not data.get('id'):
@@ -1932,7 +1943,9 @@ def manage_bar_closing_units():
                     return jsonify({'success': False, 'error': f'Error updating unit: {str(e)}'}), 500
             
             elif action == 'delete':
-                if current_user.user_role != 'Manager':
+                # Normalize role check - strip whitespace and handle None
+                user_role = (current_user.user_role or '').strip()
+                if user_role != 'Manager':
                     return jsonify({'success': False, 'error': 'Only Managers can delete units'}), 403
                 
                 if not data.get('id'):
