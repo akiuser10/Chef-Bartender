@@ -352,7 +352,7 @@ def generate_bar_closing_checklist_pdf(unit, year, month_num):
     # Title
     month_names = ['January', 'February', 'March', 'April', 'May', 'June',
                   'July', 'August', 'September', 'October', 'November', 'December']
-    title = Paragraph(f"BAR Closing Checklist - {month_names[month_num-1]} {year}", title_style)
+    title = Paragraph(f"Coffee Machine Checklist - {month_names[month_num-1]} {year}", title_style)
     story.append(title)
     story.append(Spacer(1, 0.15*inch))
     

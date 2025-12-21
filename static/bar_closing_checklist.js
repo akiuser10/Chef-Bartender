@@ -607,7 +607,7 @@ function generatePDF() {
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `BAR_Closing_Checklist_${pdfMonth}_${pdfYear}.pdf`;
+        a.download = `Coffee_Machine_Checklist_${pdfMonth}_${pdfYear}.pdf`;
         document.body.appendChild(a);
         a.click();
         window.URL.revokeObjectURL(url);

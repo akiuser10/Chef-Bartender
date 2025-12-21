@@ -2288,7 +2288,7 @@ def generate_bar_closing_checklist_pdf():
         # Generate filename
         month_names = ['January', 'February', 'March', 'April', 'May', 'June',
                       'July', 'August', 'September', 'October', 'November', 'December']
-        filename = f'BAR_Closing_Checklist_{month_names[month_num-1]}_{year}.pdf'
+        filename = f'Coffee_Machine_Checklist_{month_names[month_num-1]}_{year}.pdf'
         
         return send_file(
             pdf_buffer,
