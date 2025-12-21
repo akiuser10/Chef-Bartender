@@ -2249,9 +2249,9 @@ def bar_closing_checklist_entries():
 
 @checklist_bp.route('/bar/closing/pdf', methods=['POST'])
 @login_required
-@role_required(['Manager'])
+@role_required(['Manager', 'Bartender'])
 def generate_bar_closing_checklist_pdf():
-    """Generate monthly PDF for BAR Closing Checklist - Manager only"""
+    """Generate monthly PDF for BAR Closing Checklist - Available to Manager and Bartender"""
     try:
         from utils.pdf_generator import generate_bar_closing_checklist_pdf
         

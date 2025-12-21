@@ -70,18 +70,18 @@ function initializeEventListeners() {
         const pointFormCancel = document.getElementById('point-form-cancel');
         if (pointModalClose) pointModalClose.addEventListener('click', closePointModal);
         if (pointFormCancel) pointFormCancel.addEventListener('click', closePointModal);
-        
-        // PDF generation
-        const generatePdfBtn = document.getElementById('generate-pdf-btn');
-        if (generatePdfBtn) {
-            generatePdfBtn.addEventListener('click', generatePDF);
-        }
-        
-        const pdfMonth = document.getElementById('pdf-month');
-        const pdfYear = document.getElementById('pdf-year');
-        if (pdfMonth) pdfMonth.addEventListener('change', updatePdfButton);
-        if (pdfYear) pdfYear.addEventListener('input', updatePdfButton);
     }
+    
+    // PDF generation (available to both Manager and Bartender)
+    const generatePdfBtn = document.getElementById('generate-pdf-btn');
+    if (generatePdfBtn) {
+        generatePdfBtn.addEventListener('click', generatePDF);
+    }
+    
+    const pdfMonth = document.getElementById('pdf-month');
+    const pdfYear = document.getElementById('pdf-year');
+    if (pdfMonth) pdfMonth.addEventListener('change', updatePdfButton);
+    if (pdfYear) pdfYear.addEventListener('input', updatePdfButton);
 }
 
 // Load Units
@@ -561,7 +561,7 @@ function deletePoint(pointId) {
     });
 }
 
-// PDF Generation (Manager only)
+// PDF Generation (Manager and Bartender)
 function updatePdfButton() {
     const pdfMonth = document.getElementById('pdf-month')?.value;
     const pdfYear = document.getElementById('pdf-year')?.value;
