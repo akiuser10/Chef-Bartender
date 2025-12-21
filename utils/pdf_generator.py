@@ -90,131 +90,98 @@ def generate_temperature_log_pdf(units, start_date, end_date):
         # Limit to 7 days per week (or available dates)
         week_dates = week_dates[:7]
         
-        # Calculate how many units can fit side by side (2 units per row in landscape)
-        units_per_row = 2
-        num_rows = (len(units) + units_per_row - 1) // units_per_row
-        
-        # Process units in rows
-        for row_idx in range(num_rows):
-            unit_row = units[row_idx * units_per_row:(row_idx + 1) * units_per_row]
+        # Process each unit separately (stacked vertically)
+        for unit in units:
+            # Unit Header
+            unit_header = f"Unit {unit.unit_number} | {unit.location} | {unit.unit_type}"
+            unit_header_para = Paragraph(unit_header, unit_header_style)
             
-            # Create a table for this row of units
-            row_tables = []
+            # Build table data: times as rows, dates as columns
+            # Header row: Time | Date1 | Date2 | Date3 | ...
+            header_row = ['TIME'] + [d.strftime('%m/%d') for d in week_dates]
+            table_data = [header_row]
             
-            for unit in unit_row:
-                # Unit Header
-                unit_header = f"Unit {unit.unit_number} | {unit.location} | {unit.unit_type}"
-                unit_header_para = Paragraph(unit_header, unit_header_style)
-                
-                # Build table data: times as rows, dates as columns
-                # Header row: Time | Date1 | Date2 | Date3 | ...
-                header_row = ['TIME'] + [d.strftime('%m/%d') for d in week_dates]
-                table_data = [header_row]
-                
-                # Get all logs for this unit and week
-                logs = {}
+            # Get all logs for this unit and week
+            logs = {}
+            for d in week_dates:
+                log = TemperatureLog.query.filter_by(unit_id=unit.id, log_date=d).first()
+                if log:
+                    logs[d] = {entry.scheduled_time: entry for entry in log.entries.all()}
+                else:
+                    logs[d] = {}
+            
+            # Add rows for each time slot
+            for time_slot in scheduled_times:
+                row = [time_slot]
                 for d in week_dates:
-                    log = TemperatureLog.query.filter_by(unit_id=unit.id, log_date=d).first()
-                    if log:
-                        logs[d] = {entry.scheduled_time: entry for entry in log.entries.all()}
+                    entry = logs.get(d, {}).get(time_slot)
+                    if entry and entry.temperature is not None:
+                        temp_str = format_temperature(entry.temperature)
+                        # Check if out of range
+                        try:
+                            if entry.is_out_of_range(unit):
+                                temp_str = f"<font color='red'>{temp_str}</font>"
+                        except:
+                            pass
+                        row.append(temp_str)
                     else:
-                        logs[d] = {}
-                
-                # Add rows for each time slot
-                for time_slot in scheduled_times:
-                    row = [time_slot]
-                    for d in week_dates:
-                        entry = logs.get(d, {}).get(time_slot)
-                        if entry and entry.temperature is not None:
-                            temp_str = format_temperature(entry.temperature)
-                            # Check if out of range
-                            try:
-                                if entry.is_out_of_range(unit):
-                                    temp_str = f"<font color='red'>{temp_str}</font>"
-                            except:
-                                pass
-                            row.append(temp_str)
-                        else:
-                            row.append("—")
-                    table_data.append(row)
-                
-                # Calculate column widths (time column + date columns)
-                # Landscape letter: 11 inches width, minus margins = ~10.4 inches
-                # For 2 units side by side: ~5 inches per unit
-                time_col_width = 0.8 * inch
-                date_col_width = (5 * inch - time_col_width) / len(week_dates)
-                col_widths = [time_col_width] + [date_col_width] * len(week_dates)
-                
-                # Create table
-                table = Table(table_data, colWidths=col_widths)
-                
-                # Table style
-                table_style = [
-                    # Header row
-                    ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#f0f0f0')),
-                    ('TEXTCOLOR', (0, 0), (-1, 0), colors.HexColor('#1a1a1a')),
-                    ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
-                    ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-                    ('FONTSIZE', (0, 0), (-1, 0), 7),
-                    ('BOTTOMPADDING', (0, 0), (-1, 0), 4),
-                    ('TOPPADDING', (0, 0), (-1, 0), 4),
-                    # Time column (row headers)
-                    ('BACKGROUND', (0, 0), (0, -1), colors.HexColor('#e8e8e8')),
-                    ('FONTNAME', (0, 1), (0, -1), 'Helvetica-Bold'),
-                    ('FONTSIZE', (0, 1), (0, -1), 7),
-                    # Data rows
-                    ('FONTNAME', (1, 1), (-1, -1), 'Helvetica'),
-                    ('FONTSIZE', (1, 1), (-1, -1), 7),
-                    ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#cccccc')),
-                    ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-                    ('BOTTOMPADDING', (0, 1), (-1, -1), 3),
-                    ('TOPPADDING', (0, 1), (-1, -1), 3),
-                ]
-                
-                # Highlight out of range temperatures
-                for time_idx, time_slot in enumerate(scheduled_times, start=1):
-                    for date_idx, d in enumerate(week_dates, start=1):
-                        entry = logs.get(d, {}).get(time_slot)
-                        if entry and entry.temperature is not None:
-                            try:
-                                if entry.is_out_of_range(unit):
-                                    table_style.append(('BACKGROUND', (date_idx, time_idx), (date_idx, time_idx), colors.HexColor('#ffe6e6')))
-                            except:
-                                pass
-                
-                table.setStyle(TableStyle(table_style))
-                
-                # Store unit data
-                row_tables.append({
-                    'header': unit_header_para,
-                    'table': table
-                })
+                        row.append("—")
+                table_data.append(row)
             
-            # Create side-by-side layout using a wrapper table
-            if len(row_tables) == 2:
-                # Two units side by side - use a wrapper table
-                wrapper_data = [
-                    [
-                        KeepTogether([row_tables[0]['header'], Spacer(1, 0.05*inch), row_tables[0]['table']]),
-                        KeepTogether([row_tables[1]['header'], Spacer(1, 0.05*inch), row_tables[1]['table']])
-                    ]
-                ]
-                wrapper_table = Table(wrapper_data, colWidths=[5*inch, 5*inch])
-                wrapper_table.setStyle(TableStyle([
-                    ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-                    ('LEFTPADDING', (0, 0), (0, 0), 0),
-                    ('RIGHTPADDING', (1, 0), (1, 0), 0),
-                ]))
-                story.append(wrapper_table)
-            else:
-                # Single unit
-                story.append(KeepTogether([
-                    row_tables[0]['header'],
-                    Spacer(1, 0.05*inch),
-                    row_tables[0]['table']
-                ]))
+            # Calculate column widths (time column + date columns)
+            # Landscape letter: 11 inches width, minus margins = ~10.4 inches
+            # Use full width for single unit table
+            time_col_width = 1 * inch
+            date_col_width = (10.4 * inch - time_col_width) / len(week_dates)
+            col_widths = [time_col_width] + [date_col_width] * len(week_dates)
             
-            story.append(Spacer(1, 0.15*inch))
+            # Create table
+            table = Table(table_data, colWidths=col_widths)
+            
+            # Table style
+            table_style = [
+                # Header row
+                ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#f0f0f0')),
+                ('TEXTCOLOR', (0, 0), (-1, 0), colors.HexColor('#1a1a1a')),
+                ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+                ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                ('FONTSIZE', (0, 0), (-1, 0), 8),
+                ('BOTTOMPADDING', (0, 0), (-1, 0), 5),
+                ('TOPPADDING', (0, 0), (-1, 0), 5),
+                # Time column (row headers)
+                ('BACKGROUND', (0, 0), (0, -1), colors.HexColor('#e8e8e8')),
+                ('FONTNAME', (0, 1), (0, -1), 'Helvetica-Bold'),
+                ('FONTSIZE', (0, 1), (0, -1), 8),
+                # Data rows
+                ('FONTNAME', (1, 1), (-1, -1), 'Helvetica'),
+                ('FONTSIZE', (1, 1), (-1, -1), 8),
+                ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#cccccc')),
+                ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+                ('BOTTOMPADDING', (0, 1), (-1, -1), 4),
+                ('TOPPADDING', (0, 1), (-1, -1), 4),
+            ]
+            
+            # Highlight out of range temperatures
+            for time_idx, time_slot in enumerate(scheduled_times, start=1):
+                for date_idx, d in enumerate(week_dates, start=1):
+                    entry = logs.get(d, {}).get(time_slot)
+                    if entry and entry.temperature is not None:
+                        try:
+                            if entry.is_out_of_range(unit):
+                                table_style.append(('BACKGROUND', (date_idx, time_idx), (date_idx, time_idx), colors.HexColor('#ffe6e6')))
+                        except:
+                            pass
+            
+            table.setStyle(TableStyle(table_style))
+            
+            # Add unit header and table (stacked vertically)
+            story.append(KeepTogether([
+                unit_header_para,
+                Spacer(1, 0.08*inch),
+                table
+            ]))
+            
+            story.append(Spacer(1, 0.2*inch))
         
         # Page break between weeks (except last week)
         if week_start != sorted_weeks[-1]:
