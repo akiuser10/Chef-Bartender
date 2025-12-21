@@ -166,6 +166,11 @@
     </footer>
 
     <script>
+    // Helper function to detect touch devices
+    function isTouchDevice() {
+        return 'ontouchstart' in window || navigator.maxTouchPoints > 0 || navigator.msMaxTouchPoints > 0;
+    }
+    
     // User dropdown functionality
     document.addEventListener('DOMContentLoaded', function() {
         const trigger = document.getElementById('userDropdownTrigger');
@@ -173,31 +178,63 @@
         
         if (trigger && menu) {
             let hoverTimeout;
+            const touchDevice = isTouchDevice();
             
-            // Show dropdown on hover
-            trigger.addEventListener('mouseenter', function() {
-                clearTimeout(hoverTimeout);
-                menu.classList.add('show');
+            // Show dropdown on hover (desktop only)
+            if (!touchDevice) {
+                trigger.addEventListener('mouseenter', function() {
+                    clearTimeout(hoverTimeout);
+                    menu.classList.add('show');
+                });
+                
+                // Keep dropdown open when hovering over menu
+                menu.addEventListener('mouseenter', function() {
+                    clearTimeout(hoverTimeout);
+                    menu.classList.add('show');
+                });
+                
+                // Hide dropdown when mouse leaves
+                trigger.addEventListener('mouseleave', function() {
+                    hoverTimeout = setTimeout(function() {
+                        menu.classList.remove('show');
+                    }, 200);
+                });
+                
+                menu.addEventListener('mouseleave', function() {
+                    hoverTimeout = setTimeout(function() {
+                        menu.classList.remove('show');
+                    }, 200);
+                });
+            }
+            
+            // Click/tap toggle for mobile devices
+            trigger.addEventListener('click', function(e) {
+                if (touchDevice) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    // Toggle dropdown
+                    if (menu.classList.contains('show')) {
+                        menu.classList.remove('show');
+                    } else {
+                        // Close other dropdowns first
+                        document.querySelectorAll('.nav-dropdown-menu.show, .user-dropdown-menu.show').forEach(function(otherMenu) {
+                            if (otherMenu !== menu) {
+                                otherMenu.classList.remove('show');
+                            }
+                        });
+                        menu.classList.add('show');
+                    }
+                }
             });
             
-            // Keep dropdown open when hovering over menu
-            menu.addEventListener('mouseenter', function() {
-                clearTimeout(hoverTimeout);
-                menu.classList.add('show');
-            });
-            
-            // Hide dropdown when mouse leaves
-            trigger.addEventListener('mouseleave', function() {
-                hoverTimeout = setTimeout(function() {
-                    menu.classList.remove('show');
-                }, 200);
-            });
-            
-            menu.addEventListener('mouseleave', function() {
-                hoverTimeout = setTimeout(function() {
-                    menu.classList.remove('show');
-                }, 200);
-            });
+            // Close dropdown when clicking outside (mobile)
+            if (touchDevice) {
+                document.addEventListener('click', function(e) {
+                    if (!trigger.contains(e.target) && !menu.contains(e.target)) {
+                        menu.classList.remove('show');
+                    }
+                });
+            }
         }
 
         // Knowledge Hub dropdown functionality
@@ -206,31 +243,58 @@
         
         if (knowledgeTrigger && knowledgeMenu) {
             let hoverTimeout;
+            const touchDevice = isTouchDevice();
             
-            // Show dropdown on hover
-            knowledgeTrigger.addEventListener('mouseenter', function() {
-                clearTimeout(hoverTimeout);
-                knowledgeMenu.classList.add('show');
+            // Show dropdown on hover (desktop only)
+            if (!touchDevice) {
+                knowledgeTrigger.addEventListener('mouseenter', function() {
+                    clearTimeout(hoverTimeout);
+                    knowledgeMenu.classList.add('show');
+                });
+                
+                knowledgeMenu.addEventListener('mouseenter', function() {
+                    clearTimeout(hoverTimeout);
+                    knowledgeMenu.classList.add('show');
+                });
+                
+                knowledgeTrigger.addEventListener('mouseleave', function() {
+                    hoverTimeout = setTimeout(function() {
+                        knowledgeMenu.classList.remove('show');
+                    }, 200);
+                });
+                
+                knowledgeMenu.addEventListener('mouseleave', function() {
+                    hoverTimeout = setTimeout(function() {
+                        knowledgeMenu.classList.remove('show');
+                    }, 200);
+                });
+            }
+            
+            // Click/tap toggle for mobile devices
+            knowledgeTrigger.addEventListener('click', function(e) {
+                if (touchDevice) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    if (knowledgeMenu.classList.contains('show')) {
+                        knowledgeMenu.classList.remove('show');
+                    } else {
+                        document.querySelectorAll('.nav-dropdown-menu.show, .user-dropdown-menu.show').forEach(function(otherMenu) {
+                            if (otherMenu !== knowledgeMenu) {
+                                otherMenu.classList.remove('show');
+                            }
+                        });
+                        knowledgeMenu.classList.add('show');
+                    }
+                }
             });
             
-            // Keep dropdown open when hovering over menu
-            knowledgeMenu.addEventListener('mouseenter', function() {
-                clearTimeout(hoverTimeout);
-                knowledgeMenu.classList.add('show');
-            });
-            
-            // Hide dropdown when mouse leaves
-            knowledgeTrigger.addEventListener('mouseleave', function() {
-                hoverTimeout = setTimeout(function() {
-                    knowledgeMenu.classList.remove('show');
-                }, 200);
-            });
-            
-            knowledgeMenu.addEventListener('mouseleave', function() {
-                hoverTimeout = setTimeout(function() {
-                    knowledgeMenu.classList.remove('show');
-                }, 200);
-            });
+            if (touchDevice) {
+                document.addEventListener('click', function(e) {
+                    if (!knowledgeTrigger.contains(e.target) && !knowledgeMenu.contains(e.target)) {
+                        knowledgeMenu.classList.remove('show');
+                    }
+                });
+            }
         }
 
         // Purchase Center dropdown functionality
@@ -239,31 +303,58 @@
         
         if (purchaseCenterTrigger && purchaseCenterMenu) {
             let hoverTimeout;
+            const touchDevice = isTouchDevice();
             
-            // Show dropdown on hover
-            purchaseCenterTrigger.addEventListener('mouseenter', function() {
-                clearTimeout(hoverTimeout);
-                purchaseCenterMenu.classList.add('show');
+            // Show dropdown on hover (desktop only)
+            if (!touchDevice) {
+                purchaseCenterTrigger.addEventListener('mouseenter', function() {
+                    clearTimeout(hoverTimeout);
+                    purchaseCenterMenu.classList.add('show');
+                });
+                
+                purchaseCenterMenu.addEventListener('mouseenter', function() {
+                    clearTimeout(hoverTimeout);
+                    purchaseCenterMenu.classList.add('show');
+                });
+                
+                purchaseCenterTrigger.addEventListener('mouseleave', function() {
+                    hoverTimeout = setTimeout(function() {
+                        purchaseCenterMenu.classList.remove('show');
+                    }, 200);
+                });
+                
+                purchaseCenterMenu.addEventListener('mouseleave', function() {
+                    hoverTimeout = setTimeout(function() {
+                        purchaseCenterMenu.classList.remove('show');
+                    }, 200);
+                });
+            }
+            
+            // Click/tap toggle for mobile devices
+            purchaseCenterTrigger.addEventListener('click', function(e) {
+                if (touchDevice) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    if (purchaseCenterMenu.classList.contains('show')) {
+                        purchaseCenterMenu.classList.remove('show');
+                    } else {
+                        document.querySelectorAll('.nav-dropdown-menu.show, .user-dropdown-menu.show').forEach(function(otherMenu) {
+                            if (otherMenu !== purchaseCenterMenu) {
+                                otherMenu.classList.remove('show');
+                            }
+                        });
+                        purchaseCenterMenu.classList.add('show');
+                    }
+                }
             });
             
-            // Keep dropdown open when hovering over menu
-            purchaseCenterMenu.addEventListener('mouseenter', function() {
-                clearTimeout(hoverTimeout);
-                purchaseCenterMenu.classList.add('show');
-            });
-            
-            // Hide dropdown when mouse leaves
-            purchaseCenterTrigger.addEventListener('mouseleave', function() {
-                hoverTimeout = setTimeout(function() {
-                    purchaseCenterMenu.classList.remove('show');
-                }, 200);
-            });
-            
-            purchaseCenterMenu.addEventListener('mouseleave', function() {
-                hoverTimeout = setTimeout(function() {
-                    purchaseCenterMenu.classList.remove('show');
-                }, 200);
-            });
+            if (touchDevice) {
+                document.addEventListener('click', function(e) {
+                    if (!purchaseCenterTrigger.contains(e.target) && !purchaseCenterMenu.contains(e.target)) {
+                        purchaseCenterMenu.classList.remove('show');
+                    }
+                });
+            }
         }
 
         // Recipe Center dropdown functionality
@@ -272,31 +363,58 @@
         
         if (recipeCenterTrigger && recipeCenterMenu) {
             let hoverTimeout;
+            const touchDevice = isTouchDevice();
             
-            // Show dropdown on hover
-            recipeCenterTrigger.addEventListener('mouseenter', function() {
-                clearTimeout(hoverTimeout);
-                recipeCenterMenu.classList.add('show');
+            // Show dropdown on hover (desktop only)
+            if (!touchDevice) {
+                recipeCenterTrigger.addEventListener('mouseenter', function() {
+                    clearTimeout(hoverTimeout);
+                    recipeCenterMenu.classList.add('show');
+                });
+                
+                recipeCenterMenu.addEventListener('mouseenter', function() {
+                    clearTimeout(hoverTimeout);
+                    recipeCenterMenu.classList.add('show');
+                });
+                
+                recipeCenterTrigger.addEventListener('mouseleave', function() {
+                    hoverTimeout = setTimeout(function() {
+                        recipeCenterMenu.classList.remove('show');
+                    }, 200);
+                });
+                
+                recipeCenterMenu.addEventListener('mouseleave', function() {
+                    hoverTimeout = setTimeout(function() {
+                        recipeCenterMenu.classList.remove('show');
+                    }, 200);
+                });
+            }
+            
+            // Click/tap toggle for mobile devices
+            recipeCenterTrigger.addEventListener('click', function(e) {
+                if (touchDevice) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    if (recipeCenterMenu.classList.contains('show')) {
+                        recipeCenterMenu.classList.remove('show');
+                    } else {
+                        document.querySelectorAll('.nav-dropdown-menu.show, .user-dropdown-menu.show').forEach(function(otherMenu) {
+                            if (otherMenu !== recipeCenterMenu) {
+                                otherMenu.classList.remove('show');
+                            }
+                        });
+                        recipeCenterMenu.classList.add('show');
+                    }
+                }
             });
             
-            // Keep dropdown open when hovering over menu
-            recipeCenterMenu.addEventListener('mouseenter', function() {
-                clearTimeout(hoverTimeout);
-                recipeCenterMenu.classList.add('show');
-            });
-            
-            // Hide dropdown when mouse leaves
-            recipeCenterTrigger.addEventListener('mouseleave', function() {
-                hoverTimeout = setTimeout(function() {
-                    recipeCenterMenu.classList.remove('show');
-                }, 200);
-            });
-            
-            recipeCenterMenu.addEventListener('mouseleave', function() {
-                hoverTimeout = setTimeout(function() {
-                    recipeCenterMenu.classList.remove('show');
-                }, 200);
-            });
+            if (touchDevice) {
+                document.addEventListener('click', function(e) {
+                    if (!recipeCenterTrigger.contains(e.target) && !recipeCenterMenu.contains(e.target)) {
+                        recipeCenterMenu.classList.remove('show');
+                    }
+                });
+            }
         }
 
         // Simple parallax effect: move background faster than foreground
@@ -327,31 +445,58 @@
         
         if (checklistTrigger && checklistMenu) {
             let hoverTimeout;
+            const touchDevice = isTouchDevice();
             
-            // Show dropdown on hover
-            checklistTrigger.addEventListener('mouseenter', function() {
-                clearTimeout(hoverTimeout);
-                checklistMenu.classList.add('show');
+            // Show dropdown on hover (desktop only)
+            if (!touchDevice) {
+                checklistTrigger.addEventListener('mouseenter', function() {
+                    clearTimeout(hoverTimeout);
+                    checklistMenu.classList.add('show');
+                });
+                
+                checklistMenu.addEventListener('mouseenter', function() {
+                    clearTimeout(hoverTimeout);
+                    checklistMenu.classList.add('show');
+                });
+                
+                checklistTrigger.addEventListener('mouseleave', function() {
+                    hoverTimeout = setTimeout(function() {
+                        checklistMenu.classList.remove('show');
+                    }, 200);
+                });
+                
+                checklistMenu.addEventListener('mouseleave', function() {
+                    hoverTimeout = setTimeout(function() {
+                        checklistMenu.classList.remove('show');
+                    }, 200);
+                });
+            }
+            
+            // Click/tap toggle for mobile devices
+            checklistTrigger.addEventListener('click', function(e) {
+                if (touchDevice) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    if (checklistMenu.classList.contains('show')) {
+                        checklistMenu.classList.remove('show');
+                    } else {
+                        document.querySelectorAll('.nav-dropdown-menu.show, .user-dropdown-menu.show').forEach(function(otherMenu) {
+                            if (otherMenu !== checklistMenu) {
+                                otherMenu.classList.remove('show');
+                            }
+                        });
+                        checklistMenu.classList.add('show');
+                    }
+                }
             });
             
-            // Keep dropdown open when hovering over menu
-            checklistMenu.addEventListener('mouseenter', function() {
-                clearTimeout(hoverTimeout);
-                checklistMenu.classList.add('show');
-            });
-            
-            // Hide dropdown when mouse leaves
-            checklistTrigger.addEventListener('mouseleave', function() {
-                hoverTimeout = setTimeout(function() {
-                    checklistMenu.classList.remove('show');
-                }, 200);
-            });
-            
-            checklistMenu.addEventListener('mouseleave', function() {
-                hoverTimeout = setTimeout(function() {
-                    checklistMenu.classList.remove('show');
-                }, 200);
-            });
+            if (touchDevice) {
+                document.addEventListener('click', function(e) {
+                    if (!checklistTrigger.contains(e.target) && !checklistMenu.contains(e.target)) {
+                        checklistMenu.classList.remove('show');
+                    }
+                });
+            }
         }
 
         // About dropdown functionality
@@ -360,31 +505,58 @@
         
         if (aboutTrigger && aboutMenu) {
             let hoverTimeout;
+            const touchDevice = isTouchDevice();
             
-            // Show dropdown on hover
-            aboutTrigger.addEventListener('mouseenter', function() {
-                clearTimeout(hoverTimeout);
-                aboutMenu.classList.add('show');
+            // Show dropdown on hover (desktop only)
+            if (!touchDevice) {
+                aboutTrigger.addEventListener('mouseenter', function() {
+                    clearTimeout(hoverTimeout);
+                    aboutMenu.classList.add('show');
+                });
+                
+                aboutMenu.addEventListener('mouseenter', function() {
+                    clearTimeout(hoverTimeout);
+                    aboutMenu.classList.add('show');
+                });
+                
+                aboutTrigger.addEventListener('mouseleave', function() {
+                    hoverTimeout = setTimeout(function() {
+                        aboutMenu.classList.remove('show');
+                    }, 200);
+                });
+                
+                aboutMenu.addEventListener('mouseleave', function() {
+                    hoverTimeout = setTimeout(function() {
+                        aboutMenu.classList.remove('show');
+                    }, 200);
+                });
+            }
+            
+            // Click/tap toggle for mobile devices
+            aboutTrigger.addEventListener('click', function(e) {
+                if (touchDevice) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    if (aboutMenu.classList.contains('show')) {
+                        aboutMenu.classList.remove('show');
+                    } else {
+                        document.querySelectorAll('.nav-dropdown-menu.show, .user-dropdown-menu.show').forEach(function(otherMenu) {
+                            if (otherMenu !== aboutMenu) {
+                                otherMenu.classList.remove('show');
+                            }
+                        });
+                        aboutMenu.classList.add('show');
+                    }
+                }
             });
             
-            // Keep dropdown open when hovering over menu
-            aboutMenu.addEventListener('mouseenter', function() {
-                clearTimeout(hoverTimeout);
-                aboutMenu.classList.add('show');
-            });
-            
-            // Hide dropdown when mouse leaves
-            aboutTrigger.addEventListener('mouseleave', function() {
-                hoverTimeout = setTimeout(function() {
-                    aboutMenu.classList.remove('show');
-                }, 200);
-            });
-            
-            aboutMenu.addEventListener('mouseleave', function() {
-                hoverTimeout = setTimeout(function() {
-                    aboutMenu.classList.remove('show');
-                }, 200);
-            });
+            if (touchDevice) {
+                document.addEventListener('click', function(e) {
+                    if (!aboutTrigger.contains(e.target) && !aboutMenu.contains(e.target)) {
+                        aboutMenu.classList.remove('show');
+                    }
+                });
+            }
         }
 
         // Scroll-triggered animations
