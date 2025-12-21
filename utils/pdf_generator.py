@@ -404,22 +404,37 @@ def generate_bar_closing_checklist_pdf(unit, year, month_num):
         for item in items:
             items_map[(item.entry_id, item.checklist_point_id)] = item
     
+    # Create a style for header cells that allows wrapping
+    header_style = ParagraphStyle(
+        'HeaderStyle',
+        parent=styles['Normal'],
+        fontSize=7,
+        fontName='Helvetica-Bold',
+        alignment=TA_CENTER,
+        textColor=colors.HexColor('#1a1a1a'),
+        leading=8,
+        spaceAfter=0,
+        spaceBefore=0
+    )
+    
     # Build table data
     # Header row: Checklist Point | Date1 | Date2 | Date3 | ...
-    header_row = ['CHECKLIST POINT'] + [d.strftime('%d') for d in dates]
+    # Use Paragraph for header to enable text wrapping
+    header_row = [Paragraph('CHECKLIST<br/>POINT', header_style)] + [Paragraph(d.strftime('%d'), header_style) for d in dates]
     table_data = [header_row]
     
-    # Add rows for each checklist point
+    # Add rows for each checklist point (without group name)
     for point in points:
-        row = [f"{point.group_name}: {point.point_text}"]
+        # Use Paragraph for checklist point text to enable wrapping
+        point_para = Paragraph(point.point_text, styles['Normal'])
+        row = [point_para]
         for d in dates:
             entry = entries_map.get(d)
             if entry:
                 item = items_map.get((entry.id, point.id))
                 if item and item.is_completed:
-                    cell_value = "✓"
-                    if item.staff_initials:
-                        cell_value += f" ({item.staff_initials})"
+                    # Only show initials, no checkmark
+                    cell_value = item.staff_initials if item.staff_initials else ""
                 else:
                     cell_value = ""
             else:
@@ -442,10 +457,13 @@ def generate_bar_closing_checklist_pdf(unit, year, month_num):
         ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#f0f0f0')),
         ('TEXTCOLOR', (0, 0), (-1, 0), colors.HexColor('#1a1a1a')),
         ('ALIGN', (0, 0), (-1, 0), 'CENTER'),
+        ('VALIGN', (0, 0), (-1, 0), 'MIDDLE'),
         ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-        ('FONTSIZE', (0, 0), (-1, 0), 8),
+        ('FONTSIZE', (0, 0), (-1, 0), 7),
         ('BOTTOMPADDING', (0, 0), (-1, 0), 5),
         ('TOPPADDING', (0, 0), (-1, 0), 5),
+        ('LEFTPADDING', (0, 0), (-1, 0), 3),
+        ('RIGHTPADDING', (0, 0), (-1, 0), 3),
         # Checklist point column (row headers)
         ('BACKGROUND', (0, 0), (0, -1), colors.HexColor('#e8e8e8')),
         ('FONTNAME', (0, 1), (0, -1), 'Helvetica'),
