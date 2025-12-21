@@ -117,13 +117,19 @@ def generate_temperature_log_pdf(units, start_date, end_date):
                     entry = logs.get(d, {}).get(time_slot)
                     if entry and entry.temperature is not None:
                         temp_str = format_temperature(entry.temperature)
+                        initial = entry.initial or ""
+                        # Combine temperature and initial
+                        if initial:
+                            cell_value = f"{temp_str} ({initial})"
+                        else:
+                            cell_value = temp_str
                         # Check if out of range
                         try:
                             if entry.is_out_of_range(unit):
-                                temp_str = f"<font color='red'>{temp_str}</font>"
+                                cell_value = f"<font color='red'>{cell_value}</font>"
                         except:
                             pass
-                        row.append(temp_str)
+                        row.append(cell_value)
                     else:
                         row.append("—")
                 table_data.append(row)
