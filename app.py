@@ -100,6 +100,7 @@ def create_app(config_object='config.Config'):
     @app.cli.command('cleanup-temperature-logs')
     def cleanup_temperature_logs():
         """Clean up temperature logs older than 12 weeks"""
+        import click
         from utils.db_helpers import cleanup_old_temperature_logs
         
         with app.app_context():

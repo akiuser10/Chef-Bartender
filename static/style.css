@@ -6598,3 +6598,99 @@ button.btn,
 .hidden {
     display: none;
 }
+
+/* Bar Closing Checklist Styles */
+#user-data {
+    display: none;
+}
+
+.unit-management-section,
+.points-management-section,
+.pdf-generation-section {
+    margin-bottom: 20px;
+    padding: 15px;
+    background: #f5f5f5;
+    border-radius: 8px;
+}
+
+.unit-management-section > div:first-child,
+.points-management-section > div:first-child {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.unit-management-section h3,
+.points-management-section h3 {
+    margin: 0;
+}
+
+.pdf-generation-section h3 {
+    margin: 0 0 10px 0;
+}
+
+#units-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 10px;
+}
+
+#points-list {
+    display: none;
+}
+
+.pdf-generation-section > div {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+#pdf-month {
+    padding: 8px;
+}
+
+#pdf-year {
+    padding: 8px;
+    width: 100px;
+}
+
+.checklist-entry-section {
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.checklist-entry-section h3 {
+    margin-top: 0;
+}
+
+.checklist-entry-section > div:first-of-type {
+    margin-bottom: 20px;
+    display: flex;
+    gap: 15px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.checklist-entry-section .form-group {
+    margin: 0;
+}
+
+#checklist-items-container {
+    display: none;
+}
+
+.checklist-entry-section > div:last-child {
+    margin-top: 20px;
+}
+
+.modal.hidden {
+    display: none;
+}
+
+.modal-body > form > div:last-child {
+    margin-top: 20px;
+}

@@ -1838,7 +1838,7 @@ def kitchen_glass_washer_entries():
 def bar_closing_checklist():
     """BAR Closing Checklist page - accessible to Manager and Bartender"""
     today = date.today()
-    return render_template('checklist/coffee_machine_cleaning_checklist.html', today=today)
+    return render_template('checklist/bar_closing_checklist.html', today=today)
 
 
 @checklist_bp.route('/bar/closing/units', methods=['GET', 'POST'])

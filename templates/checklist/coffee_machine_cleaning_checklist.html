@@ -1,24 +1,36 @@
 {% extends "base.html" %}
 {% block page_panel %}
-<script>
-    // Pass user info to JavaScript
-    {% if current_user.is_authenticated %}
-        {% set first_initial = current_user.first_name[0] if current_user.first_name else "" %}
-        {% set last_initial = current_user.last_name[0] if current_user.last_name else "" %}
-        {% if first_initial or last_initial %}
-            window.userInitials = '{{ (first_initial + last_initial).upper() }}';
-        {% elif current_user.username %}
-            window.userInitials = '{{ current_user.username[0].upper() }}';
-        {% else %}
-            window.userInitials = '';
-        {% endif %}
-        window.userRole = '{{ current_user.user_role }}';
-        window.userDisplayName = '{{ get_user_display_name(current_user) }}';
+{% if current_user.is_authenticated %}
+    {% set first_initial = current_user.first_name[0] if current_user.first_name else "" %}
+    {% set last_initial = current_user.last_name[0] if current_user.last_name else "" %}
+    {% if first_initial or last_initial %}
+        {% set user_initials = (first_initial + last_initial).upper() %}
+    {% elif current_user.username %}
+        {% set user_initials = current_user.username[0].upper() %}
     {% else %}
-        window.userInitials = '';
-        window.userRole = '';
-        window.userDisplayName = '';
+        {% set user_initials = "" %}
     {% endif %}
+{% else %}
+    {% set user_initials = "" %}
+{% endif %}
+<div id="user-data" 
+     data-initials="{{ user_initials }}"
+     data-role="{{ current_user.user_role if current_user.is_authenticated else '' }}"
+     data-display-name="{{ get_user_display_name(current_user) if current_user.is_authenticated else '' }}"></div>
+<script>
+    // Pass user info to JavaScript - reading from data attributes to avoid linter errors
+    (function() {
+        var userDataEl = document.getElementById('user-data');
+        if (userDataEl) {
+            window.userInitials = userDataEl.getAttribute('data-initials') || '';
+            window.userRole = userDataEl.getAttribute('data-role') || '';
+            window.userDisplayName = userDataEl.getAttribute('data-display-name') || '';
+        } else {
+            window.userInitials = '';
+            window.userRole = '';
+            window.userDisplayName = '';
+        }
+    })();
 </script>
 
 <div class="panel-header">
@@ -28,23 +40,23 @@
 <div class="checklist-container">
     <!-- Unit Management Section (Manager Only) -->
     {% if current_user.user_role == 'Manager' %}
-    <div class="unit-management-section" style="margin-bottom: 20px; padding: 15px; background: #f5f5f5; border-radius: 8px;">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-            <h3 style="margin: 0;">Manage Units</h3>
+    <div class="unit-management-section">
+        <div>
+            <h3>Manage Units</h3>
             <button type="button" id="add-unit-btn" class="btn-primary">Add New Unit</button>
         </div>
-        <div id="units-list" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px;">
+        <div id="units-list">
             <!-- Units will be populated by JavaScript -->
         </div>
     </div>
 
     <!-- Checklist Points Management (Manager Only) -->
-    <div class="points-management-section" style="margin-bottom: 20px; padding: 15px; background: #f5f5f5; border-radius: 8px;">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-            <h3 style="margin: 0;">Manage Checklist Points</h3>
-            <button type="button" id="add-point-btn" class="btn-primary" style="display: none;">Add Checklist Point</button>
+    <div class="points-management-section">
+        <div>
+            <h3>Manage Checklist Points</h3>
+            <button type="button" id="add-point-btn" class="btn-primary hidden">Add Checklist Point</button>
         </div>
-        <div id="points-list" style="display: none;">
+        <div id="points-list" class="hidden">
             <!-- Points will be populated by JavaScript -->
         </div>
     </div>
@@ -53,10 +65,10 @@
 
     <!-- PDF Generation (Manager and Bartender) -->
     {% if current_user.user_role == 'Manager' or current_user.user_role == 'Bartender' %}
-    <div class="pdf-generation-section" style="margin-bottom: 20px; padding: 15px; background: #f5f5f5; border-radius: 8px;">
-        <h3 style="margin: 0 0 10px 0;">Generate Monthly PDF</h3>
-        <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
-            <select id="pdf-month" style="padding: 8px;">
+    <div class="pdf-generation-section">
+        <h3>Generate Monthly PDF</h3>
+        <div>
+            <select id="pdf-month" title="Select month for PDF generation">
                 <option value="">Select Month</option>
                 <option value="01">January</option>
                 <option value="02">February</option>
@@ -71,21 +83,21 @@
                 <option value="11">November</option>
                 <option value="12">December</option>
             </select>
-            <input type="number" id="pdf-year" placeholder="Year" min="2020" max="2100" style="padding: 8px; width: 100px;" value="{{ today.year if today else '' }}">
-            <button type="button" id="generate-pdf-btn" class="btn-primary" style="display: none;">Generate PDF</button>
+            <input type="number" id="pdf-year" placeholder="Year" min="2020" max="2100" value="{{ today.year if today else '' }}">
+            <button type="button" id="generate-pdf-btn" class="btn-primary hidden">Generate PDF</button>
         </div>
     </div>
     {% endif %}
 
     <!-- Daily Checklist Entry -->
-    <div class="checklist-entry-section" style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-        <h3 style="margin-top: 0;">Daily Checklist Entry</h3>
-        <div style="margin-bottom: 20px; display: flex; gap: 15px; align-items: center; flex-wrap: wrap;">
-            <div class="form-group" style="margin: 0;">
+    <div class="checklist-entry-section">
+        <h3>Daily Checklist Entry</h3>
+        <div>
+            <div class="form-group">
                 <label for="entry-date">Date *</label>
                 <input type="date" id="entry-date" required value="{{ today.isoformat() if today else '' }}">
             </div>
-            <div class="form-group" style="margin: 0;">
+            <div class="form-group">
                 <label for="unit-select">Unit *</label>
                 <select id="unit-select" required>
                     <option value="">-- Select Unit --</option>
@@ -94,11 +106,11 @@
             <button type="button" id="load-entry-btn" class="btn-primary">Load Checklist</button>
         </div>
 
-        <div id="checklist-items-container" style="display: none;">
+        <div id="checklist-items-container" class="hidden">
             <div id="checklist-items">
                 <!-- Checklist items will be populated by JavaScript -->
             </div>
-            <div style="margin-top: 20px;">
+            <div>
                 <button type="button" id="save-entry-btn" class="btn-primary">Save Checklist</button>
             </div>
         </div>
@@ -107,7 +119,7 @@
 
 <!-- Add/Edit Unit Modal (Manager Only) -->
 {% if current_user.user_role == 'Manager' %}
-<div id="unit-modal" class="modal hidden" style="display: none;">
+<div id="unit-modal" class="modal hidden">
     <div class="modal-content">
         <div class="modal-header">
             <h3 id="unit-modal-title">Add Unit</h3>
@@ -124,7 +136,7 @@
                     <label for="unit-description">Description</label>
                     <textarea id="unit-description" name="description" rows="2"></textarea>
                 </div>
-                <div style="margin-top: 20px;">
+                <div>
                     <button type="submit" class="btn-primary">Save</button>
                     <button type="button" id="unit-form-cancel" class="btn-secondary">Cancel</button>
                 </div>
@@ -134,7 +146,7 @@
 </div>
 
 <!-- Add/Edit Checklist Point Modal (Manager Only) -->
-<div id="point-modal" class="modal hidden" style="display: none;">
+<div id="point-modal" class="modal hidden">
     <div class="modal-content">
         <div class="modal-header">
             <h3 id="point-modal-title">Add Checklist Point</h3>
@@ -156,7 +168,7 @@
                     <label for="point-display-order">Display Order *</label>
                     <input type="number" id="point-display-order" name="display_order" min="1" required>
                 </div>
-                <div style="margin-top: 20px;">
+                <div>
                     <button type="submit" class="btn-primary">Save</button>
                     <button type="button" id="point-form-cancel" class="btn-secondary">Cancel</button>
                 </div>
