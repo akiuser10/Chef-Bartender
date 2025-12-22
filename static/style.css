@@ -22,7 +22,7 @@ body {
     background-position: center;
     color: #333333;
     margin: 0;
-    padding: 0;
+    padding: 140px 0 0 0; /* offset for fixed header so content isn't hidden */
     line-height: 1.6;
     min-height: 100vh;
     height: 100%;
@@ -31,11 +31,14 @@ body {
     position: relative;
 }
 
-/* Sticky site header (top ribbons stay visible on scroll) */
+/* Sticky/fixed site header (top ribbons stay visible on scroll) */
 .site-header {
-    position: sticky;
+    position: fixed;
     top: 0;
+    left: 0;
+    right: 0;
     z-index: 120;
+    width: 100%;
 }
 
 img,
@@ -2400,38 +2403,9 @@ button.btn {
     border-color: #d45a2a;
 }
 
-/* Footer */
+/* Footer completely hidden (per design request) */
 footer {
-    /* Use textured ribbon image instead of solid black */
-    background-color: transparent;
-    background-image: url('/static/images/Bottom_Ribbon_.png');
-    background-repeat: no-repeat;
-    background-position: center bottom;
-    background-size: cover;
-    color: #333333;
-    padding: 60px 40px 30px;
-    margin-top: auto;
-    flex-shrink: 0;
-    position: relative;
-    overflow: visible;
-    margin-top: -20px; /* Allow background to overlap slightly */
-    padding-top: 80px; /* Compensate for negative margin */
-    z-index: 1; /* Ensure footer is below modal but visible in normal flow */
-}
-
-footer::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-image: 
-        radial-gradient(circle at 20% 30%, rgba(139, 195, 74, 0.05) 0%, transparent 50%),
-        radial-gradient(circle at 80% 70%, rgba(76, 175, 80, 0.05) 0%, transparent 50%),
-        radial-gradient(circle at 50% 50%, rgba(129, 178, 20, 0.03) 0%, transparent 50%);
-    pointer-events: none;
-    opacity: 0.6;
+    display: none !important;
 }
 
 footer p {
@@ -6254,9 +6228,9 @@ button.btn,
     height: 100%;
     overflow-y: auto;
     background-color: rgba(0, 0, 0, 0.5);
-    /* Padding to account for header and footer ribbons */
+    /* Padding to account for header ribbon */
     padding-top: 180px; /* Space for header ribbon (top-header + main-nav ~160px + 20px spacing) */
-    padding-bottom: 200px; /* Space for footer ribbon (~170px + 30px spacing) */
+    padding-bottom: 20px; /* Reduced padding since footer is removed */
 }
 
 .modal:not(.hidden) {
