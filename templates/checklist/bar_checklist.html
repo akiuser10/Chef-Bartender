@@ -7,6 +7,26 @@
 <div class="checklist-container">
     <div class="checklist-modules">
         <div class="checklist-module-card">
+            <h3>BAR Opening Checklist</h3>
+            <p>Complete daily opening checklist to prepare the bar for service. Includes equipment checks, preparation tasks, and inventory verification.</p>
+            <a href="{{ url_for('checklist.bar_opening_checklist') }}" class="btn-primary">Open Checklist</a>
+        </div>
+        <div class="checklist-module-card">
+            <h3>BAR Closing Checklist</h3>
+            <p>Complete daily closing checklist to reset the bar for the next opening. Includes cleaning, storage, equipment shutdown, and communication tasks.</p>
+            <a href="{{ url_for('checklist.bar_shift_closing_checklist') }}" class="btn-primary">Open Checklist</a>
+        </div>
+        <div class="checklist-module-card">
+            <h3>Coffee Machine Cleaning Checklist</h3>
+            <p>Daily cleaning and maintenance checklist for coffee machines. Track cleaning tasks, sanitization, and equipment maintenance with staff initials.</p>
+            <a href="{{ url_for('checklist.bar_closing_checklist') }}" class="btn-primary">Open Checklist</a>
+        </div>
+        <div class="checklist-module-card">
+            <h3>Chopping Board Cleaning & Sanitisation (BAR)</h3>
+            <p>Daily cleaning and sanitization checklist for chopping boards. Ensure proper washing, sanitizing, inspection, and storage procedures are followed.</p>
+            <a href="{{ url_for('checklist.chopping_board_checklist') }}" class="btn-primary">Open Checklist</a>
+        </div>
+        <div class="checklist-module-card">
             <h3>Glass Washer Checklist (HACCP)</h3>
             <p>HACCP-compliant checklist for bar glass washers. Track wash and rinse temperatures, sanitizing methods, and ensure compliance with food safety standards.</p>
             <a href="{{ url_for('checklist.bar_glass_washer_checklist') }}" class="btn-primary">Open Checklist</a>
