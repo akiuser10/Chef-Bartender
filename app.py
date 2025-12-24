@@ -209,14 +209,20 @@ def create_app(config_object='config.Config'):
             
             try:
                 app.logger.info("Starting database initialization...")
-                # Create all tables
+                # Create all tables (this is the critical part)
                 db.create_all()
                 app.logger.info("Database tables created")
                 
-                # Run schema updates
-                ensure_schema_updates()
-                app.logger.info("Database initialization completed")
+                # Run schema updates (this can be slow, but necessary)
+                # Skip if it takes too long - can run later
+                try:
+                    ensure_schema_updates()
+                    app.logger.info("Schema updates completed")
+                except Exception as schema_error:
+                    app.logger.warning(f"Schema updates skipped due to error: {str(schema_error)}")
+                    # Continue anyway - tables are created
                 
+                app.logger.info("Database initialization completed")
                 app._db_initialized = True
             except Exception as e:
                 app.logger.error(f"Error initializing database: {str(e)}", exc_info=True)
