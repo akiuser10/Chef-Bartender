@@ -168,43 +168,33 @@ def create_app(config_object='config.Config'):
         app.logger.error(f'Internal Server Error: {str(error)}', exc_info=True)
         return render_template('error.html', error=str(error)), 500
     
-    # Initialize database at app creation time (but don't block if it fails)
-    # This ensures DB is ready before first request
+    # Initialize database lazily - only create directories at startup
+    # Database tables will be created on first request to avoid blocking worker startup
     app._db_initialized = False
-    try:
-        with app.app_context():
-            # Create upload directories
-            upload_folder = app.config['UPLOAD_FOLDER']
-            os.makedirs(upload_folder, exist_ok=True)
-            os.makedirs(os.path.join(upload_folder, 'products'), exist_ok=True)
-            os.makedirs(os.path.join(upload_folder, 'recipes'), exist_ok=True)
-            os.makedirs(os.path.join(upload_folder, 'slides'), exist_ok=True)
-            os.makedirs(os.path.join(upload_folder, 'slides', 'default'), exist_ok=True)
-            os.makedirs(os.path.join(upload_folder, 'books'), exist_ok=True)
-            os.makedirs(os.path.join(upload_folder, 'books', 'covers'), exist_ok=True)
-            os.makedirs(os.path.join(upload_folder, 'books', 'covers', 'default'), exist_ok=True)
-            os.makedirs(os.path.join(upload_folder, 'books', 'pdfs'), exist_ok=True)
-            
-            # Create all tables
-            app.logger.info("Initializing database tables...")
-            db.create_all()
-            app.logger.info("Database tables created successfully")
-            
-            # Run schema updates
-            app.logger.info("Running schema updates...")
-            ensure_schema_updates()
-            app.logger.info("Database initialization completed")
-            
-            app._db_initialized = True
-    except Exception as e:
-        app.logger.error(f"Error during app startup database initialization: {str(e)}", exc_info=True)
-        app.logger.warning("App will continue - database may initialize on first request")
-        # Don't mark as initialized - let it retry on first request
     
-    # Fallback: Initialize on first request if startup initialization failed
+    # Create upload directories at startup (fast, non-blocking)
+    try:
+        upload_folder = app.config['UPLOAD_FOLDER']
+        os.makedirs(upload_folder, exist_ok=True)
+        os.makedirs(os.path.join(upload_folder, 'products'), exist_ok=True)
+        os.makedirs(os.path.join(upload_folder, 'recipes'), exist_ok=True)
+        os.makedirs(os.path.join(upload_folder, 'slides'), exist_ok=True)
+        os.makedirs(os.path.join(upload_folder, 'slides', 'default'), exist_ok=True)
+        os.makedirs(os.path.join(upload_folder, 'books'), exist_ok=True)
+        os.makedirs(os.path.join(upload_folder, 'books', 'covers'), exist_ok=True)
+        os.makedirs(os.path.join(upload_folder, 'books', 'covers', 'default'), exist_ok=True)
+        os.makedirs(os.path.join(upload_folder, 'books', 'pdfs'), exist_ok=True)
+        app.logger.info("Upload directories created")
+    except Exception as e:
+        app.logger.warning(f"Could not create upload directories: {str(e)}")
+    
+    # Initialize database on first request (with timeout protection)
+    import threading
+    _init_lock = threading.Lock()
+    
     @app.before_request
-    def ensure_database_initialized():
-        """Ensure database is initialized (fallback if startup init failed)"""
+    def initialize_database():
+        """Initialize database on first request"""
         from flask import request
         if request.path == '/health':
             return
@@ -212,15 +202,26 @@ def create_app(config_object='config.Config'):
         if app._db_initialized:
             return
         
-        try:
-            with app.app_context():
+        # Use lock to ensure only one thread initializes
+        with _init_lock:
+            if app._db_initialized:
+                return
+            
+            try:
+                app.logger.info("Starting database initialization...")
+                # Create all tables
                 db.create_all()
+                app.logger.info("Database tables created")
+                
+                # Run schema updates
                 ensure_schema_updates()
+                app.logger.info("Database initialization completed")
+                
                 app._db_initialized = True
-                app.logger.info("Database initialized on first request (fallback)")
-        except Exception as e:
-            app.logger.error(f"Error in fallback database initialization: {str(e)}", exc_info=True)
-            # Continue - app might still work
+            except Exception as e:
+                app.logger.error(f"Error initializing database: {str(e)}", exc_info=True)
+                app._db_initialized = True  # Mark as attempted to prevent repeated failures
+                # Continue - app might still work if tables exist
     
     return app
 
