@@ -206,21 +206,17 @@ def create_app(config_object='config.Config'):
                 os.makedirs(os.path.join(upload_folder, 'books', 'pdfs'), exist_ok=True)
                 
                 # Create all tables first (this will create tables with all model columns)
+                app.logger.info("Starting database table creation...")
                 db.create_all()
                 app.logger.info("Database tables created successfully")
                 
                 # Run schema updates (adds any missing columns for migrations)
+                app.logger.info("Starting schema updates...")
                 ensure_schema_updates()
                 app.logger.info("Database schema updates completed")
                 
-                # Clean up old temperature logs (keep only last 12 weeks for audit)
-                from utils.db_helpers import cleanup_old_temperature_logs
-                try:
-                    deleted_count = cleanup_old_temperature_logs()
-                    if deleted_count > 0:
-                        app.logger.info(f"Cleaned up {deleted_count} old temperature log(s) (12 weeks retention)")
-                except Exception as e:
-                    app.logger.warning(f"Could not clean up old temperature logs: {str(e)}")
+                # Clean up old temperature logs (keep only last 12 weeks for audit) - skip on first init to save time
+                # This can run later via CLI command if needed
                 
                 app._db_initialized = True
             except Exception as e:
