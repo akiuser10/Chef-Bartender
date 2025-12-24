@@ -209,6 +209,17 @@ def create_app(config_object='config.Config'):
             
             try:
                 app.logger.info("Starting database initialization...")
+                
+                # Test database connection first
+                try:
+                    db.engine.connect()
+                    app.logger.info("Database connection successful")
+                except Exception as conn_error:
+                    app.logger.error(f"Database connection failed: {str(conn_error)}")
+                    app.logger.warning("App will continue but database operations may fail")
+                    app._db_initialized = True  # Mark as attempted to prevent repeated connection attempts
+                    return  # Exit early - don't try to create tables if we can't connect
+                
                 # Create all tables (this is the critical part)
                 db.create_all()
                 app.logger.info("Database tables created")
