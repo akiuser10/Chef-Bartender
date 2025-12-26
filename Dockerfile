@@ -36,6 +36,6 @@ ENV PYTHONUNBUFFERED=1
 EXPOSE 8080
 
 # Start gunicorn (Railway sets PORT env var)
-# Use single worker and longer timeout to prevent startup issues
-# Remove --preload to allow faster worker startup
-CMD gunicorn app:app --bind 0.0.0.0:${PORT:-8080} --timeout 300 --workers 1 --worker-class sync --access-logfile - --error-logfile - --log-level info
+# Use single worker and longer timeout to allow database initialization on first request
+# Database initialization is lazy (non-blocking startup) to prevent worker timeout
+CMD gunicorn app:app --bind 0.0.0.0:${PORT:-8080} --timeout 120 --workers 1 --worker-class sync --access-logfile - --error-logfile - --log-level info --graceful-timeout 30

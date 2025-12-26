@@ -245,6 +245,13 @@ def create_app(config_object='config.Config'):
                 app.logger.info("Database initialization completed successfully")
                 return True
         except Exception as e:
+            # Re-raise OperationalError so retry logic can catch it
+            from sqlalchemy.exc import OperationalError
+            if isinstance(e, OperationalError):
+                app.logger.warning(f"Database connection error (will retry): {str(e)}")
+                raise  # Re-raise for retry logic
+            
+            # For other errors, log and return False
             app.logger.error(f"Error initializing database: {str(e)}", exc_info=True)
             # Log additional diagnostic information
             app.logger.error(f"SQLALCHEMY_DATABASE_URI is set: {bool(app.config.get('SQLALCHEMY_DATABASE_URI'))}")
@@ -254,26 +261,49 @@ def create_app(config_object='config.Config'):
                 app.logger.error(f"Database URI prefix: {db_uri[:100]}...")
             return False
     
-    # Initialize database during app startup
-    # This ensures the database is ready before Railway marks the service as healthy
+    # Lazy database initialization (non-blocking startup for Railway)
+    # Database will be initialized on first request to avoid worker timeout
     app._db_initialized = False
-    try:
-        if initialize_database():
-            app._db_initialized = True
-    except Exception as e:
-        # If initialization fails, log but don't crash - app can retry on first request
-        app.logger.error(f"Failed to initialize database at startup: {str(e)}")
-        app.logger.warning("App will attempt to initialize database on first request")
-        app._db_initialized = False
+    app._db_init_in_progress = False
     
-    # Fallback: Initialize database on first request if startup initialization failed
-    # This ensures the app works even if startup initialization had issues
     import threading
     _init_lock = threading.Lock()
     
+    def initialize_database_with_retry(max_retries=5, initial_delay=2):
+        """Initialize database with retry logic and exponential backoff"""
+        import time
+        from sqlalchemy.exc import OperationalError
+        
+        for attempt in range(max_retries):
+            try:
+                if attempt > 0:
+                    delay = initial_delay * (2 ** (attempt - 1))  # Exponential backoff
+                    app.logger.info(f"Retrying database connection (attempt {attempt + 1}/{max_retries}) after {delay}s...")
+                    time.sleep(delay)
+                
+                # Use the existing initialize_database function
+                if initialize_database():
+                    return True
+                elif attempt < max_retries - 1:
+                    continue  # Retry
+                else:
+                    return False
+            except OperationalError as e:
+                app.logger.warning(f"Database connection error (attempt {attempt + 1}/{max_retries}): {str(e)}")
+                if attempt < max_retries - 1:
+                    continue  # Retry
+                return False
+            except Exception as e:
+                app.logger.error(f"Database initialization error (attempt {attempt + 1}/{max_retries}): {str(e)}")
+                if attempt < max_retries - 1:
+                    continue  # Retry
+                return False
+        
+        return False
+    
     @app.before_request
     def ensure_database_initialized():
-        """Fallback: Ensure database is initialized if startup initialization failed"""
+        """Lazy database initialization on first request (non-blocking startup)"""
         from flask import request
         # Skip health check - it should work without database
         if request.path == '/health':
@@ -284,18 +314,26 @@ def create_app(config_object='config.Config'):
         
         # Use lock to ensure only one thread initializes
         with _init_lock:
+            # Double-check after acquiring lock
             if app._db_initialized:
                 return
             
+            # Check if initialization is already in progress
+            if app._db_init_in_progress:
+                return
+            
+            app._db_init_in_progress = True
             try:
-                app.logger.info("Attempting database initialization on first request (fallback)...")
-                if initialize_database():
+                app.logger.info("Initializing database on first request (lazy initialization)...")
+                if initialize_database_with_retry():
                     app._db_initialized = True
-                    app.logger.info("Database initialized successfully on first request")
+                    app.logger.info("Database initialized successfully")
+                else:
+                    app.logger.error("Database initialization failed after retries - requests may fail")
             except Exception as e:
-                app.logger.error(f"Failed to initialize database on first request: {str(e)}")
-                # Don't mark as initialized if it failed
-                app._db_initialized = False
+                app.logger.error(f"Exception during database initialization: {str(e)}")
+            finally:
+                app._db_init_in_progress = False
     
     return app
 
