@@ -170,21 +170,26 @@ def create_app(config_object='config.Config'):
         app.logger.error(f'Internal Server Error: {str(error)}', exc_info=True)
         return render_template('error.html', error=str(error)), 500
     
-    # Create upload directories at startup (fast, non-blocking)
-    try:
-        upload_folder = app.config['UPLOAD_FOLDER']
-        os.makedirs(upload_folder, exist_ok=True)
-        os.makedirs(os.path.join(upload_folder, 'products'), exist_ok=True)
-        os.makedirs(os.path.join(upload_folder, 'recipes'), exist_ok=True)
-        os.makedirs(os.path.join(upload_folder, 'slides'), exist_ok=True)
-        os.makedirs(os.path.join(upload_folder, 'slides', 'default'), exist_ok=True)
-        os.makedirs(os.path.join(upload_folder, 'books'), exist_ok=True)
-        os.makedirs(os.path.join(upload_folder, 'books', 'covers'), exist_ok=True)
-        os.makedirs(os.path.join(upload_folder, 'books', 'covers', 'default'), exist_ok=True)
-        os.makedirs(os.path.join(upload_folder, 'books', 'pdfs'), exist_ok=True)
-        app.logger.info("Upload directories created")
-    except Exception as e:
-        app.logger.warning(f"Could not create upload directories: {str(e)}")
+    # Create upload directories lazily (defer to avoid blocking startup)
+    # This will be done on first request if needed
+    def ensure_upload_directories():
+        """Ensure upload directories exist (called lazily)"""
+        try:
+            upload_folder = app.config['UPLOAD_FOLDER']
+            os.makedirs(upload_folder, exist_ok=True)
+            os.makedirs(os.path.join(upload_folder, 'products'), exist_ok=True)
+            os.makedirs(os.path.join(upload_folder, 'recipes'), exist_ok=True)
+            os.makedirs(os.path.join(upload_folder, 'slides'), exist_ok=True)
+            os.makedirs(os.path.join(upload_folder, 'slides', 'default'), exist_ok=True)
+            os.makedirs(os.path.join(upload_folder, 'books'), exist_ok=True)
+            os.makedirs(os.path.join(upload_folder, 'books', 'covers'), exist_ok=True)
+            os.makedirs(os.path.join(upload_folder, 'books', 'covers', 'default'), exist_ok=True)
+            os.makedirs(os.path.join(upload_folder, 'books', 'pdfs'), exist_ok=True)
+        except Exception as e:
+            app.logger.warning(f"Could not create upload directories: {str(e)}")
+    
+    # Store function for lazy execution
+    app._ensure_upload_directories = ensure_upload_directories
     
     # Initialize database at startup (required for Railway and other production platforms)
     # This ensures tables are created before the app starts serving requests
@@ -310,6 +315,13 @@ def create_app(config_object='config.Config'):
         # Skip health check endpoints - they should work without database
         if request.path in ['/health', '/healthz']:
             return
+        
+        # Ensure upload directories exist (lazy initialization)
+        if hasattr(app, '_ensure_upload_directories'):
+            try:
+                app._ensure_upload_directories()
+            except:
+                pass  # Don't block if this fails
         
         if app._db_initialized:
             return
