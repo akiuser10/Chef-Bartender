@@ -160,15 +160,51 @@ def create_app(config_object='config.Config'):
     # Error handlers
     @app.errorhandler(404)
     def not_found_error(error):
-        from flask import render_template
+        from flask import render_template, request
+        if request.path.startswith('/api/') or request.is_json:
+            from flask import jsonify
+            return jsonify({'error': 'Not found'}), 404
         return render_template('error.html', error='Page not found'), 404
     
     @app.errorhandler(500)
     def internal_error(error):
-        from flask import render_template
-        db.session.rollback()
+        from flask import render_template, request
+        from sqlalchemy.exc import OperationalError, DisconnectionError
+        
+        # Handle database connection errors gracefully
+        try:
+            if isinstance(error, (OperationalError, DisconnectionError)):
+                app.logger.error(f'Database connection error: {str(error)}', exc_info=True)
+                if request.path.startswith('/api/') or request.is_json:
+                    from flask import jsonify
+                    return jsonify({
+                        'error': 'Database connection error',
+                        'message': 'Please try again in a few seconds'
+                    }), 503
+                return render_template('error.html', error='Database connection error. Please try again.'), 503
+        except:
+            pass  # If error checking fails, continue with normal 500 handling
+        
+        try:
+            db.session.rollback()
+        except:
+            pass  # If rollback fails, continue
+        
         app.logger.error(f'Internal Server Error: {str(error)}', exc_info=True)
+        
+        if request.path.startswith('/api/') or request.is_json:
+            from flask import jsonify
+            return jsonify({'error': 'Internal server error'}), 500
+        
         return render_template('error.html', error=str(error)), 500
+    
+    @app.errorhandler(503)
+    def service_unavailable(error):
+        from flask import render_template, request
+        if request.path.startswith('/api/') or request.is_json:
+            from flask import jsonify
+            return jsonify({'error': 'Service temporarily unavailable'}), 503
+        return render_template('error.html', error='Service temporarily unavailable. Please try again.'), 503
     
     # Create upload directories lazily (defer to avoid blocking startup)
     # This will be done on first request if needed
