@@ -1,14 +1,11 @@
 """
 OTP (One-Time Password) utility functions
+Note: Email sending functionality has been disabled
 """
 import random
 import string
 from datetime import datetime, timedelta
 from flask import session, current_app
-from extensions import mail
-from flask_mail import Message  # type: ignore
-import threading
-import smtplib
 
 # OTP expiration time (10 minutes)
 OTP_EXPIRY_MINUTES = 10
@@ -223,79 +220,14 @@ def _send_email_sync(app, email, otp, mail_config, resend_api_key=None, sendgrid
 
 def send_otp_email(email, otp):
     """
-    Send OTP to user's email asynchronously (non-blocking)
-    Returns True immediately if configuration is valid, False otherwise
-    The actual email is sent in a background thread
-    Priority: Resend API > SMTP
+    Email sending is disabled.
+    Returns False to indicate email was not sent.
     """
     try:
-        app = current_app._get_current_object()
-        from_email = current_app.config.get('MAIL_DEFAULT_SENDER') or current_app.config.get('MAIL_USERNAME') or 'noreply@chefandbartender.com'
-        
-        # Check for Resend API key (primary email service)
-        resend_api_key = current_app.config.get('RESEND_API_KEY')
-        
-        # Prepare mail config with all SMTP settings for fallback
-        mail_config = {
-            'MAIL_DEFAULT_SENDER': from_email,
-            'MAIL_USERNAME': current_app.config.get('MAIL_USERNAME'),
-            'MAIL_SERVER': current_app.config.get('MAIL_SERVER'),
-            'MAIL_PORT': current_app.config.get('MAIL_PORT'),
-            'MAIL_USE_TLS': current_app.config.get('MAIL_USE_TLS'),
-            'MAIL_PASSWORD': current_app.config.get('MAIL_PASSWORD'),
-        }
-        
-        if resend_api_key:
-            # Use Resend API (works on Railway) with SMTP fallback
-            # Send email in background thread (non-blocking)
-            thread = threading.Thread(
-                target=_send_email_sync,
-                args=(app, email, otp, mail_config, resend_api_key, None),
-                daemon=True
-            )
-            thread.start()
-            
-            current_app.logger.info(f"OTP email sending started for {email} via Resend (with SMTP fallback) (async)")
-            return True
-        
-        # Fallback to SMTP configuration (may not work on Railway)
-        mail_username = current_app.config.get('MAIL_USERNAME')
-        mail_password = current_app.config.get('MAIL_PASSWORD')
-        
-        if not mail_username or not mail_password:
-            current_app.logger.error(
-                f"Email configuration missing: RESEND_API_KEY={bool(resend_api_key)}, "
-                f"MAIL_USERNAME={bool(mail_username)}, "
-                f"MAIL_PASSWORD={bool(mail_password)}"
-            )
-            return False
-        
-        # Prepare mail config to pass to thread
-        mail_config = {
-            'MAIL_DEFAULT_SENDER': current_app.config.get('MAIL_DEFAULT_SENDER'),
-            'MAIL_USERNAME': mail_username,
-            'MAIL_SERVER': current_app.config.get('MAIL_SERVER'),
-            'MAIL_PORT': current_app.config.get('MAIL_PORT'),
-            'MAIL_USE_TLS': current_app.config.get('MAIL_USE_TLS'),
-        }
-        
-        # Send email in background thread (non-blocking)
-        thread = threading.Thread(
-            target=_send_email_sync,
-            args=(app, email, otp, mail_config, None, None),
-            daemon=True
-        )
-        thread.start()
-        
-        current_app.logger.info(f"OTP email sending started for {email} via SMTP (async)")
-        return True
-    except Exception as e:
-        error_msg = f"Error initiating OTP email send to {email}: {str(e)}"
-        try:
-            current_app.logger.error(error_msg, exc_info=True)
-        except:
-            print(error_msg)
-        return False
+        current_app.logger.warning(f"Email sending is disabled. OTP {otp} was requested for {email} but not sent.")
+    except:
+        pass
+    return False
 
 
 def store_otp_in_session(email, otp, username=None, password_hash=None):
