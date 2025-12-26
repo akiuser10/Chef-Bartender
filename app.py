@@ -35,10 +35,12 @@ def create_app(config_object='config.Config'):
     app.config.from_object(config_object)
     
     # Register health check endpoint FIRST - before any blocking operations
+    # This must respond immediately without any database or other dependencies
     @app.route('/health')
+    @app.route('/healthz')  # Alternative health check path
     def health_check():
-        """Health check endpoint for Railway - responds immediately"""
-        return {'status': 'ok'}, 200
+        """Health check endpoint for Railway - responds immediately without any dependencies"""
+        return {'status': 'ok', 'service': 'chef-bartender'}, 200
     
     # Initialize extensions (these should not block)
     db.init_app(app)
@@ -305,8 +307,8 @@ def create_app(config_object='config.Config'):
     def ensure_database_initialized():
         """Lazy database initialization on first request (non-blocking startup)"""
         from flask import request
-        # Skip health check - it should work without database
-        if request.path == '/health':
+        # Skip health check endpoints - they should work without database
+        if request.path in ['/health', '/healthz']:
             return
         
         if app._db_initialized:
