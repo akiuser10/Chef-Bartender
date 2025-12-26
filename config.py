@@ -5,10 +5,12 @@ class Config:
     SECRET_KEY = os.environ.get('SECRET_KEY') or 'supersecretkey'
     
     # Support both SQLite (development) and PostgreSQL (production) via DATABASE_URL
-    # Railway provides DATABASE_URL when PostgreSQL service is linked
+    # Railway provides DATABASE_URL (internal) and DATABASE_PUBLIC_URL (external)
     # Try multiple environment variable names for compatibility
+    # Prefer internal URL, fallback to public URL if internal fails
     database_url = (
         os.environ.get('DATABASE_URL') or 
+        os.environ.get('DATABASE_PUBLIC_URL') or  # Fallback to public URL if internal not available
         os.environ.get('POSTGRES_URL') or 
         os.environ.get('POSTGRESQL_URL') or
         'sqlite:///bar_bartender.db'  # Fallback to SQLite for local development
