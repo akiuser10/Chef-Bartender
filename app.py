@@ -276,34 +276,46 @@ def create_app(config_object='config.Config'):
     import threading
     _init_lock = threading.Lock()
     
-    def initialize_database_with_retry(max_retries=5, initial_delay=2):
-        """Initialize database with retry logic and exponential backoff"""
+    def initialize_database_with_retry(max_retries=3, initial_delay=1, max_total_time=30):
+        """Initialize database with retry logic and exponential backoff (with timeout)"""
         import time
         from sqlalchemy.exc import OperationalError
         
+        start_time = time.time()
+        
         for attempt in range(max_retries):
+            # Check if we've exceeded max time
+            elapsed = time.time() - start_time
+            if elapsed > max_total_time:
+                app.logger.error(f"Database initialization timeout after {elapsed:.1f}s (max {max_total_time}s)")
+                return False
+            
             try:
                 if attempt > 0:
-                    delay = initial_delay * (2 ** (attempt - 1))  # Exponential backoff
+                    delay = min(initial_delay * (2 ** (attempt - 1)), 5)  # Cap delay at 5s, exponential backoff
                     app.logger.info(f"Retrying database connection (attempt {attempt + 1}/{max_retries}) after {delay}s...")
                     time.sleep(delay)
                 
                 # Use the existing initialize_database function
                 if initialize_database():
+                    elapsed = time.time() - start_time
+                    app.logger.info(f"Database initialized successfully in {elapsed:.1f}s")
                     return True
                 elif attempt < max_retries - 1:
                     continue  # Retry
                 else:
                     return False
             except OperationalError as e:
-                app.logger.warning(f"Database connection error (attempt {attempt + 1}/{max_retries}): {str(e)}")
-                if attempt < max_retries - 1:
-                    continue  # Retry
+                elapsed = time.time() - start_time
+                app.logger.warning(f"Database connection error (attempt {attempt + 1}/{max_retries}, {elapsed:.1f}s elapsed): {str(e)}")
+                if attempt < max_retries - 1 and elapsed < max_total_time:
+                    continue  # Retry if we have time
                 return False
             except Exception as e:
-                app.logger.error(f"Database initialization error (attempt {attempt + 1}/{max_retries}): {str(e)}")
-                if attempt < max_retries - 1:
-                    continue  # Retry
+                elapsed = time.time() - start_time
+                app.logger.error(f"Database initialization error (attempt {attempt + 1}/{max_retries}, {elapsed:.1f}s elapsed): {str(e)}")
+                if attempt < max_retries - 1 and elapsed < max_total_time:
+                    continue  # Retry if we have time
                 return False
         
         return False
@@ -311,7 +323,7 @@ def create_app(config_object='config.Config'):
     @app.before_request
     def ensure_database_initialized():
         """Lazy database initialization on first request (non-blocking startup)"""
-        from flask import request
+        from flask import request, jsonify
         # Skip health check endpoints - they should work without database
         if request.path in ['/health', '/healthz']:
             return
@@ -334,7 +346,13 @@ def create_app(config_object='config.Config'):
             
             # Check if initialization is already in progress
             if app._db_init_in_progress:
-                return
+                # If initialization is in progress, wait a bit and return 503
+                # This prevents multiple simultaneous initialization attempts
+                app.logger.warning("Database initialization in progress, returning 503")
+                return jsonify({
+                    'error': 'Database initialization in progress',
+                    'status': 'Please try again in a few seconds'
+                }), 503
             
             app._db_init_in_progress = True
             try:
@@ -343,11 +361,26 @@ def create_app(config_object='config.Config'):
                     app._db_initialized = True
                     app.logger.info("Database initialized successfully")
                 else:
-                    app.logger.error("Database initialization failed after retries - requests may fail")
+                    app.logger.error("Database initialization failed after retries")
+                    # Return 503 Service Unavailable if database init fails
+                    app._db_init_in_progress = False
+                    return jsonify({
+                        'error': 'Database connection failed',
+                        'status': 'Please check Railway logs and ensure PostgreSQL service is running'
+                    }), 503
             except Exception as e:
-                app.logger.error(f"Exception during database initialization: {str(e)}")
-            finally:
+                app.logger.error(f"Exception during database initialization: {str(e)}", exc_info=True)
                 app._db_init_in_progress = False
+                # Return 503 with error details
+                return jsonify({
+                    'error': 'Database initialization error',
+                    'message': str(e),
+                    'status': 'Please check Railway logs'
+                }), 503
+            finally:
+                # Only clear flag if we're done (success or permanent failure)
+                if app._db_initialized or not app._db_init_in_progress:
+                    app._db_init_in_progress = False
     
     return app
 
