@@ -93,21 +93,41 @@ Updated `config.py` to support production environment variables.
 
 1. Sign up at [railway.app](https://railway.app)
 
-2. **Update config.py** (same as Render above)
+2. **Create a PostgreSQL database:**
+   - Dashboard → New → Database → Add PostgreSQL
+   - Railway will automatically provide the `DATABASE_URL` environment variable
 
-3. **Create `Procfile`:**
+3. **Link the database to your service:**
+   - In your web service settings → Variables tab
+   - Railway automatically links services in the same project
+   - Ensure `DATABASE_URL` is available (Railway sets this automatically when PostgreSQL is linked)
 
-    text
-   web: gunicorn app:app
-    
-
-4. **Add `gunicorn` to requirements.txt**
+4. **Add environment variables in Railway dashboard:**
+   - `SECRET_KEY` (generate a random string using: `python -c "import secrets; print(secrets.token_hex(32))"`)
 
 5. Push to GitHub and connect Railway to your repo
 
-6. Add environment variables in Railway dashboard:
-   - `SECRET_KEY` (generate a random string)
-   - `DATABASE_URL` (automatically provided if you add PostgreSQL)
+6. **Deploy:**
+   - Railway will detect the Dockerfile or Procfile automatically
+   - The database will be initialized automatically on startup
+
+**Troubleshooting Railway Database Issues:**
+
+- **Database not loading:** 
+  - Ensure PostgreSQL service is added and linked to your web service
+  - Check that `DATABASE_URL` environment variable is set (Railway sets this automatically)
+  - Check Railway logs for database connection errors
+  - Database tables are created automatically on startup - check logs for "Database initialization completed successfully"
+
+- **Connection errors:**
+  - Verify PostgreSQL service is running (green status in Railway dashboard)
+  - Ensure services are in the same Railway project (they auto-link)
+  - Check that `DATABASE_URL` starts with `postgresql://` (not `postgres://`)
+
+- **Tables not created:**
+  - The app now initializes the database at startup (not on first request)
+  - Check Railway deployment logs for initialization messages
+  - If initialization fails, the app will retry on the first request as a fallback
 
 ---
 

@@ -129,7 +129,12 @@ def extract_pdf_first_page_as_image(pdf_path, output_folder='books/covers'):
     Returns the path to the saved image, or None if extraction fails.
     """
     try:
-        import fitz  # PyMuPDF
+        try:
+            import fitz  # type: ignore # PyMuPDF
+        except ImportError:
+            # PyMuPDF not installed - return None (PDF thumbnails won't work)
+            current_app.logger.warning("PyMuPDF not available - PDF thumbnail generation disabled")
+            return None
         from PIL import Image
         import uuid
         

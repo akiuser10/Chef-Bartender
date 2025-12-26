@@ -5,13 +5,24 @@ class Config:
     SECRET_KEY = os.environ.get('SECRET_KEY') or 'supersecretkey'
     
     # Support both SQLite (development) and PostgreSQL (production) via DATABASE_URL
-    database_url = os.environ.get('DATABASE_URL', 'sqlite:///bar_bartender.db')
+    # Railway provides DATABASE_URL when PostgreSQL service is linked
+    # Try multiple environment variable names for compatibility
+    database_url = (
+        os.environ.get('DATABASE_URL') or 
+        os.environ.get('POSTGRES_URL') or 
+        os.environ.get('POSTGRESQL_URL') or
+        'sqlite:///bar_bartender.db'  # Fallback to SQLite for local development
+    )
+    
     # Strip quotes if present (Railway might include them)
     if database_url:
         database_url = database_url.strip('"\'')
+    
     # Handle PostgreSQL URL format for Render and other platforms
+    # SQLAlchemy requires postgresql:// not postgres://
     if database_url and database_url.startswith('postgres://'):
         database_url = database_url.replace('postgres://', 'postgresql://', 1)
+    
     SQLALCHEMY_DATABASE_URI = database_url
     
     SQLALCHEMY_TRACK_MODIFICATIONS = False

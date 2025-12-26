@@ -8,6 +8,8 @@ WORKDIR /app
 RUN apt-get update && apt-get install -y \
     gcc \
     postgresql-client \
+    libmupdf-dev \
+    python3-dev \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy requirements first for better caching
@@ -22,8 +24,9 @@ RUN python -m venv /opt/venv && \
 # Copy application code
 COPY . .
 
-# Create upload directories
-RUN mkdir -p static/uploads/products static/uploads/recipes
+# Create upload directories (both for local and volume-based storage)
+RUN mkdir -p static/uploads/products static/uploads/recipes static/uploads/books/pdfs static/uploads/books/covers static/uploads/slides/default && \
+    mkdir -p /data/uploads 2>/dev/null || true
 
 # Set environment variables
 ENV PATH="/opt/venv/bin:$PATH"
