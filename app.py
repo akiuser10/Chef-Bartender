@@ -42,6 +42,34 @@ def create_app(config_object='config.Config'):
         """Health check endpoint for Railway - responds immediately without any dependencies"""
         return {'status': 'ok', 'service': 'chef-bartender'}, 200
     
+    # Diagnostic endpoint to check DATABASE_URL (safe - doesn't expose password)
+    @app.route('/debug/db-status')
+    def db_status():
+        """Diagnostic endpoint to check database configuration (safe - no sensitive data)"""
+        db_url = app.config.get('SQLALCHEMY_DATABASE_URI', '')
+        
+        # Mask password in URL for safe logging
+        safe_url = 'Not set'
+        if db_url:
+            try:
+                # Show only protocol, host, port, and database name
+                if '@' in db_url:
+                    parts = db_url.split('@')
+                    protocol_part = parts[0].split('//')[0] + '//***'
+                    host_part = parts[1] if len(parts) > 1 else ''
+                    safe_url = protocol_part + '@' + host_part
+                else:
+                    safe_url = db_url[:50] + '...' if len(db_url) > 50 else db_url
+            except:
+                safe_url = 'Set but format unknown'
+        
+        return {
+            'database_url_set': bool(db_url),
+            'database_url_preview': safe_url,
+            'database_initialized': getattr(app, '_db_initialized', False),
+            'database_init_in_progress': getattr(app, '_db_init_in_progress', False)
+        }, 200
+    
     # Initialize extensions (these should not block)
     db.init_app(app)
     login_manager.init_app(app)
