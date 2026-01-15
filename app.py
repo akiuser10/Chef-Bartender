@@ -212,7 +212,7 @@ def create_app(config_object='config.Config'):
             pass  # If error checking fails, continue with normal 500 handling
         
         try:
-        db.session.rollback()
+            db.session.rollback()
         except:
             pass  # If rollback fails, continue
         
@@ -236,19 +236,19 @@ def create_app(config_object='config.Config'):
     # This will be done on first request if needed
     def ensure_upload_directories():
         """Ensure upload directories exist (called lazily)"""
-    try:
-        upload_folder = app.config['UPLOAD_FOLDER']
-        os.makedirs(upload_folder, exist_ok=True)
-        os.makedirs(os.path.join(upload_folder, 'products'), exist_ok=True)
-        os.makedirs(os.path.join(upload_folder, 'recipes'), exist_ok=True)
-        os.makedirs(os.path.join(upload_folder, 'slides'), exist_ok=True)
-        os.makedirs(os.path.join(upload_folder, 'slides', 'default'), exist_ok=True)
-        os.makedirs(os.path.join(upload_folder, 'books'), exist_ok=True)
-        os.makedirs(os.path.join(upload_folder, 'books', 'covers'), exist_ok=True)
-        os.makedirs(os.path.join(upload_folder, 'books', 'covers', 'default'), exist_ok=True)
-        os.makedirs(os.path.join(upload_folder, 'books', 'pdfs'), exist_ok=True)
-    except Exception as e:
-        app.logger.warning(f"Could not create upload directories: {str(e)}")
+        try:
+            upload_folder = app.config['UPLOAD_FOLDER']
+            os.makedirs(upload_folder, exist_ok=True)
+            os.makedirs(os.path.join(upload_folder, 'products'), exist_ok=True)
+            os.makedirs(os.path.join(upload_folder, 'recipes'), exist_ok=True)
+            os.makedirs(os.path.join(upload_folder, 'slides'), exist_ok=True)
+            os.makedirs(os.path.join(upload_folder, 'slides', 'default'), exist_ok=True)
+            os.makedirs(os.path.join(upload_folder, 'books'), exist_ok=True)
+            os.makedirs(os.path.join(upload_folder, 'books', 'covers'), exist_ok=True)
+            os.makedirs(os.path.join(upload_folder, 'books', 'covers', 'default'), exist_ok=True)
+            os.makedirs(os.path.join(upload_folder, 'books', 'pdfs'), exist_ok=True)
+        except Exception as e:
+            app.logger.warning(f"Could not create upload directories: {str(e)}")
     
     # Store function for lazy execution
     app._ensure_upload_directories = ensure_upload_directories
