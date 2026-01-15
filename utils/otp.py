@@ -225,9 +225,9 @@ def send_otp_email(email, otp):
     """
     try:
         current_app.logger.warning(f"Email sending is disabled. OTP {otp} was requested for {email} but not sent.")
-    except:
+        except:
         pass
-    return False
+        return False
 
 
 def store_otp_in_session(email, otp, username=None, password_hash=None):

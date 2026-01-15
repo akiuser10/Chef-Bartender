@@ -48,11 +48,11 @@ if [ -f "requirements.txt" ]; then
     # PyMuPDF is used for PDF thumbnail generation (optional feature)
     if ! pip install -q "PyMuPDF==1.24.0" 2>/dev/null; then
         echo "⚠ PyMuPDF installation failed (may be due to spaces in path or Python 3.14 compatibility)"
-        echo "  PDF thumbnails won't work, but the app will run fine"
-        echo "  To install manually: pip install PyMuPDF==1.24.0"
-        grep -v "^PyMuPDF" "$TEMP_REQUIREMENTS" > "${TEMP_REQUIREMENTS}.new"
-        mv "${TEMP_REQUIREMENTS}.new" "$TEMP_REQUIREMENTS"
-        SKIP_PACKAGES+=("PyMuPDF")
+    echo "  PDF thumbnails won't work, but the app will run fine"
+    echo "  To install manually: pip install PyMuPDF==1.24.0"
+    grep -v "^PyMuPDF" "$TEMP_REQUIREMENTS" > "${TEMP_REQUIREMENTS}.new"
+    mv "${TEMP_REQUIREMENTS}.new" "$TEMP_REQUIREMENTS"
+    SKIP_PACKAGES+=("PyMuPDF")
     else
         echo "✓ PyMuPDF installed successfully"
     fi

@@ -44,4 +44,4 @@ class Config:
     UPLOAD_FOLDER = upload_base
     MAX_CONTENT_LENGTH = 50 * 1024 * 1024  # 50MB max file size (for PDFs)
     ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp', 'pdf'}
-
+    

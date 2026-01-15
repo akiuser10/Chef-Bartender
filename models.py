@@ -1095,6 +1095,85 @@ class KitchenChoppingBoardChecklistItem(db.Model):
 
 
 # ============================================
+# ICE SCOOP SANITATION CHECKLIST MODELS
+# ============================================
+
+class IceScoopSanitationUnit(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    unit_name = db.Column(db.String(100), nullable=False, default='BAR')
+    description = db.Column(db.String(255))
+    organisation = db.Column(db.String(200))
+    created_by = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    creator = db.relationship('User', foreign_keys=[created_by], backref='created_ice_scoop_units')
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    is_active = db.Column(db.Boolean, default=True)
+
+    entries = db.relationship('IceScoopSanitationEntry', backref='unit', cascade='all, delete-orphan', lazy='dynamic')
+
+    def __repr__(self):
+        return f'<IceScoopSanitationUnit {self.id}: {self.unit_name}>'
+
+
+class IceScoopSanitationEntry(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    unit_id = db.Column(db.Integer, db.ForeignKey('ice_scoop_sanitation_unit.id'), nullable=False)
+    entry_date = db.Column(db.Date, nullable=False)
+    slot_index = db.Column(db.Integer, nullable=False)  # 1-4 slots per day
+    is_completed = db.Column(db.Boolean, default=False)
+    staff_initials = db.Column(db.String(10))
+    completed_at = db.Column(db.DateTime)
+    organisation = db.Column(db.String(200))
+    created_by = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    creator = db.relationship('User', foreign_keys=[created_by], backref='created_ice_scoop_entries')
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    __table_args__ = (
+        db.UniqueConstraint('unit_id', 'entry_date', 'slot_index', name='unique_ice_scoop_unit_date_slot'),
+    )
+
+    def __repr__(self):
+        return f'<IceScoopSanitationEntry {self.id}: Unit {self.unit_id} - {self.entry_date} - Slot {self.slot_index}>'
+
+
+class KitchenIceScoopSanitationUnit(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    unit_name = db.Column(db.String(100), nullable=False, default='KITCHEN')
+    description = db.Column(db.String(255))
+    organisation = db.Column(db.String(200))
+    created_by = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    creator = db.relationship('User', foreign_keys=[created_by], backref='created_kitchen_ice_scoop_units')
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    is_active = db.Column(db.Boolean, default=True)
+
+    entries = db.relationship('KitchenIceScoopSanitationEntry', backref='unit', cascade='all, delete-orphan', lazy='dynamic')
+
+    def __repr__(self):
+        return f'<KitchenIceScoopSanitationUnit {self.id}: {self.unit_name}>'
+
+
+class KitchenIceScoopSanitationEntry(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    unit_id = db.Column(db.Integer, db.ForeignKey('kitchen_ice_scoop_sanitation_unit.id'), nullable=False)
+    entry_date = db.Column(db.Date, nullable=False)
+    slot_index = db.Column(db.Integer, nullable=False)  # 1-4 slots per day
+    is_completed = db.Column(db.Boolean, default=False)
+    staff_initials = db.Column(db.String(10))
+    completed_at = db.Column(db.DateTime)
+    organisation = db.Column(db.String(200))
+    created_by = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    creator = db.relationship('User', foreign_keys=[created_by], backref='created_kitchen_ice_scoop_entries')
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    __table_args__ = (
+        db.UniqueConstraint('unit_id', 'entry_date', 'slot_index', name='unique_kitchen_ice_scoop_unit_date_slot'),
+    )
+
+    def __repr__(self):
+        return f'<KitchenIceScoopSanitationEntry {self.id}: Unit {self.unit_id} - {self.entry_date} - Slot {self.slot_index}>'
+
+# ============================================
 # BAR OPENING & CLOSING CHECKLIST MODELS
 # ============================================
 

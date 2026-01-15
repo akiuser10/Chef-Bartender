@@ -68,12 +68,14 @@
                 <a href="{{ url_for('checklist.bar_shift_closing_checklist') }}" class="nav-dropdown-item">Closing Checklist</a>
                 <a href="{{ url_for('checklist.bar_closing_checklist') }}" class="nav-dropdown-item">Coffee Machine</a>
                 <a href="{{ url_for('checklist.chopping_board_checklist') }}" class="nav-dropdown-item">Chopping Board</a>
+                <a href="{{ url_for('checklist.bar_ice_scoop_sanitation') }}" class="nav-dropdown-item">Ice Scoop Sanitation</a>
                 <a href="{{ url_for('checklist.bar_glass_washer_checklist') }}" class="nav-dropdown-item">Glass Washer Checklist</a>
                 <a href="{{ url_for('checklist.cold_storage_temperature_log') }}" class="nav-dropdown-item">Temperature Log</a>
                 {% endif %}
                 {% if current_user.user_role in ['Chef', 'Manager'] %}
                 <a href="{{ url_for('checklist.kitchen_checklist') }}" class="nav-dropdown-item">Kitchen</a>
                 <a href="{{ url_for('checklist.kitchen_chopping_board_checklist') }}" class="nav-dropdown-item">Chopping Board</a>
+                <a href="{{ url_for('checklist.kitchen_ice_scoop_sanitation') }}" class="nav-dropdown-item">Ice Scoop Sanitation</a>
                 <a href="{{ url_for('checklist.kitchen_glass_washer_checklist') }}" class="nav-dropdown-item">Glass Washer Checklist</a>
                 <a href="{{ url_for('checklist.kitchen_dish_washer_checklist') }}" class="nav-dropdown-item">Dish Washer Checklist</a>
                 <a href="{{ url_for('checklist.kitchen_cold_storage_temperature_log') }}" class="nav-dropdown-item">Temperature Log</a>
@@ -133,8 +135,12 @@
         {% with messages = get_flashed_messages() %}
             {% if messages %}
                 <div class="flash">
+                    {% set seen = namespace(values=[]) %}
                     {% for msg in messages %}
-                        <p>{{ msg }}</p>
+                        {% if msg not in seen.values %}
+                            <p>{{ msg }}</p>
+                            {% set seen.values = seen.values + [msg] %}
+                        {% endif %}
                     {% endfor %}
                 </div>
             {% endif %}

@@ -10,7 +10,7 @@ from sqlalchemy import and_, or_
 import json
 import io
 
-from models import ColdStorageUnit, TemperatureLog, TemperatureEntry, WashingUnit, BarGlassWasherChecklist, KitchenDishWasherChecklist, KitchenGlassWasherChecklist, BarClosingChecklistUnit, BarClosingChecklistPoint, BarClosingChecklistEntry, BarClosingChecklistItem, ChoppingBoardChecklistUnit, ChoppingBoardChecklistPoint, ChoppingBoardChecklistEntry, ChoppingBoardChecklistItem, KitchenChoppingBoardChecklistUnit, KitchenChoppingBoardChecklistPoint, KitchenChoppingBoardChecklistEntry, KitchenChoppingBoardChecklistItem, BarOpeningChecklistUnit, BarOpeningChecklistPoint, BarOpeningChecklistEntry, BarOpeningChecklistItem, BarShiftClosingChecklistUnit, BarShiftClosingChecklistPoint, BarShiftClosingChecklistEntry, BarShiftClosingChecklistItem
+from models import ColdStorageUnit, TemperatureLog, TemperatureEntry, WashingUnit, BarGlassWasherChecklist, KitchenDishWasherChecklist, KitchenGlassWasherChecklist, BarClosingChecklistUnit, BarClosingChecklistPoint, BarClosingChecklistEntry, BarClosingChecklistItem, ChoppingBoardChecklistUnit, ChoppingBoardChecklistPoint, ChoppingBoardChecklistEntry, ChoppingBoardChecklistItem, KitchenChoppingBoardChecklistUnit, KitchenChoppingBoardChecklistPoint, KitchenChoppingBoardChecklistEntry, KitchenChoppingBoardChecklistItem, IceScoopSanitationUnit, IceScoopSanitationEntry, KitchenIceScoopSanitationUnit, KitchenIceScoopSanitationEntry, BarOpeningChecklistUnit, BarOpeningChecklistPoint, BarOpeningChecklistEntry, BarOpeningChecklistItem, BarShiftClosingChecklistUnit, BarShiftClosingChecklistPoint, BarShiftClosingChecklistEntry, BarShiftClosingChecklistItem
 from extensions import db
 from utils.helpers import get_organization_filter, get_user_display_name
 
@@ -31,6 +31,26 @@ def role_required(roles):
     return decorator
 
 
+ICE_SCOOP_TIME_SLOTS = [
+    {'index': 1, 'label': '08:00'},
+    {'index': 2, 'label': '12:00'},
+    {'index': 3, 'label': '16:00'},
+    {'index': 4, 'label': '20:00'},
+]
+
+
+def _get_user_initials(user):
+    if not user:
+        return ''
+    first_initial = user.first_name[0] if user.first_name else ''
+    last_initial = user.last_name[0] if user.last_name else ''
+    if first_initial or last_initial:
+        return f"{first_initial}{last_initial}".upper()
+    if user.username:
+        return user.username[0].upper()
+    return ''
+
+
 @checklist_bp.route('/bar')
 @login_required
 @role_required(['Manager', 'Bartender'])
@@ -46,6 +66,375 @@ def kitchen_checklist():
     """Kitchen Checklist page - accessible to Chef and Manager"""
     return render_template('checklist/kitchen_checklist.html')
 
+
+# ============================================
+# ICE SCOOP SANITATION MONITOR ROUTES
+# ============================================
+
+@checklist_bp.route('/bar/ice-scoop', methods=['GET'])
+@login_required
+@role_required(['Manager', 'Bartender'])
+def bar_ice_scoop_sanitation():
+    """Ice Scoop Sanitation Monitor (Bar) - accessible to Manager and Bartender"""
+    today = date.today()
+    return render_template('checklist/ice_scoop_sanitation_bar.html', today=today, slots=ICE_SCOOP_TIME_SLOTS)
+
+
+@checklist_bp.route('/bar/ice-scoop/units', methods=['GET', 'POST'])
+@login_required
+@role_required(['Manager', 'Bartender'])
+def manage_bar_ice_scoop_units():
+    """Manage bar ice scoop units - Manager only for create/update/delete"""
+    if request.method == 'GET':
+        try:
+            org_filter = get_organization_filter(IceScoopSanitationUnit)
+            units = IceScoopSanitationUnit.query.filter(org_filter).filter_by(is_active=True).order_by(IceScoopSanitationUnit.unit_name).all()
+            return jsonify([{
+                'id': unit.id,
+                'unit_name': unit.unit_name,
+                'description': unit.description
+            } for unit in units])
+        except Exception as e:
+            current_app.logger.error(f"Error loading ice scoop units: {str(e)}", exc_info=True)
+            return jsonify([])
+
+    data = request.get_json() or {}
+    action = data.get('action')
+    user_role = (current_user.user_role or '').strip()
+    if user_role != 'Manager':
+        return jsonify({'success': False, 'error': 'Only Managers can manage units'}), 403
+
+    if action == 'create':
+        unit_name = data.get('unit_name', '').strip() or 'BAR'
+        description = data.get('description', '').strip()
+        org_filter = get_organization_filter(IceScoopSanitationUnit)
+        existing_unit = IceScoopSanitationUnit.query.filter(org_filter).filter_by(unit_name=unit_name, is_active=True).first()
+        if existing_unit:
+            return jsonify({'success': False, 'error': f'Unit name "{unit_name}" already exists'}), 400
+        organisation = (current_user.organisation or current_user.restaurant_bar_name or '').strip()
+        if not organisation:
+            return jsonify({'success': False, 'error': 'User organization is required to create units'}), 400
+        unit = IceScoopSanitationUnit(
+            unit_name=unit_name,
+            description=description,
+            organisation=organisation,
+            created_by=current_user.id,
+            is_active=True
+        )
+        db.session.add(unit)
+        db.session.commit()
+        return jsonify({'success': True, 'unit': {
+            'id': unit.id,
+            'unit_name': unit.unit_name,
+            'description': unit.description
+        }})
+
+    if action == 'update':
+        unit_id = data.get('id')
+        if not unit_id:
+            return jsonify({'success': False, 'error': 'Unit ID is required'}), 400
+        unit = IceScoopSanitationUnit.query.get(unit_id)
+        if not unit:
+            return jsonify({'success': False, 'error': 'Unit not found'}), 404
+        org_filter = get_organization_filter(IceScoopSanitationUnit)
+        if not IceScoopSanitationUnit.query.filter(org_filter).filter_by(id=unit.id).first():
+            return jsonify({'success': False, 'error': 'Unauthorized'}), 403
+        unit.unit_name = data.get('unit_name', unit.unit_name)
+        unit.description = data.get('description', unit.description)
+        db.session.commit()
+        return jsonify({'success': True})
+
+    if action == 'delete':
+        unit_id = data.get('id')
+        if not unit_id:
+            return jsonify({'success': False, 'error': 'Unit ID is required'}), 400
+        unit = IceScoopSanitationUnit.query.get(unit_id)
+        if not unit:
+            return jsonify({'success': False, 'error': 'Unit not found'}), 404
+        org_filter = get_organization_filter(IceScoopSanitationUnit)
+        if not IceScoopSanitationUnit.query.filter(org_filter).filter_by(id=unit.id).first():
+            return jsonify({'success': False, 'error': 'Unauthorized'}), 403
+        unit.is_active = False
+        db.session.commit()
+        return jsonify({'success': True})
+
+    return jsonify({'success': False, 'error': 'Invalid action'}), 400
+
+
+@checklist_bp.route('/bar/ice-scoop/entries', methods=['GET', 'POST'])
+@login_required
+@role_required(['Manager', 'Bartender'])
+def bar_ice_scoop_entries():
+    """Get or save ice scoop sanitation entries (Bar)"""
+    if request.method == 'GET':
+        unit_id = request.args.get('unit_id', type=int)
+        entry_date = request.args.get('entry_date', type=str)
+        if not unit_id or not entry_date:
+            return jsonify({'success': False, 'error': 'Unit ID and entry date are required'}), 400
+        try:
+            entry_date_obj = date.fromisoformat(entry_date)
+        except ValueError:
+            return jsonify({'success': False, 'error': 'Invalid date format'}), 400
+
+        org_filter = get_organization_filter(IceScoopSanitationUnit)
+        unit = IceScoopSanitationUnit.query.filter(org_filter).filter_by(id=unit_id, is_active=True).first()
+        if not unit:
+            return jsonify({'success': False, 'error': 'Unit not found or unauthorized'}), 404
+
+        org_filter_entries = get_organization_filter(IceScoopSanitationEntry)
+        entries = IceScoopSanitationEntry.query.filter(org_filter_entries).filter_by(
+            unit_id=unit_id,
+            entry_date=entry_date_obj
+        ).all()
+        entry_map = {e.slot_index: e for e in entries}
+
+        slots = []
+        for slot in ICE_SCOOP_TIME_SLOTS:
+            entry = entry_map.get(slot['index'])
+            slots.append({
+                'slot_index': slot['index'],
+                'label': slot['label'],
+                'is_completed': bool(entry.is_completed) if entry else False,
+                'staff_initials': entry.staff_initials if entry else ''
+            })
+        return jsonify({'success': True, 'slots': slots})
+
+    data = request.get_json() or {}
+    unit_id = data.get('unit_id')
+    entry_date = data.get('entry_date')
+    slots = data.get('slots', [])
+    if not unit_id or not entry_date:
+        return jsonify({'success': False, 'error': 'Unit ID and entry date are required'}), 400
+    try:
+        entry_date_obj = date.fromisoformat(entry_date)
+    except ValueError:
+        return jsonify({'success': False, 'error': 'Invalid date format'}), 400
+
+    org_filter = get_organization_filter(IceScoopSanitationUnit)
+    unit = IceScoopSanitationUnit.query.filter(org_filter).filter_by(id=unit_id, is_active=True).first()
+    if not unit:
+        return jsonify({'success': False, 'error': 'Unit not found or unauthorized'}), 404
+
+    organisation = (current_user.organisation or current_user.restaurant_bar_name or '').strip()
+    if not organisation:
+        return jsonify({'success': False, 'error': 'User organization is required'}), 400
+
+    try:
+        for slot in slots:
+            slot_index = int(slot.get('slot_index'))
+            is_completed = bool(slot.get('is_completed'))
+            staff_initials = (slot.get('staff_initials') or '').strip()
+            if is_completed and not staff_initials:
+                staff_initials = _get_user_initials(current_user)
+
+            org_filter_entries = get_organization_filter(IceScoopSanitationEntry)
+            entry = IceScoopSanitationEntry.query.filter(org_filter_entries).filter_by(
+                unit_id=unit_id,
+                entry_date=entry_date_obj,
+                slot_index=slot_index
+            ).first()
+            if not entry:
+                entry = IceScoopSanitationEntry(
+                    unit_id=unit_id,
+                    entry_date=entry_date_obj,
+                    slot_index=slot_index,
+                    organisation=organisation,
+                    created_by=current_user.id
+                )
+                db.session.add(entry)
+            entry.is_completed = is_completed
+            entry.staff_initials = staff_initials or None
+            entry.completed_at = datetime.utcnow() if is_completed else None
+
+        db.session.commit()
+        return jsonify({'success': True})
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(f"Error saving ice scoop entries: {str(e)}", exc_info=True)
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@checklist_bp.route('/kitchen/ice-scoop', methods=['GET'])
+@login_required
+@role_required(['Chef', 'Manager'])
+def kitchen_ice_scoop_sanitation():
+    """Ice Scoop Sanitation Monitor (Kitchen) - accessible to Chef and Manager"""
+    today = date.today()
+    return render_template('checklist/ice_scoop_sanitation_kitchen.html', today=today, slots=ICE_SCOOP_TIME_SLOTS)
+
+
+@checklist_bp.route('/kitchen/ice-scoop/units', methods=['GET', 'POST'])
+@login_required
+@role_required(['Chef', 'Manager'])
+def manage_kitchen_ice_scoop_units():
+    """Manage kitchen ice scoop units - Manager only for create/update/delete"""
+    if request.method == 'GET':
+        try:
+            org_filter = get_organization_filter(KitchenIceScoopSanitationUnit)
+            units = KitchenIceScoopSanitationUnit.query.filter(org_filter).filter_by(is_active=True).order_by(KitchenIceScoopSanitationUnit.unit_name).all()
+            return jsonify([{
+                'id': unit.id,
+                'unit_name': unit.unit_name,
+                'description': unit.description
+            } for unit in units])
+        except Exception as e:
+            current_app.logger.error(f"Error loading kitchen ice scoop units: {str(e)}", exc_info=True)
+            return jsonify([])
+
+    data = request.get_json() or {}
+    action = data.get('action')
+    user_role = (current_user.user_role or '').strip()
+    if user_role != 'Manager':
+        return jsonify({'success': False, 'error': 'Only Managers can manage units'}), 403
+
+    if action == 'create':
+        unit_name = data.get('unit_name', '').strip() or 'KITCHEN'
+        description = data.get('description', '').strip()
+        org_filter = get_organization_filter(KitchenIceScoopSanitationUnit)
+        existing_unit = KitchenIceScoopSanitationUnit.query.filter(org_filter).filter_by(unit_name=unit_name, is_active=True).first()
+        if existing_unit:
+            return jsonify({'success': False, 'error': f'Unit name "{unit_name}" already exists'}), 400
+        organisation = (current_user.organisation or current_user.restaurant_bar_name or '').strip()
+        if not organisation:
+            return jsonify({'success': False, 'error': 'User organization is required to create units'}), 400
+        unit = KitchenIceScoopSanitationUnit(
+            unit_name=unit_name,
+            description=description,
+            organisation=organisation,
+            created_by=current_user.id,
+            is_active=True
+        )
+        db.session.add(unit)
+        db.session.commit()
+        return jsonify({'success': True, 'unit': {
+            'id': unit.id,
+            'unit_name': unit.unit_name,
+            'description': unit.description
+        }})
+
+    if action == 'update':
+        unit_id = data.get('id')
+        if not unit_id:
+            return jsonify({'success': False, 'error': 'Unit ID is required'}), 400
+        unit = KitchenIceScoopSanitationUnit.query.get(unit_id)
+        if not unit:
+            return jsonify({'success': False, 'error': 'Unit not found'}), 404
+        org_filter = get_organization_filter(KitchenIceScoopSanitationUnit)
+        if not KitchenIceScoopSanitationUnit.query.filter(org_filter).filter_by(id=unit.id).first():
+            return jsonify({'success': False, 'error': 'Unauthorized'}), 403
+        unit.unit_name = data.get('unit_name', unit.unit_name)
+        unit.description = data.get('description', unit.description)
+        db.session.commit()
+        return jsonify({'success': True})
+
+    if action == 'delete':
+        unit_id = data.get('id')
+        if not unit_id:
+            return jsonify({'success': False, 'error': 'Unit ID is required'}), 400
+        unit = KitchenIceScoopSanitationUnit.query.get(unit_id)
+        if not unit:
+            return jsonify({'success': False, 'error': 'Unit not found'}), 404
+        org_filter = get_organization_filter(KitchenIceScoopSanitationUnit)
+        if not KitchenIceScoopSanitationUnit.query.filter(org_filter).filter_by(id=unit.id).first():
+            return jsonify({'success': False, 'error': 'Unauthorized'}), 403
+        unit.is_active = False
+        db.session.commit()
+        return jsonify({'success': True})
+
+    return jsonify({'success': False, 'error': 'Invalid action'}), 400
+
+
+@checklist_bp.route('/kitchen/ice-scoop/entries', methods=['GET', 'POST'])
+@login_required
+@role_required(['Chef', 'Manager'])
+def kitchen_ice_scoop_entries():
+    """Get or save ice scoop sanitation entries (Kitchen)"""
+    if request.method == 'GET':
+        unit_id = request.args.get('unit_id', type=int)
+        entry_date = request.args.get('entry_date', type=str)
+        if not unit_id or not entry_date:
+            return jsonify({'success': False, 'error': 'Unit ID and entry date are required'}), 400
+        try:
+            entry_date_obj = date.fromisoformat(entry_date)
+        except ValueError:
+            return jsonify({'success': False, 'error': 'Invalid date format'}), 400
+
+        org_filter = get_organization_filter(KitchenIceScoopSanitationUnit)
+        unit = KitchenIceScoopSanitationUnit.query.filter(org_filter).filter_by(id=unit_id, is_active=True).first()
+        if not unit:
+            return jsonify({'success': False, 'error': 'Unit not found or unauthorized'}), 404
+
+        org_filter_entries = get_organization_filter(KitchenIceScoopSanitationEntry)
+        entries = KitchenIceScoopSanitationEntry.query.filter(org_filter_entries).filter_by(
+            unit_id=unit_id,
+            entry_date=entry_date_obj
+        ).all()
+        entry_map = {e.slot_index: e for e in entries}
+
+        slots = []
+        for slot in ICE_SCOOP_TIME_SLOTS:
+            entry = entry_map.get(slot['index'])
+            slots.append({
+                'slot_index': slot['index'],
+                'label': slot['label'],
+                'is_completed': bool(entry.is_completed) if entry else False,
+                'staff_initials': entry.staff_initials if entry else ''
+            })
+        return jsonify({'success': True, 'slots': slots})
+
+    data = request.get_json() or {}
+    unit_id = data.get('unit_id')
+    entry_date = data.get('entry_date')
+    slots = data.get('slots', [])
+    if not unit_id or not entry_date:
+        return jsonify({'success': False, 'error': 'Unit ID and entry date are required'}), 400
+    try:
+        entry_date_obj = date.fromisoformat(entry_date)
+    except ValueError:
+        return jsonify({'success': False, 'error': 'Invalid date format'}), 400
+
+    org_filter = get_organization_filter(KitchenIceScoopSanitationUnit)
+    unit = KitchenIceScoopSanitationUnit.query.filter(org_filter).filter_by(id=unit_id, is_active=True).first()
+    if not unit:
+        return jsonify({'success': False, 'error': 'Unit not found or unauthorized'}), 404
+
+    organisation = (current_user.organisation or current_user.restaurant_bar_name or '').strip()
+    if not organisation:
+        return jsonify({'success': False, 'error': 'User organization is required'}), 400
+
+    try:
+        for slot in slots:
+            slot_index = int(slot.get('slot_index'))
+            is_completed = bool(slot.get('is_completed'))
+            staff_initials = (slot.get('staff_initials') or '').strip()
+            if is_completed and not staff_initials:
+                staff_initials = _get_user_initials(current_user)
+
+            org_filter_entries = get_organization_filter(KitchenIceScoopSanitationEntry)
+            entry = KitchenIceScoopSanitationEntry.query.filter(org_filter_entries).filter_by(
+                unit_id=unit_id,
+                entry_date=entry_date_obj,
+                slot_index=slot_index
+            ).first()
+            if not entry:
+                entry = KitchenIceScoopSanitationEntry(
+                    unit_id=unit_id,
+                    entry_date=entry_date_obj,
+                    slot_index=slot_index,
+                    organisation=organisation,
+                    created_by=current_user.id
+                )
+                db.session.add(entry)
+            entry.is_completed = is_completed
+            entry.staff_initials = staff_initials or None
+            entry.completed_at = datetime.utcnow() if is_completed else None
+
+        db.session.commit()
+        return jsonify({'success': True})
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(f"Error saving kitchen ice scoop entries: {str(e)}", exc_info=True)
+        return jsonify({'success': False, 'error': str(e)}), 500
 
 # ============================================
 # COLD STORAGE TEMPERATURE LOG ROUTES

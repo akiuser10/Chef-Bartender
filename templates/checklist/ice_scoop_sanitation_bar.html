@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+{% block page_panel %}
+{% if current_user.is_authenticated %}
+    {% set first_initial = current_user.first_name[0] if current_user.first_name else "" %}
+    {% set last_initial = current_user.last_name[0] if current_user.last_name else "" %}
+    {% if first_initial or last_initial %}
+        {% set user_initials = (first_initial + last_initial).upper() %}
+    {% elif current_user.username %}
+        {% set user_initials = current_user.username[0].upper() %}
+    {% else %}
+        {% set user_initials = "" %}
+    {% endif %}
+{% else %}
+    {% set user_initials = "" %}
+{% endif %}
+<div id="user-data"
+     data-initials="{{ user_initials }}"
+     data-role="{{ current_user.user_role if current_user.is_authenticated else '' }}"
+     data-display-name="{{ get_user_display_name(current_user) if current_user.is_authenticated else '' }}"></div>
+<script>
+    // Pass user info to JavaScript - reading from data attributes to avoid linter errors
+    (function() {
+        var userDataEl = document.getElementById('user-data');
+        if (userDataEl) {
+            window.userInitials = userDataEl.getAttribute('data-initials') || '';
+            window.userRole = userDataEl.getAttribute('data-role') || '';
+            window.userDisplayName = userDataEl.getAttribute('data-display-name') || '';
+        } else {
+            window.userInitials = '';
+            window.userRole = '';
+            window.userDisplayName = '';
+        }
+    })();
+</script>
+
+<div class="panel-header">
+    <h2>Ice Scoop Sanitation Monitor (BAR)</h2>
+</div>
+
+<div class="checklist-container">
+    {% if current_user.user_role == 'Manager' %}
+    <div class="unit-management-section">
+        <div>
+            <h3>Manage Units</h3>
+            <button type="button" id="add-unit-btn" class="btn-primary">Add New Unit</button>
+        </div>
+        <div id="units-list">
+            <!-- Units will be populated by JavaScript -->
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="checklist-entry-section">
+        <h3>Daily Checklist Entry</h3>
+        <p style="color: #666; margin-top: -8px;">Complete sanitation checks four times a day (4-hour intervals).</p>
+        <div>
+            <div class="form-group">
+                <label for="entry-date">Date *</label>
+                <input type="date" id="entry-date" required value="{{ today.isoformat() if today else '' }}">
+            </div>
+            <div class="form-group">
+                <label for="unit-select">Unit *</label>
+                <select id="unit-select" required>
+                    <option value="">-- Select Unit --</option>
+                </select>
+            </div>
+            <button type="button" id="load-entry-btn" class="btn-primary">Load Checklist</button>
+        </div>
+
+        <div id="checklist-items-container" class="hidden">
+            <div id="checklist-items">
+                <!-- Checklist items will be populated by JavaScript -->
+            </div>
+            <div>
+                <button type="button" id="save-entry-btn" class="btn-primary">Save Checklist</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="ice-scoop-slots" data-slots='{{ slots | tojson }}'></div>
+
+{% if current_user.user_role == 'Manager' %}
+<div id="unit-modal" class="modal hidden">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 id="unit-modal-title">Add Unit</h3>
+            <button class="modal-close" id="unit-modal-close">&times;</button>
+        </div>
+        <div class="modal-body">
+            <form id="unit-form">
+                <input type="hidden" id="unit-id" name="unit_id">
+                <div class="form-group">
+                    <label for="unit-name">Unit Name *</label>
+                    <input type="text" id="unit-name" name="unit_name" required placeholder="BAR">
+                </div>
+                <div class="form-group">
+                    <label for="unit-description">Description</label>
+                    <textarea id="unit-description" name="description" rows="2"></textarea>
+                </div>
+                <div>
+                    <button type="submit" class="btn-primary">Save</button>
+                    <button type="button" id="unit-form-cancel" class="btn-secondary">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<script src="{{ url_for('static', filename='ice_scoop_sanitation_bar.js') }}"></script>
+{% endblock %}
